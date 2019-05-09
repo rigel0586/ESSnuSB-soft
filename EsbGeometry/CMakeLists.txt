@@ -28,19 +28,21 @@ ${FAIRROOT_LIBRARY_DIR}
 
 link_directories( ${LINK_DIRECTORIES})
 
+#Find all source files
+file(GLOB sourceFiles ${CMAKE_SOURCE_DIR}/EsbGeometry/*.cxx)
+
 set(SRCS
-#Put here your sourcefiles
-WCDetector.cxx
-Cave.cxx
-GeoCave.cxx
-PMTube.cxx
+	${sourceFiles}
 )
 
+#Find all header files
+file(GLOB headerFiles ${CMAKE_SOURCE_DIR}/EsbGeometry/*.h)
+
+#GeometryLinkDef.h should be the last item in the list
+list(REMOVE_ITEM headerFiles ${CMAKE_SOURCE_DIR}/EsbGeometry/GeometryLinkDef.h)
+
 Set(HEADERS 
-	${CMAKE_SOURCE_DIR}/EsbGeometry/WCDetector.h
-	${CMAKE_SOURCE_DIR}/EsbGeometry/Cave.h
-	${CMAKE_SOURCE_DIR}/EsbGeometry/GeoCave.h
-	${CMAKE_SOURCE_DIR}/EsbGeometry/PMTube.h
+	${headerFiles}
 )
 
 Set(LINKDEF ${CMAKE_SOURCE_DIR}/EsbGeometry/GeometryLinkDef.h)

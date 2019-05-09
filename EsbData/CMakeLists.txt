@@ -17,18 +17,21 @@ ${FAIRROOT_LIBRARY_DIR}
  
 link_directories( ${LINK_DIRECTORIES})
 
+#Find all source files
+file(GLOB sourceFiles ${CMAKE_SOURCE_DIR}/EsbData/*.cxx)
+
 set(SRCS
-    Stack.cxx
-    MCTrack.cxx
-    WCDetectorPoint.cxx
-    PMTubeHit.cxx
+    ${sourceFiles}
 )
 
+#Find all header files
+file(GLOB headerFiles ${CMAKE_SOURCE_DIR}/EsbData/*.h)
+
+#DataLinkDef.h should be the last item in the list
+list(REMOVE_ITEM headerFiles ${CMAKE_SOURCE_DIR}/EsbData/DataLinkDef.h)
+
 Set(HEADERS 
-    ${CMAKE_SOURCE_DIR}/EsbData/Stack.h
-    ${CMAKE_SOURCE_DIR}/EsbData/MCTrack.h
-    ${CMAKE_SOURCE_DIR}/EsbData/WCDetectorPoint.h
-    ${CMAKE_SOURCE_DIR}/EsbData/PMTubeHit.h
+    ${headerFiles}
 )
 
 Set(LINKDEF ${CMAKE_SOURCE_DIR}/EsbData/DataLinkDef.h)
