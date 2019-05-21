@@ -1,28 +1,31 @@
  # Create a library called "libEsbTools" 
 
 set(INCLUDE_DIRECTORIES
-${BASE_INCLUDE_DIRECTORIES}
-#${CMAKE_SOURCE_DIR}/EsbTools
-${CMAKE_SOURCE_DIR}
+    ${BASE_INCLUDE_DIRECTORIES}
+    #${CMAKE_SOURCE_DIR}/EsbTools
+    ${CMAKE_SOURCE_DIR}
 )
 
 include_directories( ${INCLUDE_DIRECTORIES})
 include_directories(${SYSTEM_INCLUDE_DIRECTORIES})
 
 set(LINK_DIRECTORIES
-${ROOT_LIBRARY_DIR}
-${FAIRROOT_LIBRARY_DIR}
-#${CMAKE_SOURCE_DIR}/EsbTools
+    ${ROOT_LIBRARY_DIR}
+    ${FAIRROOT_LIBRARY_DIR}
+    #${CMAKE_SOURCE_DIR}/EsbTools
 )
  
 link_directories( ${LINK_DIRECTORIES})
 
 set(SRCS
     PMTubeGeoCreator.cxx
+    ParamReader.cxx
 )
 
 Set(HEADERS 
     ${CMAKE_SOURCE_DIR}/EsbTools/PMTubeGeoCreator.h
+    ${CMAKE_SOURCE_DIR}/EsbTools/EsbDefines.h
+    ${CMAKE_SOURCE_DIR}/EsbTools/ParamReader.h
 )
 
 Set(LINKDEF ${CMAKE_SOURCE_DIR}/EsbTools/ToolsLinkDef.h)
