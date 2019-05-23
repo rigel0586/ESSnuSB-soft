@@ -8,6 +8,8 @@
 #include "G4UniformMagField.hh"
 #include "G4TransportationManager.hh"
 
+#include "FairLogger.h"
+
 namespace esbroot {
 namespace geometry {
 namespace superfgd {
@@ -72,7 +74,6 @@ G4VPhysicalVolume* SuperFGDDetectorConstruction::Construct()
   //-------------------------------------------------------------------------
   if (fdetector.ExistsParam(data::superfgd::detector::DP::magField)) 
   {
-        cout << "InMagneticField" << endl;
         G4double magField_X = fdetector.ParamAsDouble(data::superfgd::detector::DP::magField_X) * CLHEP::tesla;
         G4double magField_Y = fdetector.ParamAsDouble(data::superfgd::detector::DP::magField_Y) * CLHEP::tesla;
         G4double magField_Z = fdetector.ParamAsDouble(data::superfgd::detector::DP::magField_Z) * CLHEP::tesla;
@@ -103,7 +104,7 @@ G4VPhysicalVolume* SuperFGDDetectorConstruction::Construct()
 				       false,                 // no boolean operations
                0);
 
-    std::cout << "logicTarget1 Mass -> " << logicTarget1->GetMass()/CLHEP::gram << std::endl;
+    LOG(info) << "logicTarget1 Mass -> " << logicTarget1->GetMass()/CLHEP::gram;
 
     return world;
 }

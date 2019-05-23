@@ -42,6 +42,8 @@ TGeoManager* FgdDetectorParameters::GetRootGeometry() const
     Construct the ROOT geometry for the SuperFGD 
     it is assumed that the geometry is based on cubes
     with optic fibers through them
+
+    NOTE: Root geometry is not used, Geant4 geometry is constructed
 */
 void FgdDetectorParameters::CreateRootGeometry() const 
 {

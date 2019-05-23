@@ -8,6 +8,7 @@
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "G4RunManager.hh"
 
+#include "FairLogger.h"
 
 namespace esbroot {
 namespace geometry {
@@ -39,7 +40,7 @@ void FgdEventAction::EndOfEventAction(const G4Event* event)
     if(nfPrga!=nullptr && !nfPrga->HasMoreEvents()
         || nfPrGga!=nullptr && !nfPrGga->HasMoreEvents())
     {
-        G4cout << "FgdEventAction: No more events, aborting run ..." << G4endl;
+        LOG(debug) << "FgdEventAction: No more events, aborting run ... ";
         runmanager->AbortRun();
     }
 }

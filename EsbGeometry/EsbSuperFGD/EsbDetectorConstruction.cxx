@@ -260,7 +260,6 @@ G4VPhysicalVolume* FgdDetectorConstruction::Construct()
   //-------------------------------------------------------------------------
   if (fdetector.ExistsParam(data::superfgd::detector::DP::magField)) 
   {
-        cout << "InMagneticField" << endl;
         G4double magField_X = fdetector.ParamAsDouble(data::superfgd::detector::DP::magField_X) * CLHEP::tesla;
         G4double magField_Y = fdetector.ParamAsDouble(data::superfgd::detector::DP::magField_Y) * CLHEP::tesla;
         G4double magField_Z = fdetector.ParamAsDouble(data::superfgd::detector::DP::magField_Z) * CLHEP::tesla;

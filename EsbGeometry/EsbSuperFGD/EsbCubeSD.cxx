@@ -3,6 +3,8 @@
 #include "EsbGeometry/EsbSuperFGD/EsbFgdRunManager.h"
 #include "EsbGeometry/EsbSuperFGD/EsbDetectorConstruction.h"
 
+#include "FairLogger.h"
+
 namespace esbroot {
 namespace geometry {
 namespace superfgd {
@@ -35,7 +37,7 @@ This is done to be more memory efficient for large simulations.
 G4bool CubeSD::ProcessTotalHits(G4Step* aStep,G4TouchableHistory* ROHist)
 {
     if(fverbose)
-        cout << "CubeSD::ProcessHitsSuperFGD " << endl;
+        LOG(debug) << " CubeSD::ProcessHitsSuperFGD ";
 
     //==========================================================================
     //              Get Runmanager and detector to analyze the step data
@@ -84,7 +86,7 @@ G4bool CubeSD::ProcessTotalHits(G4Step* aStep,G4TouchableHistory* ROHist)
     if(fwriter!=nullptr)
     {
         if(fverbose)
-             cout<<" ======  CubeSD:fverbose ====="<< __FILE__ << " " << __LINE__ << endl;
+            LOG(debug) <<" ======  CubeSD:fverbose =====";
 
         fhitBuffer->SetEdep(edep);
         fhitBuffer->SetNonIonizingEnergyDeposit(nonIon);
@@ -111,9 +113,7 @@ G4bool CubeSD::ProcessTotalHits(G4Step* aStep,G4TouchableHistory* ROHist)
     }
     else if(fverbose)
     {
-        cout    << "FileWriter is nullptr in " 
-                << __FILE__ << " " 
-                << __LINE__ << endl;
+        LOG(debug) << " FileWriter is nullptr ";
     }
     
     //================================================================
@@ -125,19 +125,18 @@ G4bool CubeSD::ProcessTotalHits(G4Step* aStep,G4TouchableHistory* ROHist)
         G4String thisVolume = aStep->GetTrack()->GetVolume()->GetName() ;
         G4String particleName = aStep->GetTrack()->GetDefinition()->GetParticleName();
 
-        G4cout << "*******************************  " << G4endl;
-        G4cout << "             HIT                 " << G4endl;
-        G4cout << "  Total_Energy_Deposit           " << edep/eV << " eV"  << G4endl;
-        G4cout << "  Total_Energy_NonIoniziong      " << nonIon/eV << " eV"  << G4endl;
-        G4cout << "  Pdg Code                       " << pdg  << G4endl;
-        G4cout << "  Particle:                      " << particleName << G4endl;
-        G4cout << "  Volume:                        " << thisVolume << G4endl;
-        G4cout << "  TrackLength:                   " << trackLength / CLHEP::mm << " mm" << G4endl;
-        G4cout << "  Charge:                        " << track->GetDefinition()->GetPDGCharge() << G4endl;
-        G4cout << "  Energy (eV) :                  " << kineticEnergy/eV << G4endl;
-        G4cout << "  POSITION (mm) :                " 
-            << hitPosition.x()/mm << " " << hitPosition.y()/mm << " " << hitPosition.z()/mm << G4endl;
-        G4cout << "*******************************" << G4endl;
+        LOG(debug) << " ******************************* ";
+        LOG(debug) << " HIT ";
+        LOG(debug) << " Total_Energy_Deposit " << edep/eV;
+        LOG(debug) << " Total_Energy_NonIoniziong " << nonIon/eV;
+        LOG(debug) << " Pdg Code " << pdg;
+        LOG(debug) << " Particle: " << particleName;
+        LOG(debug) << " Volume: " << thisVolume;
+        LOG(debug) << " TrackLength: " << trackLength / CLHEP::mm;
+        LOG(debug) << " Charge: " << track->GetDefinition()->GetPDGCharge();
+        LOG(debug) << " Energy (eV): " << kineticEnergy/eV;
+        LOG(debug) << " POSITION (mm): " << hitPosition.x()/mm << hitPosition.y()/mm << hitPosition.z()/mm;
+        LOG(debug) << " ******************************* ";
     }
 
     return true;

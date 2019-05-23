@@ -8,6 +8,7 @@
 #include "EsbGeometry/FgdDetector.h"
 #include "EsbData/FgdDetectorPoint.h" 
 
+
 #include "FairVolume.h"
 #include "FairRootManager.h"
 #include "FairGenericStack.h"
@@ -24,6 +25,10 @@
 #include "TGeoMedium.h"
 #include "TGraph.h"
 
+#include "Geant4GM/volumes/Factory.h"
+#include "RootGM/volumes/Factory.h"
+#include "TGeoManager.h"
+
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -35,8 +40,9 @@ namespace geometry {
 static const Int_t kFgdDetector = 2;
 
 //___________________________________________________________________
-FgdDetector::FgdDetector()
+FgdDetector::FgdDetector(std::string geoConfigFile)
   : FairDetector("FgdDetector", kTRUE, kFgdDetector),
+    fgdConstructor(geoConfigFile),
     fTrackID(-1),
     fVolumeID(-1),
     fPos(),
@@ -49,8 +55,9 @@ FgdDetector::FgdDetector()
 }
 
 //___________________________________________________________________
-  FgdDetector::FgdDetector(const char* name, Bool_t active)
+  FgdDetector::FgdDetector(const char* name, std::string geoConfigFile, Bool_t active)
   : FairDetector(name, active, kFgdDetector),
+    fgdConstructor(geoConfigFile),
     fTrackID(-1),
     fVolumeID(-1),
     fPos(),
@@ -144,45 +151,18 @@ void FgdDetector::Reset()
 
 void FgdDetector::ConstructGeometry()
 {
-	//TODO3: Create the real Fgd geometry
-	FairGeoLoader *geoLoad = FairGeoLoader::Instance();
-	FairGeoInterface *geoFace = geoLoad->getGeoInterface();
+	//Create the real Fgd geometry
 	
-	FairGeoMedia *geoMedia = geoFace->getMedia();
-	FairGeoBuilder* geoBuild = geoLoad->getGeoBuilder();
-	
-	FairGeoMedium* mWC = geoMedia->getMedium("H2O_ESSnuSB");
-	geoBuild->createMedium(mWC);
-  TGeoMedium *WC_med = gGeoManager->GetMedium("H2O_ESSnuSB");
-  
-	//TODO: Change this to use media.geo file
-  TGeoMaterial *Al_mat = new TGeoMaterial("Al", 26.98, 13, 2.7);
-  TGeoMedium *Al_med = new TGeoMedium("Al", 101, Al_mat);
-  
-  // Create water cylinder
-  TGeoVolume *wc = gGeoManager->MakeTube("wc", WC_med, 0.0, 1, 1);
-  
-  // Create thin wall around the water cylinder, 1 cm thick, to act as sensitive volume
-  TGeoVolume *wall = gGeoManager->MakeTube("wall", Al_med, 1, 1+0.1, 1);
-  TGeoVolume *endwall = gGeoManager->MakeTube("endwall", Al_med, 0, 1, 0.05);
+  G4VPhysicalVolume* superFgdG4Vol = fgdConstructor.Construct();
 
-  TList* media = gGeoManager->GetListOfMedia();
-  for(TObject *obj : *media) {
-		obj->Print();
-	}	
+  // Import Geant4 geometry to VGM
+  Geant4GM::Factory g4Factory;
+  g4Factory.Import(superFgdG4Vol);
 
-  AddSensitiveVolume(wall); //From FairModule
-  AddSensitiveVolume(endwall); //From FairModule
-
-  //TODO: Top volume should be a parameter in the constructor
-  TGeoVolume *top = gGeoManager->GetTopVolume();
-  top->AddNode(wc, 1);
-  top->AddNode(wall, 1); 
-  top->AddNode(endwall, 1, new TGeoTranslation(0.0, 0.0, 1+0.05));
-  top->AddNode(endwall, 2, new TGeoTranslation(0.0, 0.0, -1-0.05));
-
-  wc->SetLineColor(kRed);
-
+  // Export VGM geometry to Root
+  RootGM::Factory rtFactory;
+  g4Factory.Export(&rtFactory);
+  //gGeoManager->CloseGeometry();
 }
 
 //___________________________________________________________________

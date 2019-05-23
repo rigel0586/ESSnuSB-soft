@@ -9,5 +9,4 @@
         cerr << strb.str() << endl;\
         throw invalid_argument(strb.str()); \
 
-
 #endif

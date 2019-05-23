@@ -26,6 +26,7 @@
 #include <memory>
 
 #include "EsbTools/EsbDefines.h"
+#include "FairLogger.h"
    
 using namespace std;
 
@@ -50,7 +51,7 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction()
 void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 {
   if(!ReadEvent())
-    cout << "No more events to process!" << endl;
+    LOG(info) << "No more events to process!";
 
   const genie::NtpMCEventRecord* ntpMCEvent = PopEvent();
   if (ntpMCEvent == nullptr) 

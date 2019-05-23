@@ -3,6 +3,8 @@
 #include "EsbGeometry/EsbSuperFGD/EsbFgdRunManager.h"
 #include "EsbGeometry/EsbSuperFGD/EsbDetectorConstruction.h"
 
+#include "FairLogger.h"
+
 #include <math.h>
 
 using namespace std;
@@ -27,7 +29,7 @@ FileWriter::~FileWriter()
 {
     ffile->WriteTObject(fhitsTree.get());
     ffile->Close();
-    std::cout << "Root file written.\n";
+    LOG(info) << "Root file written.";
 }
 
 void FileWriter::AddEvent(genie::EventRecord* event)
@@ -63,31 +65,19 @@ void FileWriter::AddFiberHit(data::superfgd::detector::FiberHit& hit)
 {
     // Fibers are not required, info is only gathered from the
     // cubes
-    if(fverbose)
-    {
-        cout<<" =============  FileWriter ============" << endl;
-        cout<<" Adding hit " << endl;
-        cout<<" FiberCopyNo" << hit.GetfiberCopyNo() << endl;
-        cout<<" Momentum:X " << hit.GetHitMomentum().x() << endl;
-        cout<<" Momentum:Y " << hit.GetHitMomentum().y() << endl;
-        cout<<" Momentum:Z " << hit.GetHitMomentum().z() << endl;
-        cout<<" Pdg " << hit.GetPdg() << endl;
-        cout<<" ========================================" << endl;
-    }
 }
 
 void FileWriter::AddCubeHit(data::superfgd::detector::CubeHit& hit)
 {
     if(fverbose)
     {
-        cout<<" =============  FileWriter ============" << endl;
-        cout<<" Adding hit " << endl;
-        cout<<" CubeCopyNo " << hit.GetCubeCopyNo() << endl;
-        cout<<" Momentum:X " << hit.GetHitMomentum().x() << endl;
-        cout<<" Momentum:Y " << hit.GetHitMomentum().y() << endl;
-        cout<<" Momentum:Z " << hit.GetHitMomentum().z() << endl;
-        cout<<" Pdg " << hit.GetPdg() << endl;
-        cout<<" ========================================" << endl;
+        LOG(debug) << " =============  FileWriter ============";
+        LOG(debug) << " CubeCopyNo " << hit.GetCubeCopyNo();
+        LOG(debug) << " Momentum:X " << hit.GetHitMomentum().x();
+        LOG(debug) << " Momentum:Y " << hit.GetHitMomentum().y();
+        LOG(debug) << " Momentum:Z " << hit.GetHitMomentum().z();
+        LOG(debug) << " Pdg " << hit.GetPdg();
+        LOG(debug) << " ========================================";
     }
 
     fcubeHits->AddCubeHit(hit);
@@ -96,11 +86,7 @@ void FileWriter::AddCubeHit(data::superfgd::detector::CubeHit& hit)
 void FileWriter::SumStep(data::superfgd::detector::CubeHit& hit, data::superfgd::detector::FgdDetectorParameters& dp)
 {
     if(fverbose)
-    {
-        cout<<" =============  FileWriter ============" << endl;
-        cout<<" Summing step " << endl;
-        cout<<" ========================================" << endl;
-    }
+        LOG(debug) << " Summing step ";
 
     //================================================================
     //    Retrive the cube position from the detector parameters
