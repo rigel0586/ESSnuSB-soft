@@ -42,7 +42,7 @@ public:
                                 G4VPhysicalVolume* physVol) const;
 private: 
     G4double fSpacing;
-    G4double finitialX;           
+    G4double finitialX;          
 };
 
 }   //superfgd

@@ -39,6 +39,8 @@ public:
 private:
     std::shared_ptr<FileWriter> ffileWriter;
     bool fignoreEdep;
+
+    ClassDef(FgdRunManager,2)
 };
 
 }   //superfgd

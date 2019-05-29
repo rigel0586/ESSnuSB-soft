@@ -52,33 +52,6 @@ void CubeHit::Copy(TObject& object) const
     hit->SetCharge(this->fcharge);
 }
 
-// -----   Public method Print  to stream  ---------------------------------
-void CubeHit::PrintToStream(ostream& stream) const 
-{
-    stream << "----------------------------------------" << endl;
-    stream << "                 CubeHit              " << endl;
-    stream << "----------------------------------------" << endl;
-    stream << "Edep = " << fedep << endl;
-    stream << "Position.x = " << fhitPosition.x() << endl;
-    stream << "Position.y = " << fhitPosition.y() << endl;
-    stream << "Position.z = " << fhitPosition.z() << endl;
-    stream << "PostPosition.x = " << fpostHitPosition.x() << endl;
-    stream << "PostPosition.y = " << fpostHitPosition.y() << endl;
-    stream << "PostPosition.z = " << fpostHitPosition.z() << endl;
-    stream << "Kinetic Energy = " << fkineticEnergy << endl;
-    stream << "Momentum.Px = " << fmomentum.Px() << endl;
-    stream << "Momentum.Py = " << fmomentum.Py() << endl;
-    stream << "Momentum.Pz = " << fmomentum.Pz() << endl;
-    stream << "CubeCopyNo = " << fCubeCopyNo << endl;
-    stream << "SlabCopyNo = " << fslabCopyNo << endl;
-    stream << "Time = " << ftime << endl;
-    stream << "Track_ID = " << ftrackID << endl;
-    stream << "Parent_ID = " << fparentID << endl;
-    stream << "Pdg = " << fpdg << endl;
-    stream << "Charge = " << fcharge << endl;
-  
-    stream << endl;
-}
 
 }   // detector
 }   // superfgd

@@ -28,7 +28,7 @@ public:
     /** Base method to end the run action
      *@param G4Run - current run
      **/
-    virtual void   EndOfRunAction(const G4Run*);
+    virtual void   EndOfRunAction(const G4Run*); 
 };
 
 }   //superfgd

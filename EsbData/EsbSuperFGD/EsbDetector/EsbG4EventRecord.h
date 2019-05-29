@@ -88,9 +88,6 @@ public:
     /** Resets the event record **/
     void Reset();
 
-    /** Prints the event record to the passed stream **/
-    void PrintToStream(ostream& stream) const;
-
     /** Adds the calculated cos angle for the particle with pdg code
      *@param pdg - particle pdg code
      *@param cosAngle - calculated angle

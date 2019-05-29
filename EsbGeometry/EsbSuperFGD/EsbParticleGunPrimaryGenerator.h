@@ -93,6 +93,8 @@ class ParticleGunPrimaryGenerator : public G4VUserPrimaryGeneratorAction
 
     /** Detector lenght in Z dimention **/
     G4double ftotal_Z;
+
+    ClassDef(ParticleGunPrimaryGenerator,2) 
 };
 
 }   //superfgd

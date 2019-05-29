@@ -12,7 +12,6 @@ namespace detector {
     
 ostream & operator << (ostream & stream, const G4DigitRecord & rec) 
 {
-    rec.PrintToStream(stream);
     return stream;
 }
 
@@ -81,7 +80,7 @@ void G4DigitRecord::Clear(Option_t* /*option*/)
 
 void G4DigitRecord::Print(Option_t* option) const 
 {
-    PrintToStream(cout);
+    
 }
 
 void G4DigitRecord::Init() 
@@ -92,19 +91,6 @@ void G4DigitRecord::Reset()
 {
     Clear();
     Init();
-}
-
-void G4DigitRecord::PrintToStream(ostream& stream) const 
-{
-    stream << "========================================" << endl;
-    stream << "          G4DigitRecord             " << endl;
-    stream << "========================================" << endl;
-    int nc = freadouts->GetEntries();
-    stream << "Number of readouts = " << nc << "\n";
-    for (int i = 0; i < nc; i++) {
-        TObject* item = (*freadouts)[i];
-        ((DigitReadout*)item)->PrintToStream(stream);
-    }
 }
 
 }   // detector

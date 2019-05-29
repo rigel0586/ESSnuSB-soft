@@ -50,6 +50,8 @@ private:
 
     std::shared_ptr<data::superfgd::detector::CubeHit>  fhitBuffer;
     std::shared_ptr<FileWriter> fwriter;
+
+    ClassDef(CubeSD,2)
 };
 
 }   //superfgd

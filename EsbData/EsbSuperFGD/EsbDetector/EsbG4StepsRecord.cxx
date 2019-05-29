@@ -43,22 +43,6 @@ void G4StepsRecord::Copy(TObject& object) const
     step->SetPdgs(const_cast<std::set<Int_t>&>(this->fpdgs));
 }
 
-void G4StepsRecord::PrintToStream(ostream& stream) const 
-{
-    stream << "----------------------------------------" << endl;
-    stream << "                 G4StepsRecord              " << endl;
-    stream << "----------------------------------------" << endl;
-    stream << "Bin X = " << fbin_x << endl;
-    stream << "Bin Y = " << fbin_y << endl;
-    stream << "Bin Z = " << fbin_z << endl;
-    stream << "StartTime = " << fstartTime << endl;
-    stream << "EndTime = " << fendTime << endl;
-    stream << "Edep = " << fedep << endl;
-    stream << "TrackLength = " << ftrackLenght << endl;
-    stream << "Nonionization energy = " << fnonIon << endl;
-    stream << endl;
-}
-
 }   // detector
 }   // superfgd
 }   // data

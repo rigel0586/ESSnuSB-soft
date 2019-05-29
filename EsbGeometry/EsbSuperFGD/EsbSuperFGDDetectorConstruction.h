@@ -43,6 +43,8 @@ public:
 public:
     /** Constructs the Geant4 physical volume of the detector**/
     virtual G4VPhysicalVolume* Construct();
+
+    ClassDef(SuperFGDDetectorConstruction,2) 
 };
 
 }   //superfgd

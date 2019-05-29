@@ -81,6 +81,8 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 
     /** full path of the file containing the events **/
     std::string feventsFile;
+
+    ClassDef(PrimaryGeneratorAction,2) 
 };
 
 }   //superfgd

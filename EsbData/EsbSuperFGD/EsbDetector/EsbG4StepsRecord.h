@@ -6,7 +6,6 @@
 
 #include "EsbData/EsbSuperFGD/EsbDetector/EsbCubeHit.h"
 
-#include <iostream>
 #include <set>
 
 using namespace std;
@@ -142,9 +141,6 @@ public:
 
     /** Overriden Copy method from TObject**/
     void Copy(TObject& object) const;
-
-    /** Print object to stream **/
-    void PrintToStream(ostream& stream) const;
 
 private:
 

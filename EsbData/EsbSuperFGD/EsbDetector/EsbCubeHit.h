@@ -185,9 +185,6 @@ public:
     /** Copy ROOT method **/
     void Copy(TObject& object) const;
 
-    /** Print the object to stream **/
-    void PrintToStream(ostream& stream) const;
-
 private:
 
     double fedep;

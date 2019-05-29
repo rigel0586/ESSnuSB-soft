@@ -14,7 +14,6 @@ namespace detector {
 
 ostream & operator << (ostream & stream, const G4EventRecord & rec) 
 {
-    rec.PrintToStream(stream);
     return stream;
 }
 
@@ -175,7 +174,7 @@ void G4EventRecord::Clear(Option_t* /*option*/)
 
 void G4EventRecord::Print(Option_t* option) const 
 {
-    PrintToStream(cout);
+    
 }
 
 void G4EventRecord::Init() 
@@ -186,25 +185,6 @@ void G4EventRecord::Reset()
 {
     Clear();
     Init();
-}
-
-void G4EventRecord::PrintToStream(ostream& stream) const 
-{
-    stream << "========================================" << endl;
-    stream << "          G4EventRecord                 " << endl;
-    stream << "========================================" << endl;
-    int nc = fcubeHits->GetEntries();
-    stream << "Number of cube hits = " << nc << "\n";
-    for (int i = 0; i < nc; i++) {
-        TObject* item = (*fcubeHits)[i];
-        ((CubeHit*)item)->PrintToStream(stream);
-    }
-    nc = fsumSteps->GetEntries();
-    stream << "Number of steps = " << nc << "\n";
-    for (int i = 0; i < nc; i++) {
-        TObject* item = (*fsumSteps)[i];
-        ((G4StepsRecord*)item)->PrintToStream(stream);
-    }
 }
 
 void G4EventRecord::AddCos(long pdg,double cosAngle)

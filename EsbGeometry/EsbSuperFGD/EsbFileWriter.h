@@ -83,6 +83,8 @@ private:
     data::superfgd::detector::G4StepsRecord fvertex;
 
     bool fverbose;
+
+    ClassDef(FileWriter,2) 
 };
 
 }   //superfgd

@@ -54,8 +54,6 @@ public:
     /** Reset the readout container **/
     void Reset();
 
-    /** Print the readout container to stream **/
-    void PrintToStream(ostream& stream) const;
 
 private:
     TClonesArray* freadouts;

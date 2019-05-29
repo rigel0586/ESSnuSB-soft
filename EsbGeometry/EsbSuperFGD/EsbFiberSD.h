@@ -42,6 +42,8 @@ private:
     std::shared_ptr<data::superfgd::detector::FiberHit> fhitBuffer;
     std::shared_ptr<FileWriter> fwriter;
     bool fverbose;
+
+    ClassDef(FiberSD,2) 
 };
 
 }   //superfgd

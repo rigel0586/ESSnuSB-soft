@@ -45,6 +45,8 @@ public:
 protected:
     data::superfgd::detector::FgdDetectorParameters fdetector;
     void AddScintillatonProperties(G4Material* scintillator);
+
+    ClassDef(FgdDetectorConstruction,2)
 };
 
 }   //superfgd

@@ -22,5 +22,22 @@
 #pragma link C++ class esbroot::geometry::PMTube+;
 #pragma link C++ class esbroot::geometry::WCDetector+;
 
+#pragma link C++ class esbroot::geometry::superfgd::CubeParametrisation+;
+#pragma link C++ class esbroot::geometry::superfgd::ND280CubeScintConstructor+;
+#pragma link C++ class esbroot::geometry::superfgd::CubeSD+;
+#pragma link C++ class esbroot::geometry::superfgd::FgdDetectorConstruction+;
+#pragma link C++ class esbroot::geometry::superfgd::FgdEventAction+;
+#pragma link C++ class esbroot::geometry::superfgd::FgdRunManager+;
+#pragma link C++ class esbroot::geometry::superfgd::FgdStepAction+;
+#pragma link C++ class esbroot::geometry::superfgd::FiberParametrisation+;
+#pragma link C++ class esbroot::geometry::superfgd::FiberSD+;
+#pragma link C++ class esbroot::geometry::superfgd::FileWriter+;
+#pragma link C++ class esbroot::geometry::superfgd::ParticleGunPrimaryGenerator+;
+#pragma link C++ class esbroot::geometry::superfgd::PhysicsList+;
+#pragma link C++ class esbroot::geometry::superfgd::PrimaryGeneratorAction+;
+#pragma link C++ class esbroot::geometry::superfgd::FgdRunAction+;
+#pragma link C++ class esbroot::geometry::superfgd::ND280SuperFGDConstructor+;
+#pragma link C++ class esbroot::geometry::superfgd::SuperFGDDetectorConstruction+;
+
 
 #endif
