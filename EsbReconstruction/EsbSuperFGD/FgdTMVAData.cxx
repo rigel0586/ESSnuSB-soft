@@ -199,15 +199,12 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
         // Sort by time, the 1st hit in time is the start of the track
         std::sort(hitsOnTrack.begin(), hitsOnTrack.end(), [](ReconHit& bh1, ReconHit& bh2){return bh1.ftime<bh2.ftime;});
     }
-
-    // 1. Get total photons and cubes
+    
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
         if(hitsOnTrack.empty()) continue;
 
-        
-        LOG(info) << "hitsOnTrack.size() " << hitsOnTrack.size();
         Int_t sumTotalPhoto = 0;
         Int_t sumTotalCubes = 0;
         for(size_t j = 0; j < hitsOnTrack.size(); ++j)
@@ -222,9 +219,6 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
 
         tvmaEventRecord.SetTotalPhotons(sumTotalPhoto);
         tvmaEventRecord.SetTotalCubes(sumTotalCubes);
-
-        break;
-
     }
 
     feventRecords[feventNum].SetHasHits(true);
@@ -255,9 +249,6 @@ void FgdTMVAData::FinishTask()
     for(size_t ind = 0 ; ind < feventRecords.size(); ind++)
     {
         data = &feventRecords[ind];
-
-
-        cout << "Hits[" << ind << "] "<< fhitCoordinates[ind].size() << endl;
 
         // 1. Copy hitposition
         for(Int_t i = 0 ; i < fhitCoordinates[ind].size(); i++)
