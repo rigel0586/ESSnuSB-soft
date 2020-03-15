@@ -271,8 +271,8 @@ void FgdTMVAData::FinishTask()
 
     // 2. Write simple format for analysis
     // Containing total photons and nu energy
-    Int_t totalPh = 0;
-    Int_t totalCubes = 0;
+    Float_t totalPh = 0;
+    Float_t totalCubes = 0;
     Double_t nuE = 0.;
     TTree * totalPhTree = new TTree("TotalPhotonsTree"
                                 ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
