@@ -232,6 +232,7 @@ void FgdTMVAData::FinishTask()
     TFile * outFile = new TFile(foutputRootFile.c_str(), "RECREATE", "TVMA data from Fgd Detector");
     outFile->SetCompressionLevel(9);
 
+    // 1. Write event data, hit positions and total photons of hits
     FgdTMVAEventRecord* data = nullptr;
     TClonesArray* hitCoordinates = new TClonesArray(TVector3::Class());
     TClonesArray& hitcref = *hitCoordinates;
@@ -245,7 +246,6 @@ void FgdTMVAData::FinishTask()
     outTree->Branch(esbroot::geometry::superfgd::DP::FGD_TMVA_HIT_ARRAY_BRANCH.c_str(), &hitCoordinates);
     outTree->Branch(esbroot::geometry::superfgd::DP::FGD_TMVA_PHOTO_ARRAY_BRANCH.c_str(), &hitPhotons);
 
- 
     for(size_t ind = 0 ; ind < feventRecords.size(); ind++)
     {
         data = &feventRecords[ind];
@@ -266,8 +266,28 @@ void FgdTMVAData::FinishTask()
 
         hitCoordinates->Clear();
     }
-
     outFile->WriteTObject(outTree);
+    // =================================================================
+
+    // 2. Write simple format for analysis
+    // Containing total photons and nu energy
+    Int_t totalPh = 0;
+    Double_t nuE = 0.;
+    TTree * totalPhTree = new TTree("TotalPhotonsTree"
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+    totalPhTree->Branch("totalPhotons", &totalPh);
+    totalPhTree->Branch("nuEnergy", &nuE);
+    for(size_t ind = 0 ; ind < feventRecords.size(); ind++)
+    {
+        data = &feventRecords[ind];
+        totalPh = data->GetTotalPhotons();
+        nuE = data->GetNuE();
+
+        totalPhTree->Fill();
+    }
+    // =================================================================
+    outFile->WriteTObject(totalPhTree);
+
     outFile->Close();
     
     delete outFile;
