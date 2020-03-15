@@ -47,6 +47,12 @@ namespace DP
     static const string FGD_MC_LEPTON_RECONSTRUCTION_BRANCH = "FgdMCLeptonStatsBranch";
     static const string FGD_MC_LEPTON_RECONSTRUCTION_ROOT_FILE = "FgdMCLeptonStatsRootFile";
 
+    static const string FGD_TMVA_DATA_TTREE = "FgdTMVAData";
+    static const string FGD_TMVA_DATA_BRANCH = "FgdTMVADataBranch";
+    static const string FGD_TMVA_HIT_ARRAY_BRANCH = "FgdTMVAHitArrayBranch";
+    static const string FGD_TMVA_PHOTO_ARRAY_BRANCH = "FgdTMVAPhotoArrayBranch";
+    static const string FGD_TMVA_DATA_ROOT_FILE = "FgdTMVADataRootFile";
+
     static const string FGD_MIN_TRACK_LENGTH = "min_track_lenght";
 
     static const string FGD_GRAD_DIST = "gradDist";

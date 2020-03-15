@@ -50,6 +50,8 @@ set(SRCS
 	EsbSuperFGD/FgdReconTemplate.cxx
 	EsbSuperFGD/PdgFromMomentumLoss.cxx
 	EsbSuperFGD/FgdMuonRecon.cxx
+	EsbSuperFGD/FgdTMVAEventRecord.cxx
+	EsbSuperFGD/FgdTMVAData.cxx
 )
 
 Set(HEADERS 
@@ -62,6 +64,8 @@ Set(HEADERS
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdReconTemplate.h
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/PdgFromMomentumLoss.h
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdMuonRecon.h
+	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdTMVAEventRecord.h
+	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdTMVAData.h
 )
 
 Set(LINKDEF ${CMAKE_SOURCE_DIR}/EsbReconstruction/ReconLinkDef.h)
