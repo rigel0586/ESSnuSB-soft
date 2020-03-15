@@ -55,8 +55,9 @@ protected:
 
   std::vector<FgdTMVAEventRecord> feventRecords;//!<!
   std::shared_ptr<TDatabasePDG> fpdgDB;//!<!
-  std::vector<TClonesArray*> fhitCoordinates;//!<!
-  std::vector<TClonesArray*> fhitPhotons;//!<!
+
+  std::map<Int_t, std::vector<TVector3>> fhitCoordinates;//!<!
+  std::map<Int_t, std::vector<TVector3>> fhitPhotons;//!<!
 
   int feventNum;//!<!
   	   

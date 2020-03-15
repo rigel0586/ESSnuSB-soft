@@ -97,19 +97,7 @@ FgdTMVAData::~FgdTMVAData()
     {
         fTracksArray->Delete();
         delete fTracksArray;
-    }
-
-    for(size_t i = 0; i <  fhitCoordinates.size(); i++)
-    {
-        fhitCoordinates[i]->Delete();
-        delete fhitCoordinates[i];
-    }
-
-    for(size_t i = 0; i <  fhitPhotons.size(); i++)
-    {
-        fhitPhotons[i]->Delete();
-        delete fhitPhotons[i];
-    }  
+    } 
 }
 // -------------------------------------------------------------------------
 
@@ -124,6 +112,7 @@ InitStatus FgdTMVAData::Init()
     try
     {        
         eventFileStream.open(feventData.c_str(), std::ios::in);
+        Int_t id = 0;
 
         if(eventFileStream.is_open())
         {
@@ -131,8 +120,8 @@ InitStatus FgdTMVAData::Init()
             while(std::getline(eventFileStream,line))
             {
                 feventRecords.emplace_back(FgdTMVAEventRecord(line));
-                fhitCoordinates.emplace_back(new TClonesArray(TVector3::Class()));
-                fhitPhotons.emplace_back(new TClonesArray(TVector3::Class()));
+                fhitCoordinates[id] = std::vector<TVector3>{};
+                fhitPhotons[id] = std::vector<TVector3>{};
             }
         }
     }
@@ -203,9 +192,6 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
 
     FgdTMVAEventRecord& tvmaEventRecord = feventRecords[feventNum];
     tvmaEventRecord.ReadEventData();
-    TClonesArray& clref = *fhitCoordinates[feventNum];
-    TClonesArray& photoref = *fhitPhotons[feventNum];
-    
 
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
@@ -220,6 +206,8 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
         if(hitsOnTrack.empty()) continue;
 
+        
+        LOG(info) << "hitsOnTrack.size() " << hitsOnTrack.size();
         Int_t sumTotalPhoto = 0;
         Int_t sumTotalCubes = 0;
         for(size_t j = 0; j < hitsOnTrack.size(); ++j)
@@ -228,11 +216,8 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
             sumTotalPhoto += hit.fphotons.X() + hit.fphotons.Y() + hit.fphotons.Z();
             sumTotalCubes++;
 
-            Int_t size = clref.GetEntriesFast();
-            new(clref[size]) TVector3(hit.fHitPos);
-
-            size = photoref.GetEntriesFast();
-            new(photoref[size]) TVector3(hit.fphotons);
+            fhitCoordinates[feventNum].emplace_back(hit.fHitPos);
+            fhitPhotons[feventNum].emplace_back(hit.fphotons);
         }
 
         tvmaEventRecord.SetTotalPhotons(sumTotalPhoto);
@@ -271,22 +256,19 @@ void FgdTMVAData::FinishTask()
     {
         data = &feventRecords[ind];
 
+
+        cout << "Hits[" << ind << "] "<< fhitCoordinates[ind].size() << endl;
+
         // 1. Copy hitposition
-        TClonesArray& cref = *fhitCoordinates[ind];
-        Int_t harrSize = fhitCoordinates[ind]->GetEntriesFast();
-        for(Int_t i = 0 ; i < harrSize; i++)
+        for(Int_t i = 0 ; i < fhitCoordinates[ind].size(); i++)
         {
-            TVector3& tref = static_cast<TVector3&>(*cref[i]);
-            new(hitcref[i]) TVector3(tref);
+            new(hitcref[i]) TVector3(fhitCoordinates[ind][i]);
         }
 
         // 2. Copy photons
-        TClonesArray& pref = *fhitPhotons[ind];
-        Int_t phrSize = fhitPhotons[ind]->GetEntriesFast();
-        for(Int_t i = 0 ; i < phrSize; i++)
+        for(Int_t i = 0 ; i < fhitPhotons[ind].size(); i++)
         {
-            TVector3& tref = static_cast<TVector3&>(*pref[i]);
-            new(photoref[i]) TVector3(tref);
+            new(photoref[i]) TVector3(fhitPhotons[ind][i]);
         }
 
         outTree->Fill();
