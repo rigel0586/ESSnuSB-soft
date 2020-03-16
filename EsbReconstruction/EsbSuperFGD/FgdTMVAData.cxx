@@ -275,17 +275,26 @@ void FgdTMVAData::FinishTask()
     Float_t totalPh = 0;
     Float_t totalCubes = 0;
     Double_t nuE = 0.;
+    Bool_t isCC = false;
+    Bool_t isQuasiE = false;
+    Int_t nuPdgph = 0;
     TTree * totalPhTree = new TTree(esbroot::geometry::superfgd::DP::FGD_TOTAL_PHOTONS_TTREE.c_str()
                                 ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
     totalPhTree->Branch("totalPhotons", &totalPh);
     totalPhTree->Branch("totalCubes", &totalCubes);
     totalPhTree->Branch("nuEnergy", &nuE);
+    totalPhTree->Branch("isCC", &isCC);
+    totalPhTree->Branch("isQuasiE", &isQuasiE);
+    totalPhTree->Branch("nuPdg", &nuPdgph);
     for(size_t ind = 0 ; ind < feventRecords.size(); ind++)
     {
         data = &feventRecords[ind];
         totalPh = data->GetTotalPhotons();
         totalCubes = data->GetTotalCubes();
         nuE = data->GetNuE();
+        isCC = data->IsWeakCC();
+        isQuasiE = data->IsQuasiElastic();
+        nuPdgph = data->GetNuPdg();
 
         totalPhTree->Fill();
     }

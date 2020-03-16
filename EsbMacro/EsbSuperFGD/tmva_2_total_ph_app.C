@@ -1,4 +1,4 @@
-void tmva_2_total_ph_app(TString inFile = "tmva_data.root")
+void tmva_2_total_ph_app(TString inFile = "tmva_data.root", TString methodName = "MLP")
 {
     TMVA::Tools::Instance();
     TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" ); 
@@ -9,7 +9,6 @@ void tmva_2_total_ph_app(TString inFile = "tmva_data.root")
 
     TString dir    = "dataset/weights/";
     TString prefix = "TMVARegression";
-    TString methodName = "MLP";
     TString weightfile = dir + prefix + "_" + methodName + ".weights.xml";
     reader->BookMVA( methodName, weightfile ); 
 
