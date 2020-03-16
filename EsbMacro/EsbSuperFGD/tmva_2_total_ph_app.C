@@ -14,7 +14,7 @@ void tmva_2_total_ph_app(TString inFile = "tmva_data.root")
     reader->BookMVA( methodName, weightfile ); 
 
     TFile* tf = new TFile(inFile);
-    TTree *tr = (TTree*)tf->Get("TotalPhotonsTree");
+    TTree *tr = (TTree*)tf->Get("FgdTotalPhotonsTree");
 
     tr->SetBranchAddress( "totalPhotons", &totalPhotons );
     tr->SetBranchAddress( "totalCubes", &totalCubes );

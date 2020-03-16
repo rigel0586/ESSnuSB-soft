@@ -149,7 +149,7 @@ void tmva_2_ex_total_ph_app( TString myMethodList = "", TString inFileName = "tm
    // - you can use the same variables as above which is slightly faster,
    //   but of course you can use different ones and copy the values inside the event loop
    //
-   TTree* theTree = (TTree*)input->Get("TotalPhotonsTree");
+   TTree* theTree = (TTree*)input->Get("FgdTotalPhotonsTree");
    std::cout << "--- Select signal sample" << std::endl;
    theTree->SetBranchAddress( "totalPhotons", &totalPhotons );
    theTree->SetBranchAddress( "totalCubes", &totalCubes );

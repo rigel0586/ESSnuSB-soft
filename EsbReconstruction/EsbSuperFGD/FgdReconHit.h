@@ -50,8 +50,8 @@ public:
     } 
 
 
-    TVector3 fmppcLoc;
-    TVector3 fHitPos;
+    TVector3 fmppcLoc; // from 0 to N (mppcLoc)
+    TVector3 fHitPos;  // -f_total_X/2 + f_step_X*mppcLoc.X()  +f_step_X/2;
     TVector3 fphotons;
     TVector3 fph1;
     TVector3 fmppc1;

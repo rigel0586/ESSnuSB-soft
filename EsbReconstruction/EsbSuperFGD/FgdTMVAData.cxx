@@ -122,6 +122,7 @@ InitStatus FgdTMVAData::Init()
                 feventRecords.emplace_back(FgdTMVAEventRecord(line));
                 fhitCoordinates[id] = std::vector<TVector3>{};
                 fhitPhotons[id] = std::vector<TVector3>{};
+                ++id;
             }
         }
     }
@@ -213,7 +214,7 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
             sumTotalPhoto += hit.fphotons.X() + hit.fphotons.Y() + hit.fphotons.Z();
             sumTotalCubes++;
 
-            fhitCoordinates[feventNum].emplace_back(hit.fHitPos);
+            fhitCoordinates[feventNum].emplace_back(hit.fmppcLoc);
             fhitPhotons[feventNum].emplace_back(hit.fphotons);
         }
 
@@ -274,7 +275,7 @@ void FgdTMVAData::FinishTask()
     Float_t totalPh = 0;
     Float_t totalCubes = 0;
     Double_t nuE = 0.;
-    TTree * totalPhTree = new TTree("TotalPhotonsTree"
+    TTree * totalPhTree = new TTree(esbroot::geometry::superfgd::DP::FGD_TOTAL_PHOTONS_TTREE.c_str()
                                 ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
     totalPhTree->Branch("totalPhotons", &totalPh);
     totalPhTree->Branch("totalCubes", &totalCubes);
@@ -289,6 +290,68 @@ void FgdTMVAData::FinishTask()
         totalPhTree->Fill();
     }
     outFile->WriteTObject(totalPhTree);
+    // =================================================================
+
+
+    // 3. Write track projections
+    // Containing total photons and nu energy
+    TTree * trackPrjTree = new TTree(esbroot::geometry::superfgd::DP::FGD_TRACK_PROJECTION_TTREE.c_str()
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+
+    std::vector<Int_t> x_projections(f_bin_X+1,0);
+    std::vector<Int_t> y_projections(f_bin_Y+1,0);
+    std::vector<Int_t> z_projections(f_bin_Z+1,0);
+    Double_t nuEnergy = 0.;
+    Int_t nuPdg = 0;
+    std::stringstream ss;
+
+    for(size_t x = 0; x < f_bin_X; ++x)
+    {
+        ss << "x"<< x;
+        trackPrjTree->Branch(ss.str().c_str(), &x_projections[x]);
+        ss.str("");
+    }
+
+    for(size_t y = 0; y < f_bin_Y; ++y)
+    {
+        ss << "y"<< y;
+        trackPrjTree->Branch(ss.str().c_str(), &y_projections[y]);
+        ss.str("");
+    }
+
+    for(size_t z = 0; z < f_bin_Z; ++z)
+    {
+        ss << "z"<< z;
+        trackPrjTree->Branch(ss.str().c_str(), &z_projections[z]);
+        ss.str("");
+    }
+
+    trackPrjTree->Branch("nuEnergy", &nuEnergy);
+    trackPrjTree->Branch("nuPdg", &nuPdg);
+
+    const Int_t events = feventRecords.size();
+    for(size_t ind = 0 ; ind < events; ind++)
+    {
+        data = &feventRecords[ind];
+        nuEnergy = data->GetNuE();
+        nuPdg = data->GetNuPdg();
+        const Int_t cubes = fhitCoordinates[ind].size();
+        for(Int_t i = 0 ; i < cubes; i++)
+        {
+            TVector3& coordinate = fhitCoordinates[ind][i];
+            TVector3& photons = fhitPhotons[ind][i];
+
+            x_projections[(Int_t)coordinate.X()] = photons.X();
+            y_projections[(Int_t)coordinate.Y()] = photons.Y();
+            z_projections[(Int_t)coordinate.Z()] = photons.Z();
+        }
+        trackPrjTree->Fill();
+
+        for(size_t x = 0; x < f_bin_X; ++x) x_projections[x]=0;
+        for(size_t y = 0; y < f_bin_Y; ++y) y_projections[y]=0;
+        for(size_t z = 0; z < f_bin_Z; ++z) z_projections[z]=0;
+    }
+    outFile->WriteTObject(trackPrjTree);                      
     // =================================================================
     
 

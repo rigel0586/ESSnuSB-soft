@@ -155,7 +155,7 @@ void tmva_1_ex_total_ph_train( TString myMethodList = "" , TString inFileName = 
 
    // Register the regression tree
 
-   TTree *regTree = (TTree*)input->Get("TotalPhotonsTree");
+   TTree *regTree = (TTree*)input->Get("FgdTotalPhotonsTree");
 
    // global event weights per tree (see below for setting event-wise weights)
    Double_t regWeight  = 1.0;

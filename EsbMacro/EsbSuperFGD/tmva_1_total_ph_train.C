@@ -1,7 +1,7 @@
 void tmva_1_total_ph_train(TString inFile = "tmva_data.root")
 {
     TFile* tf = new TFile(inFile);
-    TTree *tr = (TTree*)tf->Get("TotalPhotonsTree");
+    TTree *tr = (TTree*)tf->Get("FgdTotalPhotonsTree");
     
 
     TMVA::Tools::Instance();
