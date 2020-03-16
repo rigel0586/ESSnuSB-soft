@@ -47,7 +47,7 @@
 
 using namespace TMVA;
 
-void tmva_1_ex_train( TString myMethodList = "" , TString inFileName = "tmva_data.root")
+void tmva_1_ex_total_ph_train( TString myMethodList = "" , TString inFileName = "tmva_data.root")
 {
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
    // if you use your private .rootrc, or run from a different directory, please copy the

@@ -1,4 +1,4 @@
-void tmva_2_app(TString inFile = "tmva_data.root")
+void tmva_2_total_ph_app(TString inFile = "tmva_data.root")
 {
     TMVA::Tools::Instance();
     TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" ); 
