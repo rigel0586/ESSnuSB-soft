@@ -288,8 +288,9 @@ void FgdTMVAData::FinishTask()
 
         totalPhTree->Fill();
     }
-    // =================================================================
     outFile->WriteTObject(totalPhTree);
+    // =================================================================
+    
 
     outFile->Close();
     

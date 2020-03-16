@@ -168,7 +168,7 @@ void tmva_1_ex_total_ph_train( TString myMethodList = "" , TString inFileName = 
    //dataloader->SetWeightExpression( "totalPhotons", "Regression" );
 
    // Apply additional cuts on the signal and background samples (can be different)
-   TCut mycut = "totalPhotons>0"; // for example: TCut mycut = "abs(var1)<0.5 && abs(var2-0.5)<1";
+   TCut mycut = "totalPhotons>0 && totalCubes>0"; // for example: TCut mycut = "abs(var1)<0.5 && abs(var2-0.5)<1";
 
    // tell the DataLoader to use all remaining events in the trees after training for testing:
    dataloader->PrepareTrainingAndTestTree( mycut,

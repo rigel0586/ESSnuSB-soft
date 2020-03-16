@@ -7,7 +7,6 @@ void tmva_2_total_ph_app(TString inFile = "tmva_data.root")
     reader->AddVariable( "totalPhotons", &totalPhotons );
     reader->AddVariable( "totalCubes", &totalCubes );
 
-
     TString dir    = "dataset/weights/";
     TString prefix = "TMVARegression";
     TString methodName = "MLP";
@@ -29,7 +28,7 @@ void tmva_2_total_ph_app(TString inFile = "tmva_data.root")
     for(Int_t j = 0 ; j < limit; ++j)
     {
         tr->GetEntry(j); 
-        std::vector<Float_t> result = reader->EvaluateRegression( "MLP" );
+        std::vector<Float_t> result = reader->EvaluateRegression( methodName );
         for(Int_t i = 0; i < result.size(); ++i)
         {
             if(result[i]!=0)
