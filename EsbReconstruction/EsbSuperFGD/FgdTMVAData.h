@@ -60,6 +60,9 @@ protected:
   std::map<Int_t, std::vector<TVector3>> fhitPhotons;//!<!
 
   int feventNum;//!<!
+  Double_t fmagField_X;
+  Double_t fmagField_Y;
+  Double_t fmagField_Z;
   	   
   ClassDef(FgdTMVAData, 2);
 

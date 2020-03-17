@@ -82,7 +82,7 @@ FgdTMVAData::FgdTMVAData(const char* name
   FgdMCGenFitRecon(name, geoConfigFile, mediaFile, verbose, 
                     debugLlv, false /* no visualization */, "D")
     , feventData(eventData), foutputRootFile(outputRootFile)
-    , feventNum(0)
+    , feventNum(0), fmagField_X(0.), fmagField_Y(0.), fmagField_Z(0.)
 { 
     fpdgDB = make_shared<TDatabasePDG>();
 }
@@ -107,6 +107,10 @@ FgdTMVAData::~FgdTMVAData()
 InitStatus FgdTMVAData::Init() 
 {   
     FgdMCGenFitRecon::Init();
+
+    fmagField_X = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::magField_X);
+    fmagField_Y = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::magField_Y);
+    fmagField_Z = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::magField_Z);
 
     std::ifstream eventFileStream;
     try
@@ -206,12 +210,12 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
         if(hitsOnTrack.empty()) continue;
 
-        Int_t sumTotalPhoto = 0;
         Int_t sumTotalCubes = 0;
+        TVector3 sumTotalPhoto(0,0,0);
         for(size_t j = 0; j < hitsOnTrack.size(); ++j)
         {   
             ReconHit& hit = hitsOnTrack[j];
-            sumTotalPhoto += hit.fphotons.X() + hit.fphotons.Y() + hit.fphotons.Z();
+            sumTotalPhoto +=hit.fphotons;
             sumTotalCubes++;
 
             fhitCoordinates[feventNum].emplace_back(hit.fmppcLoc);
@@ -272,7 +276,9 @@ void FgdTMVAData::FinishTask()
 
     // 2. Write simple format for analysis
     // Containing total photons and nu energy
-    Float_t totalPh = 0;
+    Float_t totalPhX = 0;
+    Float_t totalPhY = 0;
+    Float_t totalPhZ = 0;
     Float_t totalCubes = 0;
     Double_t nuE = 0.;
     Bool_t isCC = false;
@@ -280,16 +286,24 @@ void FgdTMVAData::FinishTask()
     Int_t nuPdgph = 0;
     TTree * totalPhTree = new TTree(esbroot::geometry::superfgd::DP::FGD_TOTAL_PHOTONS_TTREE.c_str()
                                 ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
-    totalPhTree->Branch("totalPhotons", &totalPh);
+    totalPhTree->Branch("totalPhotonsX", &totalPhX);
+    totalPhTree->Branch("totalPhotonsY", &totalPhY);
+    totalPhTree->Branch("totalPhotonsZ", &totalPhZ);
     totalPhTree->Branch("totalCubes", &totalCubes);
     totalPhTree->Branch("nuEnergy", &nuE);
     totalPhTree->Branch("isCC", &isCC);
     totalPhTree->Branch("isQuasiE", &isQuasiE);
     totalPhTree->Branch("nuPdg", &nuPdgph);
+    totalPhTree->Branch("magFieldX", &fmagField_X);
+    totalPhTree->Branch("magFieldY", &fmagField_Y);
+    totalPhTree->Branch("magFieldZ", &fmagField_Z);
+    
     for(size_t ind = 0 ; ind < feventRecords.size(); ind++)
     {
         data = &feventRecords[ind];
-        totalPh = data->GetTotalPhotons();
+        totalPhX = data->GetTotalPhotons().X();
+        totalPhY = data->GetTotalPhotons().Y();
+        totalPhZ = data->GetTotalPhotons().Z();
         totalCubes = data->GetTotalCubes();
         nuE = data->GetNuE();
         isCC = data->IsWeakCC();

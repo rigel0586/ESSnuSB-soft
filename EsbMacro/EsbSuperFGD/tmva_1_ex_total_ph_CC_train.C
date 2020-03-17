@@ -47,7 +47,7 @@
 
 using namespace TMVA;
 
-void tmva_1_ex_total_ph_train( TString myMethodList = "" , TString inFileName = "tmva_data.root")
+void tmva_1_ex_total_ph_CC_train( TString myMethodList = "" , TString inFileName = "tmva_data.root")
 {
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
    // if you use your private .rootrc, or run from a different directory, please copy the
@@ -70,7 +70,7 @@ void tmva_1_ex_total_ph_train( TString myMethodList = "" , TString inFileName = 
    // Mutidimensional likelihood and Nearest-Neighbour methods
    Use["PDERS"]           = 0;
    Use["PDEFoam"]         = 0;
-   Use["KNN"]             = 0;
+   Use["KNN"]             = 1;
    //
    // Linear Discriminant Analysis
    Use["LD"]		        = 0;
@@ -140,8 +140,8 @@ void tmva_1_ex_total_ph_train( TString myMethodList = "" , TString inFileName = 
 
    // Add the variable carrying the regression target
    dataloader->AddTarget( "nuEnergy" );
-   dataloader->AddTarget( "nuPdg" );
-   //dataloader->AddTarget( "isCC" );;
+   //dataloader->AddTarget( "nuPdg" );
+   //dataloader->AddTarget( "isCC" );
 
    // It is also possible to declare additional targets for multi-dimensional regression, ie:
    //     factory->AddTarget( "fvalue2" );

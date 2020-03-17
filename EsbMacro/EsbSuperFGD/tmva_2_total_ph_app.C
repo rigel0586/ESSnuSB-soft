@@ -1,10 +1,13 @@
-void tmva_2_total_ph_app(TString inFile = "tmva_data.root", TString methodName = "MLP")
+void tmva_2_total_ph_app(TString inFile = "tmva_data.root", TString methodName = "BDTG")
 {
     TMVA::Tools::Instance();
     TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" ); 
 
-    Float_t totalPhotons, totalCubes;
-    reader->AddVariable( "totalPhotons", &totalPhotons );
+    Float_t totalPhotonsX, totalPhotonsY, totalPhotonsZ, totalCubes;
+    Float_t magFieldX, magFieldY, magFieldZ;
+    reader->AddVariable( "totalPhotonsX", &totalPhotonsX );
+    reader->AddVariable( "totalPhotonsY", &totalPhotonsY );
+    reader->AddVariable( "totalPhotonsZ", &totalPhotonsZ );
     reader->AddVariable( "totalCubes", &totalCubes );
 
     TString dir    = "dataset/weights/";
@@ -15,10 +18,10 @@ void tmva_2_total_ph_app(TString inFile = "tmva_data.root", TString methodName =
     TFile* tf = new TFile(inFile);
     TTree *tr = (TTree*)tf->Get("FgdTotalPhotonsTree");
 
-    tr->SetBranchAddress( "totalPhotons", &totalPhotons );
+    tr->SetBranchAddress( "totalPhotonsX", &totalPhotonsX );
+    tr->SetBranchAddress( "totalPhotonsY", &totalPhotonsY );
+    tr->SetBranchAddress( "totalPhotonsZ", &totalPhotonsZ );
     tr->SetBranchAddress( "totalCubes", &totalCubes );
-
-    
 
     TCanvas* canvas = new TCanvas();
     TH1F* hist = new TH1F("nu E", "Neutrino Energy", 200, 0, 2);

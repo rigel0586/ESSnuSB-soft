@@ -71,11 +71,11 @@ public:
     Double_t GetProtonEdep(){return fProtonEdep;}
 
 
-    void SetTotalPhotons(Int_t e){fTotalPhotons = e;} 
-    Double_t GetTotalPhotons(){return fTotalPhotons;}
+    void SetTotalPhotons(const TVector3& e){fTotalPhotons = e;} 
+    TVector3 GetTotalPhotons(){return fTotalPhotons;}
 
     void SetTotalCubes(Int_t e){fTotalCubes = e;} 
-    Double_t GetTotalCubes(){return fTotalCubes;}
+    Int_t GetTotalCubes(){return fTotalCubes;}
 
     Bool_t IsPrimaryLeptonElectron();
     TVector3 GetElectronMom();
@@ -155,7 +155,7 @@ protected:
 
     Double_t fProtonEdep;
 
-    Int_t fTotalPhotons;
+    TVector3 fTotalPhotons;
     Int_t fTotalCubes;
     
     std::vector<std::string> fDataTokens;

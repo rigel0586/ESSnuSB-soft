@@ -97,8 +97,11 @@ void tmva_2_ex_total_ph_app( TString myMethodList = "", TString inFileName = "tm
 
    TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" );    
 
-   Float_t totalPhotons, totalCubes;
-   reader->AddVariable( "totalPhotons", &totalPhotons );
+   Float_t totalPhotonsX, totalPhotonsY, totalPhotonsZ, totalCubes;
+   Float_t magFieldX, magFieldY, magFieldZ;
+   reader->AddVariable( "totalPhotonsX", &totalPhotonsX );
+   reader->AddVariable( "totalPhotonsY", &totalPhotonsY );
+   reader->AddVariable( "totalPhotonsZ", &totalPhotonsZ );
    reader->AddVariable( "totalCubes", &totalCubes );
 
    // --- Book the MVA methods
@@ -151,7 +154,9 @@ void tmva_2_ex_total_ph_app( TString myMethodList = "", TString inFileName = "tm
    //
    TTree* theTree = (TTree*)input->Get("FgdTotalPhotonsTree");
    std::cout << "--- Select signal sample" << std::endl;
-   theTree->SetBranchAddress( "totalPhotons", &totalPhotons );
+   theTree->SetBranchAddress( "totalPhotonsX", &totalPhotonsX );
+   theTree->SetBranchAddress( "totalPhotonsY", &totalPhotonsY );
+   theTree->SetBranchAddress( "totalPhotonsZ", &totalPhotonsZ );
    theTree->SetBranchAddress( "totalCubes", &totalCubes );
 
    TH1F* nu_Hist = new TH1F("nu E", "Neutrino Energy", 200, 0, 2);
