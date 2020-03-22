@@ -59,6 +59,9 @@ protected:
   std::map<Int_t, std::vector<TVector3>> fhitCoordinates;//!<!
   std::map<Int_t, std::vector<TVector3>> fhitPhotons;//!<!
 
+  std::vector<std::vector<TVector3>> ftrackLenghts;//!<!
+  std::vector<std::vector<TVector3>> ftrackPhotos;//!<!
+
   int feventNum;//!<!
   Double_t fmagField_X;
   Double_t fmagField_Y;
