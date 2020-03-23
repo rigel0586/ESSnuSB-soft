@@ -313,10 +313,10 @@ void FgdTMVAData::FinishTask()
     Float_t totalPhY = 0;
     Float_t totalPhZ = 0;
     Float_t totalCubes = 0;
-    Double_t nuE = 0.;
+    Float_t nuE = 0.;
     Bool_t isCC = false;
     Bool_t isQuasiE = false;
-    Int_t nuPdgph = 0;
+    Float_t nuPdgph = 0;
     TTree * totalPhTree = new TTree(esbroot::geometry::superfgd::DP::FGD_TOTAL_PHOTONS_TTREE.c_str()
                                 ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
     totalPhTree->Branch("totalPhotonsX", &totalPhX);
@@ -357,8 +357,8 @@ void FgdTMVAData::FinishTask()
     std::vector<Int_t> x_projections(f_bin_X+1,0);
     std::vector<Int_t> y_projections(f_bin_Y+1,0);
     std::vector<Int_t> z_projections(f_bin_Z+1,0);
-    Double_t nuEnergy = 0.;
-    Int_t nuPdg = 0;
+    Float_t nuEnergy = 0.;
+    Float_t nuPdg = 0;
     std::stringstream ss;
 
     for(size_t x = 0; x < f_bin_X; ++x)
@@ -418,12 +418,10 @@ void FgdTMVAData::FinishTask()
     TTree * longestTrackPrjTree = new TTree(esbroot::geometry::superfgd::DP::FGD_LONGEST_TRACK_PROJECTION_TTREE.c_str()
                                 ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
 
-    Float_t lnuEnergy = 0.;
-    Float_t lnuPdg = 0;
-    Float_t totCubes = 0;
-    Float_t totPh = 0.;
-       
-
+    longestTrackPrjTree->Branch("magFieldX", &fmagField_X);
+    longestTrackPrjTree->Branch("magFieldY", &fmagField_Y);
+    longestTrackPrjTree->Branch("magFieldZ", &fmagField_Z);
+    
     std::vector<Float_t>  x_tr = {0,0,0};
     std::vector<Float_t>  y_tr = {0,0,0};
     std::vector<Float_t>  z_tr = {0,0,0};
@@ -459,6 +457,11 @@ void FgdTMVAData::FinishTask()
         longestTrackPrjTree->Branch(sstl.str().c_str(), &z_ph_tr[brInd]);
         sstl.str("");
     }
+
+    Float_t lnuEnergy = 0.;
+    Float_t lnuPdg = 0;
+    Float_t totCubes = 0;
+    Float_t totPh = 0.;
 
     longestTrackPrjTree->Branch("totalCubes", &totCubes);
     longestTrackPrjTree->Branch("totalPhotons", &totPh);
