@@ -420,7 +420,7 @@ void FgdTMVAData::FinishTask()
 
     Float_t lnuEnergy = 0.;
     Float_t lnuPdg = 0;
-    Int_t totCubes = 0;
+    Float_t totCubes = 0;
     Float_t totPh = 0.;
        
 
