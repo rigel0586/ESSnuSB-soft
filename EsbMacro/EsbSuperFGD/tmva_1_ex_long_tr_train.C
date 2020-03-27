@@ -93,7 +93,7 @@ void tmva_1_ex_long_tr_train( TString myMethodList = "" , TString inFileName = "
    Use["SVM"]             = 0;
    //
    // Boosted Decision Trees
-   Use["BDT"]             = 1;
+   Use["BDT"]             = 0;
    Use["BDTG"]            = 1;
    // ---------------------------------------------------------------
 
@@ -133,26 +133,12 @@ void tmva_1_ex_long_tr_train( TString myMethodList = "" , TString inFileName = "
    // note that you may also use variable expressions, such as: "3*var1/var2*abs(var3)"
    // [all types of expressions that can also be parsed by TTree::Draw( "expression" )]
    // Add input variables
-   dataloader->AddVariable( "x_tr0", "1st track X", "units", 'F' );
-   dataloader->AddVariable( "y_tr0", "1st track Y", "units", 'F' );
-   dataloader->AddVariable( "z_tr0", "1st track Z", "units", 'F' );
-   dataloader->AddVariable( "x_ph_tr0", "1st track photons X", "units", 'F' );
-   dataloader->AddVariable( "y_ph_tr0", "1st track photons Y", "units", 'F' );
-   dataloader->AddVariable( "z_ph_tr0", "1st track photons Z", "units", 'F' );
-
-   dataloader->AddVariable( "x_tr1", "2nd track X", "units", 'F' );
-   dataloader->AddVariable( "y_tr1", "2nd track Y", "units", 'F' );
-   dataloader->AddVariable( "z_tr1", "2nd track Z", "units", 'F' );
-   dataloader->AddVariable( "x_ph_tr1", "2nd track photons X", "units", 'F' );
-   dataloader->AddVariable( "y_ph_tr1", "2nd track photons Y", "units", 'F' );
-   dataloader->AddVariable( "z_ph_tr1", "2nd track photons Z", "units", 'F' );
-
-   dataloader->AddVariable( "x_tr2", "3rd track X", "units", 'F' );
-   dataloader->AddVariable( "y_tr2", "3rd track Y", "units", 'F' );
-   dataloader->AddVariable( "z_tr2", "3rd track Z", "units", 'F' );
-   dataloader->AddVariable( "x_ph_tr2", "3rd track photons X", "units", 'F' );
-   dataloader->AddVariable( "y_ph_tr2", "3rd track photons Y", "units", 'F' );
-   dataloader->AddVariable( "z_ph_tr2", "3rd track photons Z", "units", 'F' );
+   dataloader->AddVariable( "tr1", "1st track", "units", 'F' );
+   dataloader->AddVariable( "tr2", "2nd track", "units", 'F' );
+   dataloader->AddVariable( "tr3", "3rd track", "units", 'F' );
+   dataloader->AddVariable( "ph_tr1", "1st track photons", "units", 'F' );
+   dataloader->AddVariable( "ph_tr2", "2nd track photons", "units", 'F' );
+   dataloader->AddVariable( "ph_tr3", "3rd track photons", "units", 'F' );
 
 
    dataloader->AddVariable( "totalPhotons", "Total photons", "units", 'F' );
@@ -196,7 +182,7 @@ void tmva_1_ex_long_tr_train( TString myMethodList = "" , TString inFileName = "
 
    // tell the DataLoader to use all remaining events in the trees after training for testing:
    dataloader->PrepareTrainingAndTestTree( mycut,
-                                         "nTrain_Regression=9000:nTest_Regression=1000:SplitMode=Random:NormMode=NumEvents:!V" );
+                                         "nTrain_Regression=4000:nTest_Regression=1000:SplitMode=Random:NormMode=NumEvents:!V" );
    //
    //     dataloader->PrepareTrainingAndTestTree( mycut,
    //            "nTrain_Regression=0:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V" );

@@ -68,7 +68,8 @@ namespace superfgd {
 #define MAX_LENGTH_TRACKS_TO_RECORD 3
 
 // -----   Default constructor   -------------------------------------------
-FgdTMVAData::FgdTMVAData() : FgdMCGenFitRecon(), feventNum(0)
+FgdTMVAData::FgdTMVAData() : FgdMCGenFitRecon(), feventNum(0), fmagField_X(0.), fmagField_Y(0.), fmagField_Z(0.)
+    , fMaxtrack(1),fMaxTotph(1),fMaxCubes(1), fMaxTrph(1)
 {
 }
 // -------------------------------------------------------------------------
@@ -85,6 +86,7 @@ FgdTMVAData::FgdTMVAData(const char* name
                     debugLlv, false /* no visualization */, "D")
     , feventData(eventData), foutputRootFile(outputRootFile)
     , feventNum(0), fmagField_X(0.), fmagField_Y(0.), fmagField_Z(0.)
+    , fMaxtrack(1),fMaxTotph(1),fMaxCubes(1), fMaxTrph(1)
 { 
     fpdgDB = make_shared<TDatabasePDG>();
 }
@@ -208,13 +210,13 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
     }
     
     // 1. Extract data for all hits and total cubes hits, total photons
+    Int_t sumTotalCubes = 0;
+    TVector3 sumTotalPhoto(0,0,0);
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
         if(hitsOnTrack.empty()) continue;
 
-        Int_t sumTotalCubes = 0;
-        TVector3 sumTotalPhoto(0,0,0);
         for(size_t j = 0; j < hitsOnTrack.size(); ++j)
         {   
             ReconHit& hit = hitsOnTrack[j];
@@ -223,10 +225,19 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
 
             fhitCoordinates[feventNum].emplace_back(hit.fmppcLoc);
             fhitPhotons[feventNum].emplace_back(hit.fphotons);
-        }
+        }   
+    }
 
-        tvmaEventRecord.SetTotalPhotons(sumTotalPhoto);
-        tvmaEventRecord.SetTotalCubes(sumTotalCubes);
+    tvmaEventRecord.SetTotalPhotons(sumTotalPhoto);
+    tvmaEventRecord.SetTotalCubes(sumTotalCubes); 
+    Float_t sumTotph = sumTotalPhoto.X() + sumTotalPhoto.Y() + sumTotalPhoto.Z();
+    if(fMaxTotph < sumTotph)
+    {
+        fMaxTotph = sumTotph;
+    }
+    if(fMaxCubes < sumTotalCubes)
+    {
+        fMaxCubes = sumTotalCubes;
     }
 
 
@@ -236,25 +247,34 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
         [](std::vector<ReconHit>& tr1, std::vector<ReconHit>& tr2){return tr1.size()>tr2.size();});
 
     size_t limit = foundTracks.size() > MAX_LENGTH_TRACKS_TO_RECORD? MAX_LENGTH_TRACKS_TO_RECORD: foundTracks.size();
-    std::vector<TVector3> track;
-    std::vector<TVector3> phototrack;
+    std::vector<Float_t> track = {0.,0.,0.};
+    std::vector<Float_t> phototrack= {0.,0.,0.};
     for(size_t i = 0; i <  limit ; ++i)
     {
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
-        if(hitsOnTrack.size() > min_Track_Length)
-        {
-            size_t&& lastHit =  hitsOnTrack.size() -1;
-            TVector3 length = hitsOnTrack[lastHit].fmppcLoc - hitsOnTrack[0].fmppcLoc;
-            track.emplace_back(length);
+        if(hitsOnTrack.size() < min_Track_Length) break;
 
-            TVector3 sumPh;
-            for(size_t j = 0; j < hitsOnTrack.size(); ++j)
-            {   
-                ReconHit& hit = hitsOnTrack[j];
-                sumPh +=hit.fphotons;
-            }
-            phototrack.emplace_back(sumPh);
+        size_t trackLenght = hitsOnTrack.size();
+        
+        if(fMaxtrack < trackLenght)
+        {
+            fMaxtrack = trackLenght;
         }
+        track[i] = trackLenght;
+
+
+        Float_t sumPh;
+        for(size_t j = 0; j < hitsOnTrack.size(); ++j)
+        {   
+            ReconHit& hit = hitsOnTrack[j];
+            sumPh +=hit.fphotons.X() + hit.fphotons.Y() + hit.fphotons.Z();
+        }
+        if(fMaxTrph < sumPh)
+        {
+            fMaxTrph = sumPh;
+        }
+        phototrack[i] = sumPh;
+
     }
     ftrackLenghts.emplace_back(std::move(track));
     ftrackPhotos.emplace_back(std::move(phototrack));
@@ -271,143 +291,143 @@ void FgdTMVAData::FinishTask()
     outFile->SetCompressionLevel(9);
 
     // 1. Write event data, hit positions and total photons of hits
-    FgdTMVAEventRecord* data = nullptr;
-    TClonesArray* hitCoordinates = new TClonesArray(TVector3::Class());
-    TClonesArray& hitcref = *hitCoordinates;
+    // FgdTMVAEventRecord* data = nullptr;
+    // TClonesArray* hitCoordinates = new TClonesArray(TVector3::Class());
+    // TClonesArray& hitcref = *hitCoordinates;
 
-    TClonesArray* hitPhotons = new TClonesArray(TVector3::Class());
-    TClonesArray& photoref = *hitPhotons;
+    // TClonesArray* hitPhotons = new TClonesArray(TVector3::Class());
+    // TClonesArray& photoref = *hitPhotons;
 
-    TTree * outTree = new TTree(esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_TTREE.c_str()
-                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
-    outTree->Branch(esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_BRANCH.c_str(), &data);
-    outTree->Branch(esbroot::geometry::superfgd::DP::FGD_TMVA_HIT_ARRAY_BRANCH.c_str(), &hitCoordinates);
-    outTree->Branch(esbroot::geometry::superfgd::DP::FGD_TMVA_PHOTO_ARRAY_BRANCH.c_str(), &hitPhotons);
+    // TTree * outTree = new TTree(esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_TTREE.c_str()
+    //                             ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+    // outTree->Branch(esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_BRANCH.c_str(), &data);
+    // outTree->Branch(esbroot::geometry::superfgd::DP::FGD_TMVA_HIT_ARRAY_BRANCH.c_str(), &hitCoordinates);
+    // outTree->Branch(esbroot::geometry::superfgd::DP::FGD_TMVA_PHOTO_ARRAY_BRANCH.c_str(), &hitPhotons);
 
-    for(size_t ind = 0 ; ind < feventRecords.size(); ind++)
-    {
-        data = &feventRecords[ind];
+    // for(size_t ind = 0 ; ind < feventRecords.size(); ind++)
+    // {
+    //     data = &feventRecords[ind];
 
-        // 1. Copy hitposition
-        for(Int_t i = 0 ; i < fhitCoordinates[ind].size(); i++)
-        {
-            new(hitcref[i]) TVector3(fhitCoordinates[ind][i]);
-        }
+    //     // 1. Copy hitposition
+    //     for(Int_t i = 0 ; i < fhitCoordinates[ind].size(); i++)
+    //     {
+    //         new(hitcref[i]) TVector3(fhitCoordinates[ind][i]);
+    //     }
 
-        // 2. Copy photons
-        for(Int_t i = 0 ; i < fhitPhotons[ind].size(); i++)
-        {
-            new(photoref[i]) TVector3(fhitPhotons[ind][i]);
-        }
+    //     // 2. Copy photons
+    //     for(Int_t i = 0 ; i < fhitPhotons[ind].size(); i++)
+    //     {
+    //         new(photoref[i]) TVector3(fhitPhotons[ind][i]);
+    //     }
 
-        outTree->Fill();
+    //     outTree->Fill();
 
-        hitCoordinates->Clear();
-    }
-    outFile->WriteTObject(outTree);
+    //     hitCoordinates->Clear();
+    // }
+    // outFile->WriteTObject(outTree);
     // =================================================================
 
     // 2. Write simple format for analysis
     // Containing total photons and nu energy
-    Float_t totalPhX = 0;
-    Float_t totalPhY = 0;
-    Float_t totalPhZ = 0;
-    Float_t totalCubes = 0;
-    Float_t nuE = 0.;
-    Bool_t isCC = false;
-    Bool_t isQuasiE = false;
-    Float_t nuPdgph = 0;
-    TTree * totalPhTree = new TTree(esbroot::geometry::superfgd::DP::FGD_TOTAL_PHOTONS_TTREE.c_str()
-                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
-    totalPhTree->Branch("totalPhotonsX", &totalPhX);
-    totalPhTree->Branch("totalPhotonsY", &totalPhY);
-    totalPhTree->Branch("totalPhotonsZ", &totalPhZ);
-    totalPhTree->Branch("totalCubes", &totalCubes);
-    totalPhTree->Branch("nuEnergy", &nuE);
-    totalPhTree->Branch("isCC", &isCC);
-    totalPhTree->Branch("isQuasiE", &isQuasiE);
-    totalPhTree->Branch("nuPdg", &nuPdgph);
-    totalPhTree->Branch("magFieldX", &fmagField_X);
-    totalPhTree->Branch("magFieldY", &fmagField_Y);
-    totalPhTree->Branch("magFieldZ", &fmagField_Z);
+    // Float_t totalPhX = 0;
+    // Float_t totalPhY = 0;
+    // Float_t totalPhZ = 0;
+    // Float_t totalCubes = 0;
+    // Float_t nuE = 0.;
+    // Bool_t isCC = false;
+    // Bool_t isQuasiE = false;
+    // Float_t nuPdgph = 0;
+    // TTree * totalPhTree = new TTree(esbroot::geometry::superfgd::DP::FGD_TOTAL_PHOTONS_TTREE.c_str()
+    //                             ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+    // totalPhTree->Branch("totalPhotonsX", &totalPhX);
+    // totalPhTree->Branch("totalPhotonsY", &totalPhY);
+    // totalPhTree->Branch("totalPhotonsZ", &totalPhZ);
+    // totalPhTree->Branch("totalCubes", &totalCubes);
+    // totalPhTree->Branch("nuEnergy", &nuE);
+    // totalPhTree->Branch("isCC", &isCC);
+    // totalPhTree->Branch("isQuasiE", &isQuasiE);
+    // totalPhTree->Branch("nuPdg", &nuPdgph);
+    // totalPhTree->Branch("magFieldX", &fmagField_X);
+    // totalPhTree->Branch("magFieldY", &fmagField_Y);
+    // totalPhTree->Branch("magFieldZ", &fmagField_Z);
     
-    for(size_t ind = 0 ; ind < feventRecords.size(); ind++)
-    {
-        data = &feventRecords[ind];
-        totalPhX = data->GetTotalPhotons().X();
-        totalPhY = data->GetTotalPhotons().Y();
-        totalPhZ = data->GetTotalPhotons().Z();
-        totalCubes = data->GetTotalCubes();
-        nuE = data->GetNuE();
-        isCC = data->IsWeakCC();
-        isQuasiE = data->IsQuasiElastic();
-        nuPdgph = data->GetNuPdg();
+    // for(size_t ind = 0 ; ind < feventRecords.size(); ind++)
+    // {
+    //     data = &feventRecords[ind];
+    //     totalPhX = data->GetTotalPhotons().X();
+    //     totalPhY = data->GetTotalPhotons().Y();
+    //     totalPhZ = data->GetTotalPhotons().Z();
+    //     totalCubes = data->GetTotalCubes();
+    //     nuE = data->GetNuE();
+    //     isCC = data->IsWeakCC();
+    //     isQuasiE = data->IsQuasiElastic();
+    //     nuPdgph = data->GetNuPdg();
 
-        totalPhTree->Fill();
-    }
-    outFile->WriteTObject(totalPhTree);
+    //     totalPhTree->Fill();
+    // }
+    // outFile->WriteTObject(totalPhTree);
     // =================================================================
 
 
     // 3. Write track projections
     // Containing total photons and nu energy
-    TTree * trackPrjTree = new TTree(esbroot::geometry::superfgd::DP::FGD_TRACK_PROJECTION_TTREE.c_str()
-                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+    // TTree * trackPrjTree = new TTree(esbroot::geometry::superfgd::DP::FGD_TRACK_PROJECTION_TTREE.c_str()
+    //                             ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
 
-    std::vector<Int_t> x_projections(f_bin_X+1,0);
-    std::vector<Int_t> y_projections(f_bin_Y+1,0);
-    std::vector<Int_t> z_projections(f_bin_Z+1,0);
-    Float_t nuEnergy = 0.;
-    Float_t nuPdg = 0;
-    std::stringstream ss;
+    // std::vector<Int_t> x_projections(f_bin_X+1,0);
+    // std::vector<Int_t> y_projections(f_bin_Y+1,0);
+    // std::vector<Int_t> z_projections(f_bin_Z+1,0);
+    // Float_t nuEnergy = 0.;
+    // Float_t nuPdg = 0;
+    // std::stringstream ss;
 
-    for(size_t x = 0; x < f_bin_X; ++x)
-    {
-        ss << "x"<< x;
-        trackPrjTree->Branch(ss.str().c_str(), &x_projections[x]);
-        ss.str("");
-    }
+    // for(size_t x = 0; x < f_bin_X; ++x)
+    // {
+    //     ss << "x"<< x;
+    //     trackPrjTree->Branch(ss.str().c_str(), &x_projections[x]);
+    //     ss.str("");
+    // }
 
-    for(size_t y = 0; y < f_bin_Y; ++y)
-    {
-        ss << "y"<< y;
-        trackPrjTree->Branch(ss.str().c_str(), &y_projections[y]);
-        ss.str("");
-    }
+    // for(size_t y = 0; y < f_bin_Y; ++y)
+    // {
+    //     ss << "y"<< y;
+    //     trackPrjTree->Branch(ss.str().c_str(), &y_projections[y]);
+    //     ss.str("");
+    // }
 
-    for(size_t z = 0; z < f_bin_Z; ++z)
-    {
-        ss << "z"<< z;
-        trackPrjTree->Branch(ss.str().c_str(), &z_projections[z]);
-        ss.str("");
-    }
+    // for(size_t z = 0; z < f_bin_Z; ++z)
+    // {
+    //     ss << "z"<< z;
+    //     trackPrjTree->Branch(ss.str().c_str(), &z_projections[z]);
+    //     ss.str("");
+    // }
 
-    trackPrjTree->Branch("nuEnergy", &nuEnergy);
-    trackPrjTree->Branch("nuPdg", &nuPdg);
+    // trackPrjTree->Branch("nuEnergy", &nuEnergy);
+    // trackPrjTree->Branch("nuPdg", &nuPdg);
 
-    const Int_t events = feventRecords.size();
-    for(size_t ind = 0 ; ind < events; ind++)
-    {
-        data = &feventRecords[ind];
-        nuEnergy = data->GetNuE();
-        nuPdg = data->GetNuPdg();
-        const Int_t cubes = fhitCoordinates[ind].size();
-        for(Int_t i = 0 ; i < cubes; i++)
-        {
-            TVector3& coordinate = fhitCoordinates[ind][i];
-            TVector3& photons = fhitPhotons[ind][i];
+    // const Int_t events = feventRecords.size();
+    // for(size_t ind = 0 ; ind < events; ind++)
+    // {
+    //     data = &feventRecords[ind];
+    //     nuEnergy = data->GetNuE();
+    //     nuPdg = data->GetNuPdg();
+    //     const Int_t cubes = fhitCoordinates[ind].size();
+    //     for(Int_t i = 0 ; i < cubes; i++)
+    //     {
+    //         TVector3& coordinate = fhitCoordinates[ind][i];
+    //         TVector3& photons = fhitPhotons[ind][i];
 
-            x_projections[(Int_t)coordinate.X()] = photons.X();
-            y_projections[(Int_t)coordinate.Y()] = photons.Y();
-            z_projections[(Int_t)coordinate.Z()] = photons.Z();
-        }
-        trackPrjTree->Fill();
+    //         x_projections[(Int_t)coordinate.X()] = photons.X();
+    //         y_projections[(Int_t)coordinate.Y()] = photons.Y();
+    //         z_projections[(Int_t)coordinate.Z()] = photons.Z();
+    //     }
+    //     trackPrjTree->Fill();
 
-        for(size_t x = 0; x < f_bin_X; ++x) x_projections[x]=0;
-        for(size_t y = 0; y < f_bin_Y; ++y) y_projections[y]=0;
-        for(size_t z = 0; z < f_bin_Z; ++z) z_projections[z]=0;
-    }
-    outFile->WriteTObject(trackPrjTree);                      
+    //     for(size_t x = 0; x < f_bin_X; ++x) x_projections[x]=0;
+    //     for(size_t y = 0; y < f_bin_Y; ++y) y_projections[y]=0;
+    //     for(size_t z = 0; z < f_bin_Z; ++z) z_projections[z]=0;
+    // }
+    // outFile->WriteTObject(trackPrjTree);                      
     // =================================================================
 
 
@@ -421,42 +441,24 @@ void FgdTMVAData::FinishTask()
     longestTrackPrjTree->Branch("magFieldX", &fmagField_X);
     longestTrackPrjTree->Branch("magFieldY", &fmagField_Y);
     longestTrackPrjTree->Branch("magFieldZ", &fmagField_Z);
-    
-    std::vector<Float_t>  x_tr = {0,0,0};
-    std::vector<Float_t>  y_tr = {0,0,0};
-    std::vector<Float_t>  z_tr = {0,0,0};
 
-    std::vector<Float_t>  x_ph_tr = {0,0,0};
-    std::vector<Float_t>  y_ph_tr = {0,0,0};
-    std::vector<Float_t>  z_ph_tr = {0,0,0};
+    Float_t tr1(0);
+    Float_t tr2(0);
+    Float_t tr3(0);
 
-    std::stringstream sstl;
-    for(size_t brInd = 0; brInd < 3; ++brInd)
-    {
-        sstl << "x_tr"<< brInd;
-        longestTrackPrjTree->Branch(sstl.str().c_str(), &x_tr[brInd]);
-        sstl.str("");
+    longestTrackPrjTree->Branch("tr1", &tr1);
+    longestTrackPrjTree->Branch("tr2", &tr2);
+    longestTrackPrjTree->Branch("tr3", &tr3);
 
-        sstl << "y_tr"<< brInd;
-        longestTrackPrjTree->Branch(sstl.str().c_str(), &y_tr[brInd]);
-        sstl.str("");
+    std::vector<Float_t> ph_trVec= {0,0,0};
 
-        sstl << "z_tr"<< brInd;
-        longestTrackPrjTree->Branch(sstl.str().c_str(), &z_tr[brInd]);
-        sstl.str("");
+    Float_t ph_tr1(0);
+    Float_t ph_tr2(0);
+    Float_t ph_tr3(0);
 
-        sstl << "x_ph_tr"<< brInd;
-        longestTrackPrjTree->Branch(sstl.str().c_str(), &x_ph_tr[brInd]);
-        sstl.str("");
-
-        sstl << "y_ph_tr"<< brInd;
-        longestTrackPrjTree->Branch(sstl.str().c_str(), &y_ph_tr[brInd]);
-        sstl.str("");
-
-        sstl << "z_ph_tr"<< brInd;
-        longestTrackPrjTree->Branch(sstl.str().c_str(), &z_ph_tr[brInd]);
-        sstl.str("");
-    }
+    longestTrackPrjTree->Branch("ph_tr1", &ph_tr1);
+    longestTrackPrjTree->Branch("ph_tr2", &ph_tr2);
+    longestTrackPrjTree->Branch("ph_tr3", &ph_tr3);
 
     Float_t lnuEnergy = 0.;
     Float_t lnuPdg = 0;
@@ -469,42 +471,50 @@ void FgdTMVAData::FinishTask()
     longestTrackPrjTree->Branch("nuPdg", &lnuPdg);
 
     const Int_t evInd = feventRecords.size();
+    FgdTMVAEventRecord* dataEvent = nullptr;
     for(size_t ind = 0 ; ind < evInd; ind++)
     {
-        data = &feventRecords[ind];
-        lnuEnergy = data->GetNuE();
-        lnuPdg = data->GetNuPdg();
+        dataEvent = &feventRecords[ind];
+        lnuEnergy = dataEvent->GetNuE();
+        lnuPdg = dataEvent->GetNuPdg();
 
-        totPh = data->GetTotalPhotons().X() + data->GetTotalPhotons().Y() + data->GetTotalPhotons().Z();
-        totCubes = data->GetTotalCubes();
+        totPh = dataEvent->GetTotalPhotons().X() + dataEvent->GetTotalPhotons().Y() + dataEvent->GetTotalPhotons().Z();
+        totCubes = dataEvent->GetTotalCubes();
 
         if(ind<ftrackLenghts.size() && ind<ftrackPhotos.size())
         {
-            std::vector<TVector3>& tr = ftrackLenghts[ind];
-            std::vector<TVector3>& ph_tr = ftrackPhotos[ind];
-            const size_t& trLimit = tr.size();
-            const size_t& phLimit = ph_tr.size();
+            std::vector<Float_t>& tr = ftrackLenghts[ind];
+            std::vector<Float_t>& ph_tr = ftrackPhotos[ind];
+    
+            tr1 = tr[0];
+            ph_tr1 = ph_tr[0];
 
-            size_t limit = (trLimit < phLimit)? trLimit : phLimit;
+            tr2 = tr[1];
+            ph_tr2 = ph_tr[1];
 
-            for(size_t i = 0; i < 3 && i < limit; ++i) 
-            { 
-                x_tr[i] = tr[i].X();
-                y_tr[i] = tr[i].Y();
-                z_tr[i] = tr[i].Z();
-
-                x_ph_tr[i] = ph_tr[i].X();
-                y_ph_tr[i] = ph_tr[i].Y();
-                z_ph_tr[i] = ph_tr[i].Z();
-            }
+            tr3 = tr[2];
+            ph_tr3 = ph_tr[2];
         }
+
+        // Normalize before filling
+        tr1 /= fMaxtrack;
+        tr2 /= fMaxtrack;
+        tr3 /= fMaxtrack;
+        ph_tr1 /= fMaxTrph;
+        ph_tr2 /= fMaxTrph;
+        ph_tr3 /= fMaxTrph;
+        totCubes /= fMaxCubes;
+        totPh /= fMaxTotph;
 
         longestTrackPrjTree->Fill();
 
         // Clear data for next write
-        for(size_t x = 0; x < 3; ++x) { x_tr[x]=0.; x_ph_tr[x]=0.;}
-        for(size_t y = 0; y < 3; ++y) { y_tr[y]=0.; y_ph_tr[y]=0.;}
-        for(size_t z = 0; z < 3; ++z) { z_tr[z]=0.; z_ph_tr[z]=0.;}
+        tr1 = 0;
+        tr2 = 0;
+        tr3 = 0;
+        ph_tr1 = 0;
+        ph_tr2 = 0;
+        ph_tr3 = 0;
      }
     outFile->WriteTObject(longestTrackPrjTree);                      
     // =================================================================

@@ -59,13 +59,19 @@ protected:
   std::map<Int_t, std::vector<TVector3>> fhitCoordinates;//!<!
   std::map<Int_t, std::vector<TVector3>> fhitPhotons;//!<!
 
-  std::vector<std::vector<TVector3>> ftrackLenghts;//!<!
-  std::vector<std::vector<TVector3>> ftrackPhotos;//!<!
+  std::vector<std::vector<Float_t>> ftrackLenghts;//!<!
+  std::vector<std::vector<Float_t>> ftrackPhotos;//!<!
 
   int feventNum;//!<!
-  Double_t fmagField_X;
-  Double_t fmagField_Y;
-  Double_t fmagField_Z;
+  Float_t fmagField_X;
+  Float_t fmagField_Y;
+  Float_t fmagField_Z;
+
+  size_t fMaxtrack;
+  Float_t fMaxTrph;
+
+  Float_t fMaxTotph;
+  Float_t fMaxCubes;
   	   
   ClassDef(FgdTMVAData, 2);
 

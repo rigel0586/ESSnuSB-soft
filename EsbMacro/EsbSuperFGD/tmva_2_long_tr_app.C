@@ -1,32 +1,15 @@
-void tmva_2_long_tr_app(TString inFile = "tmva_data.root", TString methodName = "BDTG")
+void tmva_2_long_tr_app(TString inFile = "tmva_data.root", TString methodName = "MLP")
 {
     TMVA::Tools::Instance();
     TMVA::Reader *reader = new TMVA::Reader( "!Color:!Silent" ); 
 
-    Float_t x_tr0, y_tr0, z_tr0, x_ph_tr0, y_ph_tr0, z_ph_tr0;
-    reader->AddVariable( "x_tr0", &x_tr0 );
-    reader->AddVariable( "y_tr0", &y_tr0 );
-    reader->AddVariable( "z_tr0", &z_tr0 );
-    reader->AddVariable( "x_ph_tr0", &x_ph_tr0 );
-    reader->AddVariable( "y_ph_tr0", &y_ph_tr0 );
-    reader->AddVariable( "z_ph_tr0", &z_ph_tr0 );
-
-
-    Float_t x_tr1, y_tr1, z_tr1, x_ph_tr1, y_ph_tr1, z_ph_tr1;
-    reader->AddVariable( "x_tr1", &x_tr1 );
-    reader->AddVariable( "y_tr1", &y_tr1 );
-    reader->AddVariable( "z_tr1", &z_tr1 );
-    reader->AddVariable( "x_ph_tr1", &x_ph_tr1 );
-    reader->AddVariable( "y_ph_tr1", &y_ph_tr1 );
-    reader->AddVariable( "z_ph_tr1", &z_ph_tr1 );
-
-    Float_t x_tr2, y_tr2, z_tr2, x_ph_tr2, y_ph_tr2, z_ph_tr2;
-    reader->AddVariable( "x_tr2", &x_tr2 );
-    reader->AddVariable( "y_tr2", &y_tr2 );
-    reader->AddVariable( "z_tr2", &z_tr2 );
-    reader->AddVariable( "x_ph_tr2", &x_ph_tr2 );
-    reader->AddVariable( "y_ph_tr2", &y_ph_tr2 );
-    reader->AddVariable( "z_ph_tr2", &z_ph_tr2 );
+    Float_t tr1, tr2, tr3, ph_tr1, ph_tr2, ph_tr3;
+    reader->AddVariable( "tr1", &tr1 );
+    reader->AddVariable( "tr2", &tr2 );
+    reader->AddVariable( "tr3", &tr3 );
+    reader->AddVariable( "ph_tr1", &ph_tr1 );
+    reader->AddVariable( "ph_tr2", &ph_tr2 );
+    reader->AddVariable( "ph_tr3", &ph_tr3 );
 
     Float_t totalPhotons, totalCubes;
     reader->AddVariable( "totalPhotons", &totalPhotons );
@@ -42,26 +25,12 @@ void tmva_2_long_tr_app(TString inFile = "tmva_data.root", TString methodName = 
     TTree *tr = (TTree*)tf->Get("FgdLongestProjectionTree");
 
 
-    tr->SetBranchAddress( "x_tr0", &x_tr0 );
-    tr->SetBranchAddress( "y_tr0", &y_tr0 );
-    tr->SetBranchAddress( "z_tr0", &z_tr0 );
-    tr->SetBranchAddress( "x_ph_tr0", &x_ph_tr0 );
-    tr->SetBranchAddress( "y_ph_tr0", &y_ph_tr0 );
-    tr->SetBranchAddress( "z_ph_tr0", &z_ph_tr0 );
-
-    tr->SetBranchAddress( "x_tr1", &x_tr1 );
-    tr->SetBranchAddress( "y_tr1", &y_tr1 );
-    tr->SetBranchAddress( "z_tr1", &z_tr1 );
-    tr->SetBranchAddress( "x_ph_tr1", &x_ph_tr1 );
-    tr->SetBranchAddress( "y_ph_tr1", &y_ph_tr1 );
-    tr->SetBranchAddress( "z_ph_tr1", &z_ph_tr1 );
-
-    tr->SetBranchAddress( "x_tr2", &x_tr2 );
-    tr->SetBranchAddress( "y_tr2", &y_tr2 );
-    tr->SetBranchAddress( "z_tr2", &z_tr2 );
-    tr->SetBranchAddress( "x_ph_tr2", &x_ph_tr2 );
-    tr->SetBranchAddress( "y_ph_tr2", &y_ph_tr2 );
-    tr->SetBranchAddress( "z_ph_tr2", &z_ph_tr2 );
+    tr->SetBranchAddress( "tr1", &tr1 );
+    tr->SetBranchAddress( "tr2", &tr2 );
+    tr->SetBranchAddress( "tr3", &tr3 );
+    tr->SetBranchAddress( "ph_tr1", &ph_tr1 );
+    tr->SetBranchAddress( "ph_tr2", &ph_tr2 );
+    tr->SetBranchAddress( "ph_tr3", &ph_tr3 );
 
     tr->SetBranchAddress( "totalPhotons", &totalPhotons );
     tr->SetBranchAddress( "totalCubes", &totalCubes );
