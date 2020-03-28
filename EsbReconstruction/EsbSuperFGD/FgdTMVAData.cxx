@@ -475,6 +475,12 @@ void FgdTMVAData::FinishTask()
     for(size_t ind = 0 ; ind < evInd; ind++)
     {
         dataEvent = &feventRecords[ind];
+
+        if(!dataEvent->IsWeakCC())
+        {
+            continue;
+        }
+
         lnuEnergy = dataEvent->GetNuE();
         lnuPdg = dataEvent->GetNuPdg();
 
@@ -495,6 +501,9 @@ void FgdTMVAData::FinishTask()
             tr3 = tr[2];
             ph_tr3 = ph_tr[2];
         }
+
+        if(tr1==0)
+            continue;
 
         // Normalize before filling
         tr1 /= fMaxtrack;

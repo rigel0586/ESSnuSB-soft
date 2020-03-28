@@ -47,7 +47,10 @@
 
 using namespace TMVA;
 
-void tmva_1_ex_long_tr_train( TString myMethodList = "" , TString inFileName = "tmva_data.root")
+void tmva_1_ex_long_tr_train( TString myMethodList = "" 
+                              , TString inFileName = "tmva_data.root"
+                              , Int_t numToTrain = 50000
+                              , Int_t numToTest = 7110)
 {
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
    // if you use your private .rootrc, or run from a different directory, please copy the
@@ -178,11 +181,12 @@ void tmva_1_ex_long_tr_train( TString myMethodList = "" , TString inFileName = "
    //dataloader->SetWeightExpression( "totalPhotons", "Regression" );
 
    // Apply additional cuts on the signal and background samples (can be different)
-   TCut mycut = "totalCubes>0"; // for example: TCut mycut = "abs(var1)<0.5 && abs(var2-0.5)<1";
-
+   //TCut mycut = "totalCubes>0 && tr1>0"; // for example: TCut mycut = "abs(var1)<0.5 && abs(var2-0.5)<1";
+   TCut mycut = "";
    // tell the DataLoader to use all remaining events in the trees after training for testing:
-   dataloader->PrepareTrainingAndTestTree( mycut,
-                                         "nTrain_Regression=4000:nTest_Regression=1000:SplitMode=Random:NormMode=NumEvents:!V" );
+   TString prepareTrainStr;
+   prepareTrainStr.Form("nTrain_Regression=%i:nTest_Regression=%i:SplitMode=Random:NormMode=NumEvents:!V", numToTrain, numToTest);
+   dataloader->PrepareTrainingAndTestTree( mycut,prepareTrainStr);
    //
    //     dataloader->PrepareTrainingAndTestTree( mycut,
    //            "nTrain_Regression=0:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V" );

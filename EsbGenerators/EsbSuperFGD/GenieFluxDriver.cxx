@@ -22,6 +22,7 @@ GenieFluxDriver::GenieFluxDriver(const char* geoConfigFile
     :   fnuFluXFile(nuFluxFile)
         , fdetPos(detPos)
         , frndGen(seed)
+        , frdnGenDeault(seed)
         , fdis(0.0, 1.0)
         , fpdgCode(0)
         , fMaxEv(maxEnergy)
@@ -91,6 +92,8 @@ bool GenieFluxDriver::GenerateNext(void)
     Double_t nuEnergy(0.);
     int ret = 0;
     Double_t nextNu = fdis(frndGen);
+    //Double_t nextNu = fdis(frdnGenDeault);
+    
 
     for(size_t i = 0; i < fFlux.size(); ++i)
     {

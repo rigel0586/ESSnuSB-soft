@@ -104,6 +104,7 @@ protected:
 
     /* Uniform random number generators for neutrino flux calculations */
     std::mt19937 frndGen;//!<!
+    std::default_random_engine frdnGenDeault; //!<!
     std::uniform_real_distribution<Double_t> fdis;//!<!
     TVector3 fdetPos;
 

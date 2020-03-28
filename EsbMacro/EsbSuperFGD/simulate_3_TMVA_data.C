@@ -13,8 +13,11 @@
 
 void simulate_3_TMVA_data(TString inFile = "fgd_dig.root", 
 	      TString parFile = "params.root",
-	      TString outFile = "fgd_mc_recon_stats.root",
-              Int_t nStartEvent = 0, Int_t nEvents = 15)
+	      TString outFile = "fgd_tmva_data.root",
+        Int_t nStartEvent = 0,
+        Int_t nEvents = 100000,
+        TString eventDat = "../../EsbMacro/tests/eventsData.dat",
+        TString outputTMVAdata = "../../EsbMacro/tests/tmva_data.root")
 {
   using namespace esbroot;
 
@@ -37,15 +40,15 @@ void simulate_3_TMVA_data(TString inFile = "fgd_dig.root",
 
   double debugLvl = 0.0; 
 
-  fair::Logger::SetConsoleSeverity(fair::Severity::debug2);
+  fair::Logger::SetConsoleSeverity(fair::Severity::info);
   fair::Logger::SetConsoleColor(true);
 
   FairTask* recon = new reconstruction::superfgd::FgdTMVAData(
     "Reconstruction MC Task"             // name of the task
     ,"../../EsbGeometry/EsbSuperFGD/EsbConfig/fgdconfig"  //File with detector configuration
     ,"../../geometry/media.geo"       // Media file with defined materials
-    ,"../../EsbMacro/tests/eventsData.dat"       // events data file
-    ,"../../EsbMacro/tests/tmva_data.root"       // output root file
+    ,eventDat             // events data file
+    ,outputTMVAdata       // output root file
     , 1                               // Verbose level
     , debugLvl                        // debug level of genfit (0 - little, 1 - debug info, 2 - detailed)
     );                           
@@ -56,5 +59,5 @@ void simulate_3_TMVA_data(TString inFile = "fgd_dig.root",
   fRun->AddTask(recon);   
   fRun->Init(); // initializing
   fRun->Run(nStartEvent, nStartEvent + nEvents);
-  fRun->CreateGeometryFile("geo_recon_mc_lepton.root");  // for additional full geometry file
+  fRun->CreateGeometryFile("geo_tmva_data.root");  // for additional full geometry file
 }
