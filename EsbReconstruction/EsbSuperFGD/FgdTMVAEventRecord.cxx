@@ -29,7 +29,7 @@ FgdTMVAEventRecord::FgdTMVAEventRecord(std::string eventData)
         , fPrimaryElectronMom(TVector3(0,0,0)), fMuonTrackLength(0.)
         , fIsMuonExiting(false), fMuonExitMomentum(TVector3(0,0,0))
         , fMuonPolarAngle(0.), fMuonAzumAngle(0.), fElectronNumOfExitingParticles(0)
-        , fProtonEdep(0.), fTotalPhotons(0,0,0), fTotalCubes(0)
+        , fTotalEdep(0.), fTotalPhotons(0,0,0), fTotalCubes(0)
         , fHasHits(false)
 {
     Init();
@@ -49,9 +49,8 @@ FgdTMVAEventRecord::FgdTMVAEventRecord(const FgdTMVAEventRecord& c)
     this->fMuonExitMomentum = c.fMuonExitMomentum;
     this->fMuonPolarAngle = c.fMuonPolarAngle;
     this->fMuonAzumAngle = c.fMuonAzumAngle;
-    this->fHadronEdep = c.fHadronEdep;
+    this->fTotalEdep = c.fTotalEdep;
     this->fElectronNumOfExitingParticles = c.fElectronNumOfExitingParticles;
-    this->fProtonEdep = c.fProtonEdep;
     this->fTotalPhotons = c.fTotalPhotons;
     this->fTotalCubes = c.fTotalCubes;
     this->fHasHits = c.fHasHits;
@@ -199,9 +198,8 @@ FgdTMVAEventRecord& FgdTMVAEventRecord::operator=(const FgdTMVAEventRecord& c)
     this->fMuonExitMomentum = c.fMuonExitMomentum;
     this->fMuonPolarAngle = c.fMuonPolarAngle;
     this->fMuonAzumAngle = c.fMuonAzumAngle;
-    this->fHadronEdep = c.fHadronEdep;
+    this->fTotalEdep = c.fTotalEdep;
     this->fElectronNumOfExitingParticles = c.fElectronNumOfExitingParticles;
-    this->fProtonEdep = c.fProtonEdep;
     this->fTotalPhotons = c.fTotalPhotons;
     this->fTotalCubes = c.fTotalCubes;
     this->fHasHits = c.fHasHits;

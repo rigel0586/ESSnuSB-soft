@@ -49,6 +49,7 @@ class FgdTMVAData : public FgdMCGenFitRecon
 protected:
 
   Bool_t ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks);
+  Double_t CalculatePhotoEdep(ReconHit& hit);
   
   std::string feventData;//!<!
   std::string foutputRootFile;//!<!

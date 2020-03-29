@@ -208,10 +208,12 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
         // Sort by time, the 1st hit in time is the start of the track
         std::sort(hitsOnTrack.begin(), hitsOnTrack.end(), [](ReconHit& bh1, ReconHit& bh2){return bh1.ftime<bh2.ftime;});
     }
-    
+
+
     // 1. Extract data for all hits and total cubes hits, total photons
     Int_t sumTotalCubes = 0;
     TVector3 sumTotalPhoto(0,0,0);
+    Double_t sumEdep = 0;
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
@@ -222,6 +224,7 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
             ReconHit& hit = hitsOnTrack[j];
             sumTotalPhoto +=hit.fphotons;
             sumTotalCubes++;
+            sumEdep += CalculatePhotoEdep(hit);
 
             fhitCoordinates[feventNum].emplace_back(hit.fmppcLoc);
             fhitPhotons[feventNum].emplace_back(hit.fphotons);
@@ -230,6 +233,7 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
 
     tvmaEventRecord.SetTotalPhotons(sumTotalPhoto);
     tvmaEventRecord.SetTotalCubes(sumTotalCubes); 
+    tvmaEventRecord.SetTotalEdep(sumEdep);
     Float_t sumTotph = sumTotalPhoto.X() + sumTotalPhoto.Y() + sumTotalPhoto.Z();
     if(fMaxTotph < sumTotph)
     {
@@ -283,6 +287,54 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
     ++feventNum; // Increment to next event from eventData read from simulation`s genie export
 }
 
+Double_t FgdTMVAData::CalculatePhotoEdep(ReconHit& hit)
+{
+    using namespace esbroot::digitizer::superfgd;
+
+    TVector3& pe_1_dir = hit.fph1;
+    TVector3& dist_1 = hit.fmppc1;
+    TVector3& pe_2_dir = hit.fph2;
+    TVector3& dist_2 = hit.fmppc2;
+
+    double& time = hit.ftime;
+    double charge = 1.0; // not used, but is a parameter from legacy
+
+
+    double pe_1_x = FgdDigitizer::RevertyMPPCResponse(pe_1_dir.X());
+    double pe_1_y = FgdDigitizer::RevertyMPPCResponse(pe_1_dir.Y());
+    double pe_1_Z = FgdDigitizer::RevertyMPPCResponse(pe_1_dir.Z());
+
+    double pe_2_x = FgdDigitizer::RevertyMPPCResponse(pe_2_dir.X());
+    double pe_2_y = FgdDigitizer::RevertyMPPCResponse(pe_2_dir.Y());
+    double pe_2_z = FgdDigitizer::RevertyMPPCResponse(pe_2_dir.Z());
+
+    FgdDigitizer::RevertFiberResponse(pe_1_x, time, dist_1.X());
+    FgdDigitizer::RevertFiberResponse(pe_1_y, time, dist_1.Y());
+    FgdDigitizer::RevertFiberResponse(pe_1_Z, time, dist_1.Z());
+
+    FgdDigitizer::RevertFiberResponse(pe_2_x, time, dist_2.X());
+    FgdDigitizer::RevertFiberResponse(pe_2_y, time, dist_2.Y());
+    FgdDigitizer::RevertFiberResponse(pe_2_z, time, dist_2.Z());
+
+    // Deposited energy hit.fEdep and tracklength hit.ftrackLength
+    // are used to calculate the CBIRKS coefficients together with dedx (energy losses)
+    // to be able to revert from the photons
+
+    Double_t x_1 = FgdDigitizer::RevertScintiResponse(hit.fEdep, hit.ftrackLength, charge, pe_1_x);
+    Double_t y_1 = FgdDigitizer::RevertScintiResponse(hit.fEdep, hit.ftrackLength, charge, pe_1_y);
+    Double_t z_1 = FgdDigitizer::RevertScintiResponse(hit.fEdep, hit.ftrackLength, charge, pe_1_Z);
+
+    Double_t x_2 = FgdDigitizer::RevertScintiResponse(hit.fEdep, hit.ftrackLength, charge, pe_2_x);
+    Double_t y_2 = FgdDigitizer::RevertScintiResponse(hit.fEdep, hit.ftrackLength, charge, pe_2_y);
+    Double_t z_2 = FgdDigitizer::RevertScintiResponse(hit.fEdep, hit.ftrackLength, charge, pe_2_z);
+
+    Double_t x = x_1 + x_2;
+    Double_t y = y_1 + y_2;
+    Double_t z = z_1 + z_2;
+
+    Double_t totalEdep =  x + y + z;
+    return totalEdep;
+}
 
 
 void FgdTMVAData::FinishTask()
@@ -464,9 +516,11 @@ void FgdTMVAData::FinishTask()
     Float_t lnuPdg = 0;
     Float_t totCubes = 0;
     Float_t totPh = 0.;
+    Float_t totalEdep = 0.;
 
     longestTrackPrjTree->Branch("totalCubes", &totCubes);
     longestTrackPrjTree->Branch("totalPhotons", &totPh);
+    longestTrackPrjTree->Branch("totalEdep", &totalEdep);
     longestTrackPrjTree->Branch("nuEnergy", &lnuEnergy);
     longestTrackPrjTree->Branch("nuPdg", &lnuPdg);
 
@@ -483,6 +537,7 @@ void FgdTMVAData::FinishTask()
 
         lnuEnergy = dataEvent->GetNuE();
         lnuPdg = dataEvent->GetNuPdg();
+        totalEdep = dataEvent->GetTotalEdep();
 
         totPh = dataEvent->GetTotalPhotons().X() + dataEvent->GetTotalPhotons().Y() + dataEvent->GetTotalPhotons().Z();
         totCubes = dataEvent->GetTotalCubes();
@@ -535,6 +590,7 @@ void FgdTMVAData::FinishTask()
 
     FgdMCGenFitRecon::FinishTask();
 }
+
 // -------------------------------------------------------------------------
 
 

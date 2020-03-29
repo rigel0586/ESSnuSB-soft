@@ -55,8 +55,6 @@ public:
     void SetMuonExiting(Bool_t muonExit) {fIsMuonExiting = muonExit;}
     TVector3 GetMuonExitMom() {return fMuonExitMomentum;}
     void SetMuonExitMom(TVector3 exitMom);
-    Double_t GetHadronEdep() {return fHadronEdep;}
-    void SetHadronEdep(Double_t edep) {fHadronEdep = edep;}
     
     Double_t GetMuonPolarAngle();
     Double_t GetMuonAzumuteAngle();
@@ -67,8 +65,8 @@ public:
     Double_t SetMuonTrackLengthOrigin(Double_t ml) {fMuonTrackLengthOrigin = ml;}
     Double_t GetMuonTrackLengthOrigin();
 
-    void SetProtonEdep(Double_t e){fProtonEdep = e;} // in [MeV]
-    Double_t GetProtonEdep(){return fProtonEdep;}
+    void SetTotalEdep(Double_t e){fTotalEdep = e;} // in [MeV]
+    Double_t GetTotalEdep(){return fTotalEdep;}
 
 
     void SetTotalPhotons(const TVector3& e){fTotalPhotons = e;} 
@@ -139,7 +137,6 @@ protected:
     TVector3 fMuonExitMomentum;
     Double_t fMuonPolarAngle;
     Double_t fMuonAzumAngle;
-    Double_t fHadronEdep;
     TVector3 fGenfitMom;
     Double_t fMC_GentFitError;
 
@@ -153,7 +150,7 @@ protected:
     Double_t fMuonTrackLength;
     Double_t fMuonTrackLengthOrigin;
 
-    Double_t fProtonEdep;
+    Float_t fTotalEdep;
 
     TVector3 fTotalPhotons;
     Int_t fTotalCubes;
