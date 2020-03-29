@@ -41,14 +41,18 @@ FgdGenieGenerator::FgdGenieGenerator(const char* geoConfigFile
 		, fgm(gm)
 		, fExtFlux(extFlux)
 		, fCurrentEvent(0)
-		, fUseRandomVertex(false)
+		, fUseFixedVertex(false)
+		, fvertexPos(0,0,0)
 {
 }
 
 
 void FgdGenieGenerator::PostProcessEvent(/*IN OUT*/ genie::GHepRecord* event)
 {
-
+	if(fUseFixedVertex)
+	{
+		event->SetVertex(fvertexPos.X(), fvertexPos.Y(), fvertexPos.Z(),0);
+	}
 }
 
 

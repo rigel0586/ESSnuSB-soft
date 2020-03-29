@@ -38,7 +38,7 @@ searchneighborhood=0
 errPhotoLimit=0   
 
 #exclude tracks below minimum track Lenght
-min_track_lenght=15
+min_track_lenght=3
 
 # The belog settings for graph traversal
 

@@ -47,7 +47,8 @@ public:
 
 	virtual Bool_t Configure() override; 
 
-	void SetRandomVertex(Bool_t rndVertex) {fUseRandomVertex = rndVertex;}
+	void UseFixVertex(Bool_t fv) {fUseFixedVertex = fv;}
+	void SetVertexPos(const TVector3& vp ) {fvertexPos = vp;}
 
 protected:
 	virtual Bool_t KeepThrowing(std::vector<genie::GHepParticle*>& eventParticles ) override;
@@ -61,11 +62,14 @@ private:
 	TVector3 fdetPos;//!<!
 	Int_t fnumEvents;//!<!
 	Int_t fCurrentEvent;//!<!
-	Bool_t fUseRandomVertex;//!<!
+	Bool_t fUseFixedVertex;//!<!
+	TVector3 fvertexPos;//!<!
 	genie::GFluxI* fExtFlux;//!<!
 
 	std::vector<genie::EventRecord> fGenieEvents;//!<!
 	void GenerateEvents();
+
+	
 	
 	ClassDef(FgdGenieGenerator,2)
 };
