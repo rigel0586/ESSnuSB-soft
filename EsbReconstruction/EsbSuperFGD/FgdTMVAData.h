@@ -73,6 +73,8 @@ protected:
 
   Float_t fMaxTotph;
   Float_t fMaxCubes;
+  Float_t fMaxTotEdep;
+  Float_t fMaxTotPe;
   	   
   ClassDef(FgdTMVAData, 2);
 

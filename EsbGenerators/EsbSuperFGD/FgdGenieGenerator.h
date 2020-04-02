@@ -31,6 +31,7 @@ public:
 									, TVector3 detPos
 									, Int_t numEvents
 									, genie::GFluxI* extFlux = nullptr
+									, Bool_t uniformFlux = false
 									, TGeoManager* gm = nullptr);
 
 	//! Destructor
@@ -65,6 +66,7 @@ private:
 	Bool_t fUseFixedVertex;//!<!
 	TVector3 fvertexPos;//!<!
 	genie::GFluxI* fExtFlux;//!<!
+	Bool_t fUseUniformflux;//!<!
 
 	std::vector<genie::EventRecord> fGenieEvents;//!<!
 	void GenerateEvents();

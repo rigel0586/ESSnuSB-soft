@@ -17,6 +17,7 @@ GenieFluxDriver::GenieFluxDriver(const char* geoConfigFile
                             , const char* nuFluxFile
                             , unsigned int seed
                             , TVector3 detPos
+                            , Bool_t uniformFlux
                             , Int_t maxEvents
                             , Double_t maxEnergy)
     :   fnuFluXFile(nuFluxFile)
@@ -28,6 +29,7 @@ GenieFluxDriver::GenieFluxDriver(const char* geoConfigFile
         , fMaxEv(maxEnergy)
         , fcurrentEvent(0)
         , fmaxEvents(maxEvents)
+        , fUniformFlux(uniformFlux)
 { 
     InitDetectorParams(geoConfigFile);
     InitPDGList();
@@ -59,7 +61,9 @@ GenieFluxDriver::GenieFluxDriver(const GenieFluxDriver& gf)
     this->f_total_Z = gf.f_total_Z;
     this->fnuFluXFile = gf.fnuFluXFile;
     this->fFlux = gf.fFlux;
-    this->fmaxEvents = fmaxEvents;
+    this->fmaxEvents = gf.fmaxEvents;
+
+    this-> fUniformFlux = gf.fUniformFlux;
 }
 
 GenieFluxDriver& GenieFluxDriver::operator=(const GenieFluxDriver& gf)
@@ -83,17 +87,32 @@ GenieFluxDriver& GenieFluxDriver::operator=(const GenieFluxDriver& gf)
     this->f_total_Z = gf.f_total_Z;
     this->fnuFluXFile = gf.fnuFluXFile;
     this->fFlux = gf.fFlux;
-    this->fmaxEvents = fmaxEvents;
+    this->fmaxEvents = gf.fmaxEvents;
+    this-> fUniformFlux = gf.fUniformFlux;
 }
 
 bool GenieFluxDriver::GenerateNext(void)
 {
+    static size_t uniformId = 0;
+    if(fUniformFlux)
+    {
+        GenieFluxDriver::FLuxNeutrino& neutrino = fFlux[uniformId];
+        fpdgCode = neutrino.GetPdg();
+        CalculateNext4position();
+        CalculateNext4Momentum(neutrino.GetEnergy());
+        fcurrentEvent++;
+
+        uniformId++;
+        if(uniformId>=fFlux.size())
+            uniformId = 0;
+
+        return true;
+    }
+
     int nuPdg(0);
     Double_t nuEnergy(0.);
-    int ret = 0;
     Double_t nextNu = fdis(frndGen);
     //Double_t nextNu = fdis(frdnGenDeault);
-    
 
     for(size_t i = 0; i < fFlux.size(); ++i)
     {

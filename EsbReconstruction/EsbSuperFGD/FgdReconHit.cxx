@@ -28,7 +28,8 @@ ReconHit::ReconHit(TVector3 mppcLoc
             , TVector3 ph1
             , TVector3 mppc1
             , TVector3 ph2
-            , TVector3 mppc2)
+            , TVector3 mppc2
+            , Double_t pe)
         : fmppcLoc(mppcLoc)
         , fHitPos(hitPosition)
         , fphotons(photons)
@@ -48,6 +49,7 @@ ReconHit::ReconHit(TVector3 mppcLoc
         , fIsLeaf(false)
         , fZaxisAngle(0.)
         , fChangeAngle(0.)
+        , fpe(pe)
 {
     
 }
@@ -78,6 +80,7 @@ ReconHit::ReconHit(const ReconHit& c)
         , fIsLeaf(c.fIsLeaf)
         , fZaxisAngle(c.fZaxisAngle)
         , fChangeAngle(c.fChangeAngle)
+        , fpe(c.fpe)
 {
     
 }
@@ -103,6 +106,7 @@ ReconHit& ReconHit::operator=(const ReconHit& c)
     fIsVisited = c.fIsVisited;
     fIsLeaf = c.fIsLeaf;
     fZaxisAngle = c.fZaxisAngle;
+    fpe = c.fpe;
     return *this;
 }
 

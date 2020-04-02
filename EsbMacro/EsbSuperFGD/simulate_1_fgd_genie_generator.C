@@ -101,6 +101,8 @@ void simulate_1_fgd_genie_generator(TString outFileName = "evetest.root",
 		, seed // uniform random number generator seed
     , fgdPosition
     , nEvents
+    , nullptr
+    , true // set to use uniformalize the flux (it loops around the neutrino records in the flux txt file regard)
     //, external_fluxDriver
   );
 

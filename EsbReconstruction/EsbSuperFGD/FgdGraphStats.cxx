@@ -334,6 +334,7 @@ Bool_t FgdGraphStats::GetMCHits(std::vector<ReconHit>& allHits)
                               , hit->GetMppcDist1()
                               , hit->GetPhotoDist2()
                               , hit->GetMppcDist2()
+                              , hit->GetPe()
                             )); 
     }
   }
@@ -401,6 +402,7 @@ Bool_t FgdGraphStats::GetGraphHits(std::vector<ReconHit>& allHits)
                               , hit->GetMppcDist1()
                               , hit->GetPhotoDist2()
                               , hit->GetMppcDist2()
+                              , hit->GetPe()
                             )); 
     }
   }

@@ -32,7 +32,8 @@ public:
             , TVector3 ph1
             , TVector3 mppc1
             , TVector3 ph2
-            , TVector3 mppc2);
+            , TVector3 mppc2
+            , Double_t pe);
 
     ~ReconHit();
 
@@ -69,6 +70,7 @@ public:
 
     Double_t fZaxisAngle;
     Double_t fChangeAngle;
+    Double_t fpe;
 
     Int_t fLocalId;
     Bool_t fIsVisited;

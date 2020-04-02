@@ -46,12 +46,13 @@ class FgdHit : public FairHit
    *@param pdg      pdg codes of particles 
    *@param trackId      trackId
    *@param edep         energy loss
+   *@param pe         photoelectrons from scintilator (no other effects included)
    **/
   FgdHit(Double_t x, Double_t y, Double_t z, TVector3 mppcLoc
         , TVector3 photoE, TVector3 dpos, Double_t time, TVector3 mom, TVector3 momExit
         , Double_t trackLength, Double_t trackLengthOrigin , TVector3 photoE_direction1, TVector3 distance_to_mppcLoc1
         , TVector3 photoE_direction2, TVector3 distance_to_mppcLoc2
-        , Int_t pdg, Int_t trackId, Double_t edep);
+        , Int_t pdg, Int_t trackId, Double_t edep, Double_t pe);
   
   /** Destructor **/
   virtual ~FgdHit();
@@ -73,6 +74,7 @@ class FgdHit : public FairHit
   Double_t GetTrackLenght(){return ftrackLength;}
   Double_t GetTrackLengthOrigin(){return ftrackLengthOrigin;}
   Double_t GetEdep() {return fedep;}
+  Double_t GetPe(){return fpe;}
 
   /** Modifiers **/
   void SetMppcLoc(TVector3 mppcLoc){fmppcLoc = mppcLoc;}
@@ -88,6 +90,7 @@ class FgdHit : public FairHit
   void SetPgd(Int_t pdg){fpdg = pdg;}
   void SetTrackId(Int_t trackId){ftrackId = trackId;}
   void SetEdep(Double_t edep){fedep = edep;}
+  void SetPe(Double_t pe){ fpe = pe;}
    
   /** Output to screen **/
   virtual void Print(const Option_t* opt) const;
@@ -111,6 +114,7 @@ class FgdHit : public FairHit
   Int_t fpdg;
   Int_t ftrackId;
   Double_t fedep;
+  Double_t fpe;
 
   ClassDef(FgdHit, 2);
 };

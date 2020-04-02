@@ -319,6 +319,7 @@ Bool_t FgdMCGenFitRecon::GetHits(std::vector<ReconHit>& allHits)
                               , hit->GetMppcDist1()
                               , hit->GetPhotoDist2()
                               , hit->GetMppcDist2()
+                              , hit->GetPe()
                             )); 
     }
   }

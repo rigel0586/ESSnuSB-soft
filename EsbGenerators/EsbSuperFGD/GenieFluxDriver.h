@@ -35,6 +35,7 @@ public:
                   , const char* nuFluxFile
                   , unsigned int seed
                   , TVector3 detPos
+                  , Bool_t uniformFlux
                   , Int_t maxEvents = 1
                   , Double_t maxEnergy = 2. /* GeV */);
 
@@ -127,6 +128,7 @@ protected:
 
     std::string fnuFluXFile;
     std::vector<FLuxNeutrino> fFlux;//!<!
+    Bool_t fUniformFlux; // Loops around all FluxNeutrinos in the fFlux vector. Thus providing equal probability
 
     ClassDef(GenieFluxDriver,6)
   };

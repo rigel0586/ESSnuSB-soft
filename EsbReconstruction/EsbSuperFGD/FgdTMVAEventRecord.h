@@ -68,6 +68,9 @@ public:
     void SetTotalEdep(Double_t e){fTotalEdep = e;} // in [MeV]
     Double_t GetTotalEdep(){return fTotalEdep;}
 
+    void SetPe(Double_t pe){fpe = pe;}
+    Double_t GetPe(){return fpe;}
+
 
     void SetTotalPhotons(const TVector3& e){fTotalPhotons = e;} 
     TVector3 GetTotalPhotons(){return fTotalPhotons;}
@@ -151,6 +154,7 @@ protected:
     Double_t fMuonTrackLengthOrigin;
 
     Float_t fTotalEdep;
+    Double_t fpe;
 
     TVector3 fTotalPhotons;
     Int_t fTotalCubes;

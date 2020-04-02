@@ -31,6 +31,7 @@ FgdGenieGenerator::FgdGenieGenerator(const char* geoConfigFile
 									, TVector3 detPos
 									, Int_t numEvents
 									, genie::GFluxI* extFlux
+									, Bool_t uniformFlux
 									, TGeoManager* gm)
 	 : GenieGenerator()
 	 	, fgeoConfigFile(geoConfigFile)
@@ -43,6 +44,7 @@ FgdGenieGenerator::FgdGenieGenerator(const char* geoConfigFile
 		, fCurrentEvent(0)
 		, fUseFixedVertex(false)
 		, fvertexPos(0,0,0)
+		, fUseUniformflux(uniformFlux)
 {
 }
 
@@ -73,7 +75,7 @@ Bool_t FgdGenieGenerator::Configure()
 					<< esbroot::geometry::superfgd::fgdnames::superFGDName;
 
 		SetGeomI(std::make_shared<FgdGeomAnalyzer>(fgm));
-		SetFluxI(std::make_shared<GenieFluxDriver>(fgeoConfigFile.c_str(), fnuFluxFile.c_str(), fseed, fdetPos));
+		SetFluxI(std::make_shared<GenieFluxDriver>(fgeoConfigFile.c_str(), fnuFluxFile.c_str(), fseed, fdetPos, fUseUniformflux));
 
 		geomAnalyzer = dynamic_cast<FgdGeomAnalyzer*>(GetGeomI().get());
 		geomAnalyzer->SetScannerFlux(GetFluxI().get()); // Force to use MaxPathLengthsFluxMethod, otherwise it uses MaxPathLengthsBoxMethod
