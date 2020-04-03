@@ -94,7 +94,7 @@ GenieFluxDriver& GenieFluxDriver::operator=(const GenieFluxDriver& gf)
 bool GenieFluxDriver::GenerateNext(void)
 {
     static size_t uniformId = 0;
-    if(fUniformFlux)
+    if(fUniformFlux && !fFlux.empty())
     {
         GenieFluxDriver::FLuxNeutrino& neutrino = fFlux[uniformId];
         fpdgCode = neutrino.GetPdg();
