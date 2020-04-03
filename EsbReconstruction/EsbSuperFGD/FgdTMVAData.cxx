@@ -66,11 +66,10 @@ namespace reconstruction {
 namespace superfgd {
 
 #define MAX_LENGTH_TRACKS_TO_RECORD 3 // Number of cubes
-#define MAX_NU_ENERGY 2 // In GeV
 
 // -----   Default constructor   -------------------------------------------
 FgdTMVAData::FgdTMVAData() : FgdMCGenFitRecon(), feventNum(0), fmagField_X(0.), fmagField_Y(0.), fmagField_Z(0.)
-    , fMaxtrack(1),fMaxTotph(1),fMaxCubes(1), fMaxTrph(1)
+    , fMaxtrack(1),fMaxTotph(1),fMaxCubes(1), fMaxTrph(1) , fMaxnuE(-1)
 {
 }
 // -------------------------------------------------------------------------
@@ -203,6 +202,11 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
 
     FgdTMVAEventRecord& tvmaEventRecord = feventRecords[feventNum];
     tvmaEventRecord.ReadEventData();
+
+    if(fMaxnuE < tvmaEventRecord.GetNuE())
+    {
+        fMaxnuE = tvmaEventRecord.GetNuE();
+    }
 
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
@@ -550,7 +554,7 @@ void FgdTMVAData::FinishTask()
             continue;
         }
 
-        lnuEnergy = dataEvent->GetNuE()/MAX_NU_ENERGY;
+        lnuEnergy = dataEvent->GetNuE()/fMaxnuE;
         lnuPdg = dataEvent->GetNuPdg();
         totalEdep = dataEvent->GetTotalEdep();
         totalPe = dataEvent->GetPe();
