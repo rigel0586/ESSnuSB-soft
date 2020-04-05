@@ -69,7 +69,7 @@ namespace superfgd {
 
 // -----   Default constructor   -------------------------------------------
 FgdTMVAData::FgdTMVAData() : FgdMCGenFitRecon(), feventNum(0), fmagField_X(0.), fmagField_Y(0.), fmagField_Z(0.)
-    , fMaxtrack(1),fMaxTotph(1),fMaxCubes(1), fMaxTrph(1) , fMaxnuE(-1)
+    , fMaxtrack(1),fMaxTotph(1),fMaxCubes(1), fMaxTrph(1) , fMaxnuE(-1), fMaxTrueEdep(-1)
 {
 }
 // -------------------------------------------------------------------------
@@ -219,8 +219,9 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
     // 1. Extract data for all hits and total cubes hits, total photons
     Int_t sumTotalCubes = 0;
     TVector3 sumTotalPhoto(0,0,0);
-    Double_t sumEdep = 0;
-    Double_t sumPe = 0;
+    Float_t sumEdep = 0;
+    Float_t sumPe = 0;
+    Float_t sumTrueEdep = 0;
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
@@ -233,6 +234,7 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
             sumTotalCubes++;
             sumEdep += CalculatePhotoEdep(hit);
             sumPe += hit.fpe;
+            sumTrueEdep += hit.fEdep;
 
             fhitCoordinates[feventNum].emplace_back(hit.fmppcLoc);
             fhitPhotons[feventNum].emplace_back(hit.fphotons);
@@ -242,6 +244,7 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
     tvmaEventRecord.SetTotalPhotons(sumTotalPhoto);
     tvmaEventRecord.SetTotalCubes(sumTotalCubes); 
     tvmaEventRecord.SetTotalEdep(sumEdep);
+    tvmaEventRecord.SetTrueEdep(sumTrueEdep);
     tvmaEventRecord.SetPe(sumPe);
     Float_t sumTotph = sumTotalPhoto.X() + sumTotalPhoto.Y() + sumTotalPhoto.Z();
     if(fMaxTotph < sumTotph)
@@ -260,6 +263,12 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
     {
         fMaxTotPe = sumPe;
     }
+    if(fMaxTrueEdep < sumTrueEdep)
+    {
+        fMaxTrueEdep = sumTrueEdep;
+    }
+
+    
 
 
     // 2. Get data only for the first three longest tracks
@@ -534,11 +543,13 @@ void FgdTMVAData::FinishTask()
     Float_t totCubes = 0;
     Float_t totPh = 0.;
     Float_t totalEdep = 0.;
+    Float_t trueEdep = 0.;
     Float_t totalPe = 0.;
 
     longestTrackPrjTree->Branch("totalCubes", &totCubes);
     longestTrackPrjTree->Branch("totalPhotons", &totPh);
     longestTrackPrjTree->Branch("totalEdep", &totalEdep);
+    longestTrackPrjTree->Branch("trueEdep", &trueEdep);
     longestTrackPrjTree->Branch("totalPe", &totalPe);
     longestTrackPrjTree->Branch("nuEnergy", &lnuEnergy);
     longestTrackPrjTree->Branch("nuPdg", &lnuPdg);
@@ -554,10 +565,11 @@ void FgdTMVAData::FinishTask()
             continue;
         }
 
-        lnuEnergy = dataEvent->GetNuE()/fMaxnuE;
+        lnuEnergy = dataEvent->GetNuE();
         lnuPdg = dataEvent->GetNuPdg();
         totalEdep = dataEvent->GetTotalEdep();
         totalPe = dataEvent->GetPe();
+        trueEdep = dataEvent->GetTrueEdep();
 
         totPh = dataEvent->GetTotalPhotons().X() + dataEvent->GetTotalPhotons().Y() + dataEvent->GetTotalPhotons().Z();
         totCubes = dataEvent->GetTotalCubes();
@@ -589,7 +601,9 @@ void FgdTMVAData::FinishTask()
         ph_tr3 /= fMaxTrph;
         totCubes /= fMaxCubes;
         totPh /= fMaxTotph;
+        lnuEnergy /= fMaxnuE;
         totalEdep /= fMaxTotEdep;
+        trueEdep /= fMaxTrueEdep;
         totalPe /= fMaxTotPe;
 
         longestTrackPrjTree->Fill();

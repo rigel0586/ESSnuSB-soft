@@ -68,6 +68,9 @@ public:
     void SetTotalEdep(Double_t e){fTotalEdep = e;} // in [MeV]
     Double_t GetTotalEdep(){return fTotalEdep;}
 
+    void SetTrueEdep(Double_t e){fTrueEdep = e;} // in [MeV]
+    Double_t GetTrueEdep(){return fTrueEdep;}
+
     void SetPe(Double_t pe){fpe = pe;}
     Double_t GetPe(){return fpe;}
 
@@ -155,6 +158,7 @@ protected:
 
     Float_t fTotalEdep;
     Double_t fpe;
+    Float_t fTrueEdep;
 
     TVector3 fTotalPhotons;
     Int_t fTotalCubes;

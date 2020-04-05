@@ -30,7 +30,7 @@ FgdTMVAEventRecord::FgdTMVAEventRecord(std::string eventData)
         , fIsMuonExiting(false), fMuonExitMomentum(TVector3(0,0,0))
         , fMuonPolarAngle(0.), fMuonAzumAngle(0.), fElectronNumOfExitingParticles(0)
         , fTotalEdep(0.), fTotalPhotons(0,0,0), fTotalCubes(0)
-        , fHasHits(false)
+        , fHasHits(false), fTrueEdep(0), fpe(0)
 {
     Init();
 }
@@ -54,6 +54,8 @@ FgdTMVAEventRecord::FgdTMVAEventRecord(const FgdTMVAEventRecord& c)
     this->fTotalPhotons = c.fTotalPhotons;
     this->fTotalCubes = c.fTotalCubes;
     this->fHasHits = c.fHasHits;
+    this->fTrueEdep = c.fTrueEdep;
+    this->fpe = c.fpe;
 
     this->Init();
 }
@@ -203,6 +205,8 @@ FgdTMVAEventRecord& FgdTMVAEventRecord::operator=(const FgdTMVAEventRecord& c)
     this->fTotalPhotons = c.fTotalPhotons;
     this->fTotalCubes = c.fTotalCubes;
     this->fHasHits = c.fHasHits;
+    this->fTrueEdep = c.fTrueEdep;
+    this->fpe = c.fpe;
 
     this->Init();
     return *this;

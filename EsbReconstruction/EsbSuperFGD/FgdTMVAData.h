@@ -76,6 +76,7 @@ protected:
   Float_t fMaxTotEdep;
   Float_t fMaxTotPe;
   Float_t fMaxnuE;
+  Float_t fMaxTrueEdep;
   	   
   ClassDef(FgdTMVAData, 2);
 

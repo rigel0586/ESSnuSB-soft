@@ -151,22 +151,22 @@ void FgdDigitizer::Exec(Option_t* opt)
     // the part of the photons that go to x,y,z are taken into
     // account in the coefficients when applying the scintillation response.
     // -> light collection + attenuation
-    double peX1=pe/2.; 
-    double peX2=pe/2.;
+    double peX1=pe/6.; 
+    double peX2=pe/6.;
     double timepeX=time;
     ApplyFiberResponse(peX1,timepeX,mppcX); // along X fiber
     ApplyFiberResponse(peX2,timepeX,mppcX_2ndSide); // along -X fiber
     double peX = peX1 + peX2;       // pe along fiber X
 
-    double peY1=pe/2.; 
-    double peY2=pe/2.; 
+    double peY1=pe/6.; 
+    double peY2=pe/6.; 
     double timepeY=time;
     ApplyFiberResponse(peY1,timepeY,mppcY); // along Y fiber
     ApplyFiberResponse(peY2,timepeY,mppcY_2ndSide); // along -Y fiber
     double peY = peY1 + peY2;       // pe along fiber Y
 
-    double peZ1=pe/2.; 
-    double peZ2=pe/2.; 
+    double peZ1=pe/6.; 
+    double peZ2=pe/6.; 
     double timepeZ=time;
     ApplyFiberResponse(peZ1,timepeZ,mppcZ); // along Z fiber
     ApplyFiberResponse(peZ2,timepeZ,mppcZ_2ndSide); // along -Z fiber
@@ -342,9 +342,11 @@ void FgdDigitizer::ApplyMPPCResponse(double& npe)
     return;
 }
 
+
 double FgdDigitizer::RevertyMPPCResponse(double npe)
 {
-  return (npe/MPPCEff_SuperFGD);
+  static const double Inverse_MPPCEff_SuperFGD = 2.15; // From trial an error the best match is chosen for the revert value
+  return (npe * Inverse_MPPCEff_SuperFGD);
 }
 // -------------------------------------------------------------------------
 
