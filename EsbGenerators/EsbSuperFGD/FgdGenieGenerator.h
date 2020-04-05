@@ -73,7 +73,7 @@ private:
 
 	
 	
-	ClassDef(FgdGenieGenerator,2)
+	ClassDef(FgdGenieGenerator,3)
 };
 
 } //namespace superfgd 
