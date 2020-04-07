@@ -560,7 +560,7 @@ void FgdTMVAData::FinishTask()
     {
         dataEvent = &feventRecords[ind];
 
-        if(!dataEvent->IsWeakCC())
+        if(!dataEvent->IsWeakCC() || !dataEvent->IsQuasiElastic())
         {
             continue;
         }
@@ -589,8 +589,8 @@ void FgdTMVAData::FinishTask()
             ph_tr3 = ph_tr[2];
         }
 
-        if(tr1==0)
-            continue;
+        // if(tr1==0)
+        //     continue;
 
         // Normalize before filling
         tr1 /= fMaxtrack;
@@ -600,10 +600,17 @@ void FgdTMVAData::FinishTask()
         ph_tr2 /= fMaxTrph;
         ph_tr3 /= fMaxTrph;
         totCubes /= fMaxCubes;
-        totPh /= fMaxTotph;
+
+        //totPh /= fMaxTotph;   
+        Float_t halfMaxph = fMaxTotph/2;
+        totPh = (totPh - halfMaxph)/halfMaxph; // normalize to [-1:1]
+
+
         lnuEnergy /= fMaxnuE;
         totalEdep /= fMaxTotEdep;
-        trueEdep /= fMaxTrueEdep;
+
+        //trueEdep /= fMaxTrueEdep
+
         totalPe /= fMaxTotPe;
 
         longestTrackPrjTree->Fill();

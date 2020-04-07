@@ -51,6 +51,8 @@ namespace DP
     static const string FGD_TOTAL_PHOTONS_TTREE = "FgdTotalPhotonsTree";
     static const string FGD_TRACK_PROJECTION_TTREE = "FgdTrackProjectionTree";
     static const string FGD_LONGEST_TRACK_PROJECTION_TTREE = "FgdLongestProjectionTree";
+    static const string FGD_DEPOSITED_ENERGY_CUBE_TTREE = "FgdDepositedEnergyTree";
+    static const string FGD_CUBE_INFO_TTREE = "FgdCubesEventInfoTree";
     static const string FGD_TMVA_DATA_BRANCH = "FgdTMVADataBranch";
     static const string FGD_TMVA_HIT_ARRAY_BRANCH = "FgdTMVAHitArrayBranch";
     static const string FGD_TMVA_PHOTO_ARRAY_BRANCH = "FgdTMVAPhotoArrayBranch";

@@ -1,5 +1,5 @@
-#ifndef ESBROOT_ESBDRECONSTRUCTION_FGD_TMVA_DATA_STATS_H
-#define ESBROOT_ESBDRECONSTRUCTION_FGD_TMVA_DATA_STATS_H
+#ifndef ESBROOT_ESBDRECONSTRUCTION_FGD_TMVA_DATA2_STATS_H
+#define ESBROOT_ESBDRECONSTRUCTION_FGD_TMVA_DATA2_STATS_H
 
 // EsbRoot headers
 #include "EsbReconstruction/EsbSuperFGD/FgdMCGenFitRecon.h"
@@ -9,13 +9,13 @@ namespace esbroot {
 namespace reconstruction {
 namespace superfgd {
 
-class FgdTMVAData : public FgdMCGenFitRecon
+class FgdTMVAData2 : public FgdMCGenFitRecon
 {
 
  public:
 
   /** Default constructor **/  
-  FgdTMVAData();
+  FgdTMVAData2();
 
   /** Constructor with argument
    *@param name       Name of task
@@ -26,7 +26,7 @@ class FgdTMVAData : public FgdMCGenFitRecon
    *@param verbose  - Verbosity level
    *@param debugLlv - debug level for genfit
   **/  
-  FgdTMVAData(const char* name
+  FgdTMVAData2(const char* name
               , const char* geoConfigFile
               , const char* mediaFile
               , const char* eventData
@@ -35,7 +35,7 @@ class FgdTMVAData : public FgdMCGenFitRecon
               , double debugLlv = 0);
 
   /** Destructor **/
-  virtual ~FgdTMVAData();
+  virtual ~FgdTMVAData2();
 
   /** Virtual method Init **/
   virtual InitStatus Init() override;
@@ -49,36 +49,22 @@ class FgdTMVAData : public FgdMCGenFitRecon
 protected:
 
   Bool_t ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks);
-  Double_t CalculatePhotoEdep(ReconHit& hit);
   
   std::string feventData;//!<!
   std::string foutputRootFile;//!<!
 
   std::vector<FgdTMVAEventRecord> feventRecords;//!<!
-  std::shared_ptr<TDatabasePDG> fpdgDB;//!<!
-
-  std::map<Int_t, std::vector<TVector3>> fhitCoordinates;//!<!
-  std::map<Int_t, std::vector<TVector3>> fhitPhotons;//!<!
-
-  std::vector<std::vector<Float_t>> ftrackLenghts;//!<!
-  std::vector<std::vector<Float_t>> ftrackPhotos;//!<!
 
   int feventNum;//!<!
   Float_t fmagField_X;
   Float_t fmagField_Y;
   Float_t fmagField_Z;
 
-  size_t fMaxtrack;
-  Float_t fMaxTrph;
-
-  Float_t fMaxTotph;
-  Float_t fMaxCubes;
-  Float_t fMaxTotEdep;
-  Float_t fMaxTotPe;
-  Float_t fMaxnuE;
-  Float_t fMaxTrueEdep;
+  TFile * foutFile;
+  TTree * fdeTree;
+  TTree * fciTree;
   	   
-  ClassDef(FgdTMVAData, 2);
+  ClassDef(FgdTMVAData2, 2);
 
 };
 
@@ -86,4 +72,4 @@ protected:
 } //reconstruction
 } //esbroot
 
-#endif // ESBROOT_ESBDRECONSTRUCTION_FGD_TMVA_DATA_STATS_H
+#endif // ESBROOT_ESBDRECONSTRUCTION_FGD_TMVA_DATA2_STATS_H

@@ -52,6 +52,7 @@ set(SRCS
 	EsbSuperFGD/FgdMuonRecon.cxx
 	EsbSuperFGD/FgdTMVAEventRecord.cxx
 	EsbSuperFGD/FgdTMVAData.cxx
+	EsbSuperFGD/FgdTMVAData2.cxx
 )
 
 Set(HEADERS 
@@ -66,6 +67,7 @@ Set(HEADERS
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdMuonRecon.h
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdTMVAEventRecord.h
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdTMVAData.h
+	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdTMVAData2.h
 )
 
 Set(LINKDEF ${CMAKE_SOURCE_DIR}/EsbReconstruction/ReconLinkDef.h)
