@@ -29,5 +29,6 @@
 #pragma link C++ class esbroot::reconstruction::superfgd::FgdTMVAEventRecord+;
 #pragma link C++ class esbroot::reconstruction::superfgd::FgdTMVAData+;
 #pragma link C++ class esbroot::reconstruction::superfgd::FgdTMVAData2+;
+#pragma link C++ class esbroot::reconstruction::superfgd::FgdEdepAnalyzer+;
 
 #endif
