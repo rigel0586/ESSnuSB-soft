@@ -3,7 +3,7 @@
 
 // EsbRoot headers
 #include "EsbReconstruction/EsbSuperFGD/FgdMCGenFitRecon.h"
-#include "EsbReconstruction/EsbSuperFGD/FgdTMVAEventRecord.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdMCEventRecord.h"
 
 namespace esbroot {
 namespace reconstruction {
@@ -21,6 +21,7 @@ class FgdEdepAnalyzer : public FgdMCGenFitRecon
    *@param name       Name of task
    *@param geoConfigFile  - Configuration file detector
    *@param mediaFile  - Configuration file for the used mediums
+   *@param eventData - events data file (generated from fgd generator)
    *@param outputEdepFile  - output data statistics for photons to edep
    *@param photoInterval - interval for which to make statistics
    *@param verbose  - Verbosity level
@@ -29,6 +30,7 @@ class FgdEdepAnalyzer : public FgdMCGenFitRecon
   FgdEdepAnalyzer(const char* name
               , const char* geoConfigFile
               , const char* mediaFile
+              , const char* eventData
               , const char* outputEdepFile
               , Int_t photoInterval
               , Int_t verbose = 1
@@ -61,6 +63,7 @@ protected:
     Int_t getHigh(){return fhigh;}
     size_t size(){return fdedx.size();}
     Double_t getAvgDedx();
+    Double_t getStdDev();
 
     private:
         Int_t flow;
@@ -86,6 +89,8 @@ protected:
   Bool_t ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks);
   
   std::string foutputEdepFile;//!<!
+  std::string feventData;//!<!
+  std::vector<FgdMCEventRecord> feventRecords;//!<!
 
   int feventNum;//!<!
   Float_t fmagField_X;
@@ -93,7 +98,7 @@ protected:
   Float_t fmagField_Z;
 
   Int_t fphotoInterval;
-  EdepArray fDataArr;
+  std::map<Int_t, EdepArray> fmapEdep;//!<!
   	   
   ClassDef(FgdEdepAnalyzer, 2);
 

@@ -221,6 +221,11 @@ Bool_t FgdTMVAData2::ProcessStats(std::vector<std::vector<ReconHit>>& foundTrack
     fdeTree->Branch("dE", &dE);
     fdeTree->Branch("phot", &phot);
 
+    Float_t photons(0);
+    Float_t dedx(0);
+    fdeTree->Branch("photons", &photons);
+    fdeTree->Branch("dedx", &dedx);
+
     Float_t dst_X(0);
     Float_t dst_X2(0);
     fdeTree->Branch("dst_X", &dst_X);
@@ -248,6 +253,9 @@ Bool_t FgdTMVAData2::ProcessStats(std::vector<std::vector<ReconHit>>& foundTrack
         for(size_t j = 0; j < hitsOnTrack.size(); ++j)
         {   
             ReconHit& hit = hitsOnTrack[j];
+
+            photons = hit.fpe;
+            dedx = hit.fEdep / hit.ftrackLength;
 
             dE = hit.fEdep;
             phot =   hit.fph1.X() + hit.fph1.Y() + hit.fph1.Z()

@@ -15,7 +15,8 @@ void simulate_3_edep_analyzer(TString inFile = "fgd_dig.root",
 	      TString parFile = "params.root",
 	      TString outFile = "fgd_edep_analyzer.root",
         Int_t nStartEvent = 0,
-        Int_t nEvents = 25000,
+        Int_t nEvents = 30000,
+        TString eventDat = "../../EsbMacro/tests/eventsData.dat",
         TString outEdepFile = "../../EsbMacro/tests/outEdepFile.dat")
 {
   using namespace esbroot;
@@ -46,8 +47,9 @@ void simulate_3_edep_analyzer(TString inFile = "fgd_dig.root",
     "Reconstruction MC Task"             // name of the task
     ,"../../EsbGeometry/EsbSuperFGD/EsbConfig/fgdconfig"  //File with detector configuration
     ,"../../geometry/media.geo"       // Media file with defined materials
+    ,eventDat             // events data file
     ,outEdepFile             // output data file
-    , 1                       // Interval to make the statistics
+    , 10                     // Interval to make the statistics
     , 1                               // Verbose level
     , debugLvl                        // debug level of genfit (0 - little, 1 - debug info, 2 - detailed)
     );                           

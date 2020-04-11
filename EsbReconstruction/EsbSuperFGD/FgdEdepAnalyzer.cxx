@@ -69,7 +69,7 @@ namespace superfgd {
 
 // -----   Default constructor   -------------------------------------------
 FgdEdepAnalyzer::FgdEdepAnalyzer() : FgdMCGenFitRecon(), feventNum(0)
-        , fmagField_X(0.), fmagField_Y(0.), fmagField_Z(0.), fDataArr()
+        , fmagField_X(0.), fmagField_Y(0.), fmagField_Z(0.), fmapEdep()
 {
 }
 // -------------------------------------------------------------------------
@@ -78,18 +78,19 @@ FgdEdepAnalyzer::FgdEdepAnalyzer() : FgdMCGenFitRecon(), feventNum(0)
 FgdEdepAnalyzer::FgdEdepAnalyzer(const char* name
                           , const char* geoConfigFile
                           , const char* mediaFile
+                          , const char* eventData
                           , const char* outputEdepFile
                           , Int_t photoInterval
                           , Int_t verbose
                           , double debugLlv) :
   FgdMCGenFitRecon(name, geoConfigFile, mediaFile, verbose, 
                     debugLlv, false /* no visualization */, "D")
+    , feventData(eventData)
     , foutputEdepFile(outputEdepFile), fphotoInterval(photoInterval)
     , feventNum(0), fmagField_X(0.), fmagField_Y(0.), fmagField_Z(0.)
-    , fDataArr()
+    , fmapEdep()
 { 
     fphotoInterval = (fphotoInterval <=0)? 1: fphotoInterval;
-    fDataArr.setPhInt(fphotoInterval);
 }
 // -------------------------------------------------------------------------
 
@@ -112,6 +113,29 @@ FgdEdepAnalyzer::~FgdEdepAnalyzer()
 InitStatus FgdEdepAnalyzer::Init() 
 {   
     FgdMCGenFitRecon::Init();
+    std::ifstream eventFileStream;
+    try
+    {        
+        eventFileStream.open(feventData.c_str(), std::ios::in);
+
+        if(eventFileStream.is_open())
+        {
+            std::string line;
+            while(std::getline(eventFileStream,line))
+            {
+                feventRecords.emplace_back(FgdMCEventRecord(line));
+            }
+        }
+    }
+    catch(const std::exception& e)
+    {
+        LOG(fatal) << e.what();
+    }
+
+    if(eventFileStream.is_open())
+    {
+        eventFileStream.close();
+    }
 
     fmagField_X = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::magField_X);
     fmagField_Y = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::magField_Y);
@@ -154,6 +178,7 @@ void FgdEdepAnalyzer::Exec(Option_t* opt)
     else
     {
       LOG(error) << " Could not find clean hits or tracks! ";
+      ++feventNum;
     }
   }
   catch(genfit::Exception& e)
@@ -165,6 +190,15 @@ void FgdEdepAnalyzer::Exec(Option_t* opt)
 
 Bool_t FgdEdepAnalyzer::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks)
 {
+    if(feventNum >= feventRecords.size())
+    {
+        LOG(fatal) << "EventData reconrds are less than the passed events!";
+        throw "EventData reconrds are less than the passed events!";
+    }
+
+    FgdMCEventRecord& mcEventRecord = feventRecords[feventNum];
+    mcEventRecord.ReadEventData();
+
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
@@ -177,10 +211,21 @@ Bool_t FgdEdepAnalyzer::ProcessStats(std::vector<std::vector<ReconHit>>& foundTr
             Double_t edep = hit.fEdep;
             Double_t pe = hit.fpe;
 
-            //LOG(warning) << "pe " << pe << " dedx " <<  edep/trackLength << " [ " << edep << ", " << trackLength << "]"; 
-            fDataArr.add(pe, edep/trackLength);
+            //LOG(warning) << "pdg " << hit.fpdg << " pe " << pe << " dedx " <<  edep/trackLength << " [ " << edep << ", " << trackLength << "]"; 
+
+            std::map<Int_t, EdepArray>::iterator pdgKey= fmapEdep.find(hit.fpdg);
+            if(pdgKey != fmapEdep.end())
+            {
+                pdgKey->second.add(pe, edep/trackLength);
+            }else{
+                fmapEdep[hit.fpdg].setPhInt(fphotoInterval);
+                fmapEdep[hit.fpdg].add(pe, edep/trackLength);
+            }
         }   
     }
+
+    feventRecords[feventNum].SetHasHits(true);
+    ++feventNum; // Increment to next event from eventData read from simulation`s genie export
 }
 
 void FgdEdepAnalyzer::FinishTask()
@@ -188,13 +233,22 @@ void FgdEdepAnalyzer::FinishTask()
     FgdMCGenFitRecon::FinishTask();
 
     LOG(warning) << "==========================================";
-    std::vector<EdepInfo>& info = fDataArr.getInfo();
-    std::sort(info.begin(), info.end(), [](EdepInfo& bh1, EdepInfo& bh2){return bh1.getLow()<bh2.getLow();});
-    for(size_t i = 0; i <  info.size() ; ++i)
+    std::map<Int_t, EdepArray>::iterator pdgKey= fmapEdep.begin();
+
+    while(pdgKey != fmapEdep.end())
     {
-        EdepInfo& elem = info[i];
-        LOG(warning) << "[ " <<  elem.getLow() << "," << elem.getHigh() << "," << elem.size() << "] = " << elem.getAvgDedx();
+        std::vector<EdepInfo>& info = fmapEdep[pdgKey->first].getInfo();
+        std::sort(info.begin(), info.end(), [](EdepInfo& bh1, EdepInfo& bh2){return bh1.getLow()<bh2.getLow();});
+        for(size_t i = 0; i <  info.size() ; ++i)
+        {
+            EdepInfo& elem = info[i];
+            LOG(warning)    << pdgKey->first << " [ " <<  elem.getLow() << "," << elem.getHigh() << "," << elem.size() << "] = " 
+                            << elem.getAvgDedx()
+                            << " [ StDev = " << elem.getStdDev() << " ] ";
+        }
+        ++pdgKey;
     }
+    
 }
 
 FgdEdepAnalyzer::EdepInfo::EdepInfo(Int_t low, Int_t high)
@@ -229,6 +283,19 @@ Double_t FgdEdepAnalyzer::EdepInfo::getAvgDedx()
     }
     Double_t&& avg = sum / fdedx.size();
     return avg;
+}
+
+Double_t FgdEdepAnalyzer::EdepInfo::getStdDev()
+{
+    Double_t mean = this->getAvgDedx();
+
+    Double_t sq = 0.;
+    for(size_t i =0; i < fdedx.size(); ++i)
+    {
+        sq+= std::pow( (fdedx[i] - mean), 2);
+    }
+    Double_t&& avgSq = sq / fdedx.size();
+    return std::sqrt(avgSq);
 }
 
 
