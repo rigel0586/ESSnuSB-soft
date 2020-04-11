@@ -49,7 +49,7 @@ void simulate_3_edep_analyzer(TString inFile = "fgd_dig.root",
     ,"../../geometry/media.geo"       // Media file with defined materials
     ,eventDat             // events data file
     ,outEdepFile             // output data file
-    , 10                     // Interval to make the statistics
+    , 1                     // Interval to make the statistics
     , 1                               // Verbose level
     , debugLvl                        // debug level of genfit (0 - little, 1 - debug info, 2 - detailed)
     );                           

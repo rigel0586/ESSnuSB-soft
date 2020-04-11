@@ -52,7 +52,7 @@ void muon_only_3_reconstruction(TString inFile = "fgd_dig_mu_only.root",
     , false                            // To visualize the tracks using genfit::Eventdisplay
     , "D");                           // Option to be passed for genfit::Eventdisplay if used
 
-  ((reconstruction::superfgd::FgdMuonRecon*)recon)->SetMinHits(3);
+  ((reconstruction::superfgd::FgdMuonRecon*)recon)->SetMinHits(5);
   
   fRun->AddTask(recon);   
   fRun->Init(); // initializing

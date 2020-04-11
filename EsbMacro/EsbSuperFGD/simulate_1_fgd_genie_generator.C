@@ -6,7 +6,7 @@
 
 void simulate_1_fgd_genie_generator(TString outFileName = "evetest.root",
              Int_t nStartEvent = 0, 
-	     Int_t nEvents = 10000)
+	     Int_t nEvents = 30000)
 {
   using namespace esbroot;
   
@@ -96,19 +96,20 @@ void simulate_1_fgd_genie_generator(TString outFileName = "evetest.root",
 		"../../EsbGeometry/EsbSuperFGD/EsbConfig/fgdconfig"  //File with detector configuration
 		//,"../../EsbMacro/tests/nuFlux/nuFlux100km_250kAm.txt"  // File with neutrino flux to use if the external flux driver is not passed
     //,"../../EsbMacro/tests/nuFlux/nuFluxTest.txt"  // File with neutrino flux to use if the external flux driver is not passed
-    ,"../../EsbMacro/tests/nuFlux/tmva_nuUniform.txt" // File containing uniform energy muon neutrinos
+    //,"../../EsbMacro/tests/nuFlux/tmva_nuUniform.txt" // File containing uniform energy muon neutrinos
+    ,"../../EsbMacro/tests/nuFlux/tmva_06uni.txt"
     //,"../../EsbMacro/tests/nuFlux/tmva_nuReal.txt" // File containing real flux muon neutrinos
 		, seed // uniform random number generator seed
     , fgdPosition
     , nEvents
     , nullptr
-    , false // set to use uniformalize the flux (it loops around the neutrino records in the flux txt file regard)
+    , true // set to use uniformalize the flux (it loops around the neutrino records in the flux txt file regard)
     //, external_fluxDriver
   );
 
   partGen->UseFixVertex(true);
 
-  TVector3 verPosition(fgdPosition.X() ,fgdPosition.Y(), fgdPosition.Z() - 49);
+  TVector3 verPosition(fgdPosition.X() ,fgdPosition.Y(), fgdPosition.Z());
   partGen->SetVertexPos(verPosition);
 
   //Add to list of generators

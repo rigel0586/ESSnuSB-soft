@@ -57,7 +57,7 @@ void simulate_1_fairgenerator(TString outFileName = "evetest.root",
   //~ FairParticleGenerator* partGen = new FairParticleGenerator(2212, 1, 0, 0, 1, 0, 0, 0);
   //FairParticleGenerator* partGen = new FairParticleGenerator(13, 1, 0, 0, 0.4, 0, 0, 150);
   //FairParticleGenerator* partGen = new FairParticleGenerator(2212, 1, 0.1, 0.1, 0.4, 0.5, 0.5, -50); // Initial
-  FairParticleGenerator* partGen = new FairParticleGenerator(2212, 1, 0., 0., 1.606, 0.5, 0.5, -50);
+  FairParticleGenerator* partGen = new FairParticleGenerator(13, 1, 0., 0., 1., -40., 0., -50);
   primGen->AddGenerator(partGen);
 
   fRun->SetOutputFile(outFileName.Data()); // set output file

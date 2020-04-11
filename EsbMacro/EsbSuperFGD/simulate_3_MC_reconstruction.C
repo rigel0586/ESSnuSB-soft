@@ -13,8 +13,8 @@
 
 void simulate_3_MC_reconstruction(TString inFile = "fgd_dig.root", 
 	      TString parFile = "params.root",
-	      TString outFile = "fgd_recon.root",
-              Int_t nStartEvent = 7, Int_t nEvents = 1)
+	      TString outFile = "fgd_mc_recon.root",
+              Int_t nStartEvent = 0, Int_t nEvents = 50)
 {
   using namespace esbroot;
 
@@ -46,7 +46,7 @@ void simulate_3_MC_reconstruction(TString inFile = "fgd_dig.root",
     ,"../../geometry/media.geo"       // Media file with defined materials
     , 1                               // Verbose level
     , debugLvl                        // debug level of genfit (0 - little, 1 - debug info, 2 - detailed)
-    , true                            // To visualize the tracks using genfit::Eventdisplay
+    , false                            // To visualize the tracks using genfit::Eventdisplay
     , "D");                           // Option to be passed for genfit::Eventdisplay if used
 
   ((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetMinHits(3);

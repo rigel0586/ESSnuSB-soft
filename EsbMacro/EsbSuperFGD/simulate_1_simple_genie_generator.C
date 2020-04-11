@@ -6,7 +6,7 @@
 
 void simulate_1_simple_genie_generator(TString outFileName = "evetest.root",
              Int_t nStartEvent = 0, 
-	     Int_t nEvents = 25)
+	     Int_t nEvents = 1)
 {
   using namespace esbroot;
   

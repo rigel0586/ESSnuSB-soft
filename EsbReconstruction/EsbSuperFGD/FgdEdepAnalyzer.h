@@ -58,17 +58,23 @@ protected:
 
 
     Bool_t contains(Double_t pe);
-    void add(Double_t dedx) {fdedx.push_back(dedx);};
+    void add(Double_t dedx, Double_t edep);
     Int_t getLow(){return flow;}
     Int_t getHigh(){return fhigh;}
+    
     size_t size(){return fdedx.size();}
+
     Double_t getAvgDedx();
     Double_t getStdDev();
+
+    Double_t getAvgEdep();
+    Double_t getStdDevEdep();
 
     private:
         Int_t flow;
         Int_t fhigh;
         std::vector<Double_t> fdedx;
+        std::vector<Double_t> fEdep;
   };
 
   class EdepArray
@@ -78,7 +84,7 @@ protected:
         EdepArray(Int_t phInt) : fphInt(phInt){};
         ~EdepArray(){};
 
-        void add(Double_t pe, Double_t dedx);
+        void add(Double_t pe, Double_t dedx, Double_t edep);
         std::vector<EdepInfo>& getInfo() {return fInfo;}
         void setPhInt(Int_t val) {fphInt = val;}
     private:

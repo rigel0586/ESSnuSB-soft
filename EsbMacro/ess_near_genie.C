@@ -32,7 +32,7 @@ void ess_near_genie(TString outFileName = "ess_near_genie.root",
   
   FairDetector* fgd = new geometry::FgdDetector(
 		"Granular Detector",
-		"../EsbGeometry/EsbSuperFGD/EsbConfig/geometry",
+		"../EsbGeometry/EsbSuperFGD/EsbConfig/fgdconfig",
 		0,0,-550, kTRUE
 	);
   fRun->AddModule(fgd);
