@@ -216,10 +216,10 @@ Bool_t FgdEdepAnalyzer::ProcessStats(std::vector<std::vector<ReconHit>>& foundTr
             std::map<Int_t, EdepArray>::iterator pdgKey= fmapEdep.find(hit.fpdg);
             if(pdgKey != fmapEdep.end())
             {
-                pdgKey->second.add(pe, edep/trackLength, edep);
+                pdgKey->second.add(pe, edep/trackLength, edep, trackLength);
             }else{
                 fmapEdep[hit.fpdg].setPhInt(fphotoInterval);
-                fmapEdep[hit.fpdg].add(pe, edep/trackLength, edep);
+                fmapEdep[hit.fpdg].add(pe, edep/trackLength, edep, trackLength);
             }
         }   
     }
@@ -247,7 +247,10 @@ void FgdEdepAnalyzer::FinishTask()
                             << " [ StDev = " << elem.getStdDev() << " %" << 100*elem.getStdDev()/ elem.getAvgDedx() << " ] "
                             << " Edep -> "
                             << elem.getAvgEdep()
-                            << " [ StDev = " << elem.getStdDevEdep() << " %" << 100*elem.getStdDevEdep()/ elem.getAvgEdep() <<  " ] ";
+                            << " [ StDev = " << elem.getStdDevEdep() << " %" << 100*elem.getStdDevEdep()/ elem.getAvgEdep() <<  " ] "
+                            << " Length -> "
+                            << elem.getAvgLength()
+                            << " [ StDev = " << elem.getStdDevLength() << " %" << 100*elem.getStdDevLength()/ elem.getAvgLength() <<  " ] ";
         }
         ++pdgKey;
     }
@@ -266,6 +269,7 @@ FgdEdepAnalyzer::EdepInfo::EdepInfo(const EdepInfo& c)
     fhigh = c.fhigh;
     fdedx = c.fdedx;
     fEdep = c.fEdep;
+    fLength = c.fLength;
 }
 
 FgdEdepAnalyzer::EdepInfo::~EdepInfo()
@@ -326,22 +330,47 @@ Double_t FgdEdepAnalyzer::EdepInfo::getStdDevEdep()
     return std::sqrt(avgSq);
 }
 
-
-void FgdEdepAnalyzer::EdepInfo::add(Double_t dedx, Double_t edep)
+Double_t FgdEdepAnalyzer::EdepInfo::getAvgLength()
 {
-    fdedx.push_back(dedx);
-    fEdep.push_back(edep);
+    Double_t sum = 0.;
+    for(size_t i =0; i < fLength.size(); ++i)
+    {
+        sum+= fLength[i];
+    }
+    Double_t&& avg = sum / fLength.size();
+    return avg;
+}
+
+Double_t FgdEdepAnalyzer::EdepInfo::getStdDevLength()
+{
+    Double_t mean = this->getAvgLength();
+
+    Double_t sq = 0.;
+    for(size_t i =0; i < fLength.size(); ++i)
+    {
+        sq+= std::pow( (fLength[i] - mean), 2);
+    }
+    Double_t&& avgSq = sq / fLength.size();
+    return std::sqrt(avgSq);
 }
 
 
-void FgdEdepAnalyzer::EdepArray::add(Double_t pe, Double_t dedx, Double_t edep)
+void FgdEdepAnalyzer::EdepInfo::add(Double_t dedx, Double_t edep, Double_t length)
+{
+    fdedx.push_back(dedx);
+    fEdep.push_back(edep);
+    fLength.push_back(length);
+}
+
+
+void FgdEdepAnalyzer::EdepArray::add(Double_t pe, Double_t dedx, Double_t edep, Double_t length)
 {
     Bool_t containsVal(false);
     for(size_t i =0; i < fInfo.size(); ++i)
     {
         if(fInfo[i].contains(pe))
         {
-            fInfo[i].add(dedx, edep);
+            fInfo[i].add(dedx, edep, length);
             containsVal = true;
             break;
         }
@@ -352,7 +381,7 @@ void FgdEdepAnalyzer::EdepArray::add(Double_t pe, Double_t dedx, Double_t edep)
         Int_t low = ((Int_t)pe/fphInt) * fphInt;
         Int_t high = low + fphInt;
         EdepInfo elem(low , high);
-        elem.add(dedx, edep);
+        elem.add(dedx, edep, length);
         fInfo.emplace_back(elem);
     }
 }
