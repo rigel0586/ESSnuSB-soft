@@ -71,6 +71,13 @@ private:
   /** Class to hold the Detector parameters read from external file **/
   esbroot::geometry::superfgd::FgdDetectorParameters fParams;
 
+  /** Methods to calculate the response from detector physical characteristics **/
+  double ApplyScintiResponse(double edep, double trackLength, double charge);
+  void ApplyFiberResponse(double &numPhotons, double &time, double distance);
+  double ApplyFiberAttenuation(double Nphot0,double x);
+  double ApplyFiberTime(double &time, double x);
+  void ApplyMPPCResponse(double &npe);
+
   /** Coordinates of the detector **/
   double fX;
   double fY;
@@ -89,14 +96,6 @@ private:
   double f_total_Z;
 
   TRandom3 rand; // random varible generator
-
-
-  /** Methods to calculate the response from detector physical characteristics **/
-  double ApplyScintiResponse(double edep, double trackLength, double charge);
-  void ApplyFiberResponse(double &numPhotons, double &time, double distance);
-  double ApplyFiberAttenuation(double Nphot0,double x);
-  double ApplyFiberTime(double &time, double x);
-  void ApplyMPPCResponse(double &npe);
 
   /** Input array of FgdDetectorPoint(s)**/
   TClonesArray* fdPoints;     //! 

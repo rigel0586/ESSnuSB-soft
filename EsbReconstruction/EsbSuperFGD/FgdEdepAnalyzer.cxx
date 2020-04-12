@@ -208,10 +208,14 @@ Bool_t FgdEdepAnalyzer::ProcessStats(std::vector<std::vector<ReconHit>>& foundTr
         {   
             ReconHit& hit = hitsOnTrack[j];
             Double_t trackLength = hit.ftrackLength;
-            Double_t edep = hit.fEdep;
+            Double_t edep = hit.fEdep *1e3;
             Double_t pe = hit.fpe;
 
             //LOG(warning) << "pdg " << hit.fpdg << " pe " << pe << " dedx " <<  edep/trackLength << " [ " << edep << ", " << trackLength << "]"; 
+
+            // LOG(warning) << "pdg " << hit.fpdg << " pe " << pe << " Digitized " 
+            //             << ApplyScintiResponse(edep, trackLength, 1);  
+            
 
             std::map<Int_t, EdepArray>::iterator pdgKey= fmapEdep.find(hit.fpdg);
             if(pdgKey != fmapEdep.end())
@@ -255,6 +259,30 @@ void FgdEdepAnalyzer::FinishTask()
         ++pdgKey;
     }
     
+}
+
+double FgdEdepAnalyzer::ApplyScintiResponse(double edep, double trackLength, double charge)
+{
+    const double CBIRKS = 0.0208; // used in SciBooNE MC
+    const double EdepToPhotConv_FGD = 70.8 / CLHEP::MeV; // contains both collection in fiber and edep->gamma conversion 
+    const double EdepToPhotConv_SuperFGD = EdepToPhotConv_FGD * 1.3;
+
+    // Calculated as in 
+    //  geant4/examples/advanced/amsEcal/src/SteppingAction.cc
+    //  G4double SteppingAction::BirksAttenuation(const G4Step* aStep)
+    //  light attenuation (Birks' formula)
+    double dedx = edep/trackLength;
+    double edep_birk = edep/(1. + CBIRKS*dedx);
+    // Calculate edep to photons
+    LOG(info) << "dedx " << dedx 
+                << " edep " << edep 
+                << " trackLength " << trackLength 
+                << " (1. + CBIRKS*dedx) " << (1. + CBIRKS*dedx)
+                << " edep_birk " << edep_birk
+                << " CLHEP::cm " << CLHEP::cm
+                << " CLHEP::MeV " << CLHEP::MeV
+                << " CLHEP::cm/CLHEP::MeV " << CLHEP::cm/CLHEP::MeV;
+    return edep_birk * EdepToPhotConv_SuperFGD;  
 }
 
 FgdEdepAnalyzer::EdepInfo::EdepInfo(Int_t low, Int_t high)
