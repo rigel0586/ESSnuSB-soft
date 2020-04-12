@@ -14,7 +14,7 @@
 void simulate_7_graph_analyze(TString inFile = "fgd_dig.root", 
 	      TString parFile = "params.root",
 	      TString outFile = "fgd_mc_recon_stats.root",
-              Int_t nStartEvent = 0, Int_t nEvents = 5)
+              Int_t nStartEvent = 0, Int_t nEvents = 150)
 {
   using namespace esbroot;
 
