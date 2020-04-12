@@ -97,6 +97,8 @@ protected:
   };
 
   Bool_t ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks);
+
+  double ApplyScintiResponse(double edep, double trackLength, double charge);
   
   std::string foutputEdepFile;//!<!
   std::string feventData;//!<!

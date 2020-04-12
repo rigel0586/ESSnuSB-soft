@@ -602,8 +602,8 @@ void FgdTMVAData::FinishTask()
         totCubes /= fMaxCubes;
 
         //totPh /= fMaxTotph;   
-        Float_t halfMaxph = fMaxTotph/2;
-        totPh = (totPh - halfMaxph)/halfMaxph; // normalize to [-1:1]
+        // Float_t halfMaxph = fMaxTotph/2;
+        // totPh = (totPh - halfMaxph)/halfMaxph; // normalize to [-1:1]
 
 
         lnuEnergy /= fMaxnuE;

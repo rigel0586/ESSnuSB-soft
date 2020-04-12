@@ -213,7 +213,8 @@ void FgdDigitizer::Exec(Option_t* opt)
 
 
 // -----   Private methods   --------------------------------------------
-const double FgdDigitizer::CBIRKS = 0.0208 * CLHEP::cm/CLHEP::MeV; // used in SciBooNE MC
+//const double FgdDigitizer::CBIRKS = 0.0208 * CLHEP::cm/CLHEP::MeV; // used in SciBooNE MC
+const double FgdDigitizer::CBIRKS = 0.0208; // We use directly cm and GeV [and convert to MeVs]
 const double FgdDigitizer::EdepToPhotConv_FGD = 70.8 / CLHEP::MeV; // contains both collection in fiber and edep->gamma conversion 
 const double FgdDigitizer::EdepToPhotConv_SuperFGD = EdepToPhotConv_FGD * 1.3;
 
