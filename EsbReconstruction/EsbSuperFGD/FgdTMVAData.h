@@ -51,6 +51,8 @@ protected:
   Bool_t ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks);
   Double_t CalculatePhotoEdep(ReconHit& hit);
   
+  Bool_t isParticleAllowed(Int_t pdg);
+
   std::string feventData;//!<!
   std::string foutputRootFile;//!<!
 
@@ -68,7 +70,7 @@ protected:
   Float_t fmagField_Y;
   Float_t fmagField_Z;
 
-  size_t fMaxtrack;
+  Float_t fMaxtrack;
   Float_t fMaxTrph;
 
   Float_t fMaxTotph;

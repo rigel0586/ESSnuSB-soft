@@ -56,7 +56,7 @@ void tmva_app( TString myMethodList = "", TString inFileName = "tmva_data.root" 
    // --- Neural Network
    Use["MLP"] = 1;
 #ifdef R__HAS_TMVACPU
-   Use["DNN_CPU"] = 1;
+   Use["DNN_CPU"] = 0;
 #else
    Use["DNN_CPU"] = 0;
 #endif
@@ -106,9 +106,13 @@ void tmva_app( TString myMethodList = "", TString inFileName = "tmva_data.root" 
     //reader->AddVariable( "ph_tr3", &ph_tr3 );
 
     Float_t totalPhotons, totalCubes, totalEdep;
-    reader->AddVariable( "totalPhotons", &totalPhotons );
+    //reader->AddVariable( "totalPhotons", &totalPhotons );
     //reader->AddVariable( "totalCubes", &totalCubes );
     //reader->AddVariable( "totalEdep", &totalEdep );
+
+    reader->AddVariable( "totalPhotons", &totalPhotons );
+    //reader->AddVariable( "tr1", &tr1 );
+    //reader->AddVariable( "totalCubes", &totalCubes );
 
    // --- Book the MVA methods
 
@@ -128,7 +132,7 @@ void tmva_app( TString myMethodList = "", TString inFileName = "tmva_data.root" 
    TH1* hists[100];
    Int_t nhists = -1;
    for (std::map<std::string,int>::iterator it = Use.begin(); it != Use.end(); it++) {
-      TH1* h = new TH1F( it->first.c_str(), TString(it->first) + " method", 100, 0, 0.8 );
+      TH1* h = new TH1F( it->first.c_str(), TString(it->first) + " method", 100, 0, 2 );
       if (it->second) hists[++nhists] = h;
    }
    nhists++;

@@ -201,6 +201,14 @@ Bool_t FgdEdepAnalyzer::ProcessStats(std::vector<std::vector<ReconHit>>& foundTr
 
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
+      std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
+      // Sort by time, the 1st hit in time is the start of the track
+      std::sort(hitsOnTrack.begin(), hitsOnTrack.end(), [](ReconHit& bh1, ReconHit& bh2){return bh1.ftime<bh2.ftime;});
+    }
+
+
+    for(size_t i = 0; i <  foundTracks.size() ; ++i)
+    {
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
         if(hitsOnTrack.empty()) continue;
 
@@ -216,6 +224,9 @@ Bool_t FgdEdepAnalyzer::ProcessStats(std::vector<std::vector<ReconHit>>& foundTr
             // LOG(warning) << "pdg " << hit.fpdg << " pe " << pe << " Digitized " 
             //             << ApplyScintiResponse(edep, trackLength, 1);  
             
+            // LOG(warning)<< "pdg " << hit.fpdg << " pe " << pe << " dedx " <<  edep/trackLength << " " << hit.fmppcLoc.X()  
+            //     << " " << hit.fmppcLoc.Y() 
+            //     << " " << hit.fmppcLoc.Z() ;
 
             std::map<Int_t, EdepArray>::iterator pdgKey= fmapEdep.find(hit.fpdg);
             if(pdgKey != fmapEdep.end())

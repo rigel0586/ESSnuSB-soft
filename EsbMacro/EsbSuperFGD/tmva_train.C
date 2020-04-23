@@ -47,10 +47,11 @@
 
 using namespace TMVA;
 
-void train_tmva( TString myMethodList = "" 
-                              , TString inFileName = "tmva_data.root"
-                              , Int_t numToTrain = 10000
-                              , Int_t numToTest = 3430)
+void tmva_train( Int_t numToTrain = 3000
+                  , Int_t numToTest = 693
+                  ,TString myMethodList = "" 
+                  , TString inFileName = "tmva_data.root"
+                              )
 {
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
    // if you use your private .rootrc, or run from a different directory, please copy the
@@ -87,9 +88,9 @@ void train_tmva( TString myMethodList = ""
    // Neural Network
    Use["MLP"]             = 1;
 #ifdef R__HAS_TMVACPU
-   Use["DNN_CPU"] = 1;
+   Use["DNN_CPU"] = 0;
 #else
-   Use["DNN_CPU"] = 1;
+   Use["DNN_CPU"] = 0;
 #endif
    //
    // Support Vector Machine
@@ -97,7 +98,7 @@ void train_tmva( TString myMethodList = ""
    //
    // Boosted Decision Trees
    Use["BDT"]             = 0;
-   Use["BDTG"]            = 1;
+   Use["BDTG"]            = 0;
    // ---------------------------------------------------------------
 
    std::cout << std::endl;
@@ -143,14 +144,16 @@ void train_tmva( TString myMethodList = ""
    //dataloader->AddVariable( "ph_tr2", "2nd track photons", "units", 'F' );
    //dataloader->AddVariable( "ph_tr3", "3rd track photons", "units", 'F' );
 
+   //dataloader->AddVariable( "totalCubes", "Total cubes", "units", 'F' );
+   //dataloader->AddVariable( "totalEdep", "Total deposited energy", "units", 'F' );
 
    dataloader->AddVariable( "totalPhotons", "Total photons", "units", 'F' );
+   //dataloader->AddVariable( "tr1", "1st track", "units", 'F' );
    //dataloader->AddVariable( "totalCubes", "Total cubes", "units", 'F' );
-    //dataloader->AddVariable( "totalEdep", "Total deposited energy", "units", 'F' );
 
    // Add the variable carrying the regression target
    //dataloader->AddTarget( "nuEnergy" );
-    dataloader->AddTarget( "trueEdep" );
+   dataloader->AddTarget( "trueEdep" );
    //dataloader->AddTarget( "nuPdg" );
    //dataloader->AddTarget( "isCC" );
 

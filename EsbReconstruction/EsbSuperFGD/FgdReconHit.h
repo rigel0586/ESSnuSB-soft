@@ -61,8 +61,8 @@ public:
     Double_t ftime;
     TVector3 fmom;
     TVector3 fmomExit;
-    Double_t ftrackLength;
-    Double_t ftrackLengthOrigin;
+    Double_t ftrackLength;       // Lenght used bu summing on each step (it is less than ftrackLengthOrigin)
+    Double_t ftrackLengthOrigin; // TVirtualMC::GetMC()->TrackLength() -> Monte Carlo length
     Double_t fEdep;
     Int_t fpdg;
     Int_t ftrackId;

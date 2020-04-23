@@ -225,7 +225,7 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
-        if(hitsOnTrack.empty()) continue;
+        if(hitsOnTrack.empty() || !isParticleAllowed(hitsOnTrack[0].fpdg)) continue;
 
         for(size_t j = 0; j < hitsOnTrack.size(); ++j)
         {   
@@ -284,16 +284,22 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
         if(hitsOnTrack.size() < min_Track_Length) break;
 
-        size_t trackLenght = hitsOnTrack.size();
+        // size_t trackLenght = hitsOnTrack.size();
         
+        // if(fMaxtrack < trackLenght)
+        // {
+        //     fMaxtrack = trackLenght;
+        // }
+        // track[i] = trackLenght;
+
+        Float_t trackLenght = hitsOnTrack[hitsOnTrack.size()-1].ftrackLengthOrigin;
         if(fMaxtrack < trackLenght)
         {
             fMaxtrack = trackLenght;
         }
         track[i] = trackLenght;
 
-
-        Float_t sumPh;
+        Float_t sumPh(0.);
         for(size_t j = 0; j < hitsOnTrack.size(); ++j)
         {   
             ReconHit& hit = hitsOnTrack[j];
@@ -556,11 +562,12 @@ void FgdTMVAData::FinishTask()
 
     const Int_t evInd = feventRecords.size();
     FgdTMVAEventRecord* dataEvent = nullptr;
-    for(size_t ind = 0 ; ind < evInd; ind++)
+    for(size_t ind = 0 ; ind < evInd && ind < feventNum; ind++)
     {
         dataEvent = &feventRecords[ind];
 
-        if(!dataEvent->IsWeakCC() || !dataEvent->IsQuasiElastic())
+        bool isQuasiCC = dataEvent->IsWeakCC() && dataEvent->IsQuasiElastic();
+        if(!isQuasiCC)
         {
             continue;
         }
@@ -593,25 +600,27 @@ void FgdTMVAData::FinishTask()
         //     continue;
 
         // Normalize before filling
-        tr1 /= fMaxtrack;
-        tr2 /= fMaxtrack;
-        tr3 /= fMaxtrack;
-        ph_tr1 /= fMaxTrph;
-        ph_tr2 /= fMaxTrph;
-        ph_tr3 /= fMaxTrph;
-        totCubes /= fMaxCubes;
+        // tr1 /= fMaxtrack;
+        // tr2 /= fMaxtrack;
+        // tr3 /= fMaxtrack;
+        // ph_tr1 /= fMaxTrph;
+        // ph_tr2 /= fMaxTrph;
+        // ph_tr3 /= fMaxTrph;
+        // totCubes /= fMaxCubes;
 
-        //totPh /= fMaxTotph;   
+        // totPh /= fMaxTotph;   
         // Float_t halfMaxph = fMaxTotph/2;
         // totPh = (totPh - halfMaxph)/halfMaxph; // normalize to [-1:1]
 
 
-        lnuEnergy /= fMaxnuE;
-        totalEdep /= fMaxTotEdep;
+        // lnuEnergy /= fMaxnuE;
+        // totalEdep /= fMaxTotEdep;
 
         //trueEdep /= fMaxTrueEdep
+        // Float_t halfMaxTrueEdep = fMaxTrueEdep/2;
+        // trueEdep = (trueEdep - halfMaxTrueEdep)/halfMaxTrueEdep; // normalize to [-1:1]
 
-        totalPe /= fMaxTotPe;
+        // totalPe /= fMaxTotPe;
 
         longestTrackPrjTree->Fill();
 
@@ -632,6 +641,16 @@ void FgdTMVAData::FinishTask()
     delete outFile;
 
     FgdMCGenFitRecon::FinishTask();
+}
+
+Bool_t FgdTMVAData::isParticleAllowed(Int_t pdg)
+{
+    Bool_t isAllowed =  (pdg ==  genie::kPdgPiP) ||
+                        (pdg ==  genie::kPdgPiM) ||
+                      genie::pdg::IsProton(pdg) ||
+                      genie::pdg::IsChargedLepton(pdg);
+
+    return isAllowed;
 }
 
 // -------------------------------------------------------------------------
