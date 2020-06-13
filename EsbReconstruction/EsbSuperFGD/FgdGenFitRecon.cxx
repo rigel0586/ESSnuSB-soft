@@ -443,14 +443,17 @@ Bool_t FgdGenFitRecon::FindUsingHough(std::vector<TVector3>& points
     std::vector<pathfinder::TrackFinderTrack> pfTracks = newTrackFinder.getTracks();
     for(Int_t i =0; i <  pfTracks.size() ; i++)
     {
+      LOG(debug) << "Track " << i;
       pathfinder::TrackFinderTrack& trFinder = pfTracks[i];
       const std::vector<pathfinder::basicHit>& hitsOnTrack = trFinder.getHitsOnTrack();
       std::vector<TVector3> track;
       for(size_t j =0; j< hitsOnTrack.size(); ++j)
       {
           track.emplace_back(hitsOnTrack[j].getX(),hitsOnTrack[j].getY(),hitsOnTrack[j].getZ());
+           LOG(debug) << "X " << hitsOnTrack[j].getX() << " Y " << hitsOnTrack[j].getY() << " Z " << hitsOnTrack[j].getZ();
       }
       foundTracks.push_back(track);
+      LOG(debug) << "============================ ";
     }
   }
 
@@ -757,12 +760,96 @@ void FgdGenFitRecon::BuildGraph(std::vector<ReconHit>& hits)
     }
 }
 
+// void FgdGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks)
+// {
+//   const Int_t distToCalc = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_DIST);
+//   const Int_t intervalToCal = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_INTERVAL_DIST);
+//   const Double_t radToDeg = 180/TMath::Pi();
+//   TVector3 zAxisVec(0,0,1);
+
+//   for(Int_t i=0; i<tracks.size(); ++i)
+//   {
+//     std::vector<ReconHit*>& track = tracks[i];
+//     LOG(debug2) << "=================================== ";
+//     LOG(debug2) << "Track " << i;
+
+//     for(Int_t j=0; j<track.size(); ++j)
+//     {
+
+//       ReconHit* currentHit = track[j];
+
+//       // 1. Calculate direction from the previous hit
+//       TVector3 diffVec(0,0,0);
+//       if(j>=1)
+//       {
+//         ReconHit* previous = track[j-1];
+//         diffVec = currentHit->fmppcLoc - previous->fmppcLoc;
+//       }
+
+//       // 2.Calculate cosine change beween 2 consecutive vectors - gradient
+//       Double_t diffAngle(0);    // Difference angle between two vectors - the vectors are the difference in position (grad (position))
+//                                 // between two hits distToCalc cubes apart. The angles measures the angle change of the track
+//                                 // from hit to hit. distToCalc distance is selected to smooth out the change in angle.
+
+//       Double_t zAxisAngle(0);   // Vector angle between the z axis and the vector difference between the current hit and the hit distToCalc 
+//                                 // poisitions back.
+
+//       TVector3 diffVec1(0,0,0);
+//       TVector3 diffVec2(0,0,0);
+
+//       Int_t indOne = j - distToCalc + 1;
+//       Int_t indTwo = j; // current hit
+
+//       if(j>= (distToCalc -1) )
+//       {
+//         ReconHit* one = track[indOne];
+//         ReconHit* two = track[indTwo]; 
+//         diffVec1 = two->fmppcLoc - one->fmppcLoc;
+//         zAxisAngle = radToDeg * zAxisVec.Angle(diffVec1);
+
+//         // The z angle is calculated for the current hit
+//         currentHit->fZaxisAngle = zAxisAngle;
+//       }
+
+//       Int_t indOneP = indOne - intervalToCal;
+//       Int_t indTwoP = indTwo - intervalToCal;
+//       if(j>= (distToCalc + intervalToCal -1) )
+//       {
+//         ReconHit* oneP = track[indOneP];
+//         ReconHit* twoP = track[indTwoP];
+//         diffVec2 = twoP->fmppcLoc - oneP->fmppcLoc;
+
+//         diffAngle = radToDeg * diffVec1.Angle(diffVec2);
+
+//         // The angle is calculated for the current hit
+//         currentHit->fChangeAngle = diffAngle;
+//       }
+
+//       LOG(debug2) << "Id " << currentHit->fLocalId
+//                   << " \tX " << currentHit->fmppcLoc.X()
+//                   << " \tY " << currentHit->fmppcLoc.Y()
+//                   << " \tZ " << currentHit->fmppcLoc.Z() 
+//                   << " \tPhotons  " << "(" << currentHit->fphotons.X() << "," << currentHit->fphotons.Y() << "," << currentHit->fphotons.Z() << ")"
+//                   << " \tChange  " << "(" << diffVec.X() << "," << diffVec.Y() << "," << diffVec.Z() << ")"
+//                   // << " \t(" << diffVec1.X() << "," << diffVec1.Y() << "," << diffVec1.Z() << ") "
+//                   // << " \t(" << diffVec2.X() << "," << diffVec2.Y() << "," << diffVec2.Z() << ") "
+//                   << " \tAngle (dist = " << distToCalc << ", interval =" << intervalToCal << ") " << diffAngle
+//                   << " \tZ axis Angle (dist = " << distToCalc << ", interval =" << intervalToCal << ") " << zAxisAngle;
+//     }
+
+//     LOG(debug2) << "=================================== ";
+//   }
+// }
+
 void FgdGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks)
 {
   const Int_t distToCalc = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_DIST);
   const Int_t intervalToCal = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_INTERVAL_DIST);
-  const Double_t radToDeg = 180/TMath::Pi();
-  TVector3 zAxisVec(0,0,1);
+
+  static const Double_t radToDeg = 180/TMath::Pi();
+  static const TVector3 xAxisVec(1,0,0);
+  static const TVector3 yAxisVec(0,1,0);
+  static const TVector3 zAxisVec(0,0,1);
 
   for(Int_t i=0; i<tracks.size(); ++i)
   {
@@ -788,8 +875,11 @@ void FgdGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks)
                                 // between two hits distToCalc cubes apart. The angles measures the angle change of the track
                                 // from hit to hit. distToCalc distance is selected to smooth out the change in angle.
 
+      Double_t xAxisAngle(0);
+      Double_t yAxisAngle(0);
       Double_t zAxisAngle(0);   // Vector angle between the z axis and the vector difference between the current hit and the hit distToCalc 
                                 // poisitions back.
+      
 
       TVector3 diffVec1(0,0,0);
       TVector3 diffVec2(0,0,0);
@@ -802,16 +892,21 @@ void FgdGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks)
         ReconHit* one = track[indOne];
         ReconHit* two = track[indTwo]; 
         diffVec1 = two->fmppcLoc - one->fmppcLoc;
+        
+        xAxisAngle = radToDeg * xAxisVec.Angle(diffVec1);
+        yAxisAngle = radToDeg * yAxisVec.Angle(diffVec1);
         zAxisAngle = radToDeg * zAxisVec.Angle(diffVec1);
 
         // The z angle is calculated for the current hit
+        currentHit->fXaxisAngle = xAxisAngle;
+        currentHit->fYaxisAngle = yAxisAngle;
         currentHit->fZaxisAngle = zAxisAngle;
       }
-
-      Int_t indOneP = indOne - intervalToCal;
-      Int_t indTwoP = indTwo - intervalToCal;
+      
       if(j>= (distToCalc + intervalToCal -1) )
       {
+        Int_t indOneP = indOne - intervalToCal;
+        Int_t indTwoP = indTwo - intervalToCal;
         ReconHit* oneP = track[indOneP];
         ReconHit* twoP = track[indTwoP];
         diffVec2 = twoP->fmppcLoc - oneP->fmppcLoc;
@@ -830,17 +925,71 @@ void FgdGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks)
                   << " \tChange  " << "(" << diffVec.X() << "," << diffVec.Y() << "," << diffVec.Z() << ")"
                   // << " \t(" << diffVec1.X() << "," << diffVec1.Y() << "," << diffVec1.Z() << ") "
                   // << " \t(" << diffVec2.X() << "," << diffVec2.Y() << "," << diffVec2.Z() << ") "
-                  << " \tAngle (dist = " << distToCalc << ", interval =" << intervalToCal << ") " << diffAngle
-                  << " \tZ axis Angle (dist = " << distToCalc << ", interval =" << intervalToCal << ") " << zAxisAngle;
+                  << " \tAngle  " << diffAngle
+                  << " \tX axis Angle  " << xAxisAngle
+                  << " \tY axis Angle  " << yAxisAngle
+                  << " \tZ axis Angle  " << zAxisAngle;
     }
 
     LOG(debug2) << "=================================== ";
   }
 }
 
+// void FgdGenFitRecon::SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks)
+// {
+//   const Double_t gradAllowedDiff = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::FGD_GRAD_ALLOWABLE_DIFF);
+//   LOG(debug) << "Initial tracks size " << originalTracks.size();
+
+//   for(Int_t i=0; i<originalTracks.size(); ++i)
+//   {
+//     std::vector<ReconHit*>& track = originalTracks[i];
+
+//     if(track.empty())
+//     {
+//       continue;
+//     }
+
+//     std::vector<ReconHit*> trackToAdd;
+//     trackToAdd.push_back(track[0]); // Add the first hit to start the track
+
+//     for(Int_t j=1; j<track.size(); ++j)
+//     {
+//       ReconHit* currentHit = track[j];
+//       ReconHit* previousHit = track[j-1];
+
+//       if(currentHit->fChangeAngle == 0)
+//       {
+//         // If there is no change add the track
+//         // Also '0' indicates that the track hit is too short to calculate the 
+//         // the change.
+//         // Only compare if both the current and previous angle is not zero.
+//         trackToAdd.push_back(currentHit);
+//       }
+//       else if(  (currentHit->fChangeAngle != 0) && (previousHit->fChangeAngle != 0)  )
+//       {
+//         Double_t differenceInAngle = currentHit->fChangeAngle - previousHit->fChangeAngle;
+//         Double_t absDiff = std::fabs(differenceInAngle);
+//         if(absDiff >= gradAllowedDiff)
+//         {
+//           // If the difference is not allowed add the current track hit points
+//           // and reset it to start a new track.
+//           splitTracks.emplace_back(trackToAdd);
+//           trackToAdd.clear();
+//         }
+//         trackToAdd.push_back(currentHit);
+//       }
+//     }
+
+//     splitTracks.emplace_back(trackToAdd);
+//   }
+
+//   LOG(debug) << "Split tracks size " << splitTracks.size();
+// }
+
 void FgdGenFitRecon::SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks)
 {
   const Double_t gradAllowedDiff = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::FGD_GRAD_ALLOWABLE_DIFF);
+  const Double_t previousHitToCompare = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::FGD_GRAD_INTERVAL_DIST);
   LOG(debug) << "Initial tracks size " << originalTracks.size();
 
   for(Int_t i=0; i<originalTracks.size(); ++i)
@@ -858,7 +1007,7 @@ void FgdGenFitRecon::SplitTrack(std::vector<std::vector<ReconHit*>>& originalTra
     for(Int_t j=1; j<track.size(); ++j)
     {
       ReconHit* currentHit = track[j];
-      ReconHit* previousHit = track[j-1];
+      ReconHit* previousHit = track[j-previousHitToCompare];
 
       if(currentHit->fChangeAngle == 0)
       {
@@ -868,9 +1017,9 @@ void FgdGenFitRecon::SplitTrack(std::vector<std::vector<ReconHit*>>& originalTra
         // Only compare if both the current and previous angle is not zero.
         trackToAdd.push_back(currentHit);
       }
-      else if(  (currentHit->fChangeAngle != 0) && (previousHit->fChangeAngle != 0)  )
+      else 
       {
-        Double_t differenceInAngle = currentHit->fChangeAngle - previousHit->fChangeAngle;
+        Double_t differenceInAngle = currentHit->fZaxisAngle - previousHit->fZaxisAngle;
         Double_t absDiff = std::fabs(differenceInAngle);
         if(absDiff >= gradAllowedDiff)
         {
@@ -888,7 +1037,6 @@ void FgdGenFitRecon::SplitTrack(std::vector<std::vector<ReconHit*>>& originalTra
 
   LOG(debug) << "Split tracks size " << splitTracks.size();
 }
-
 
 Bool_t FgdGenFitRecon::CalculateInitialMomentum(const std::vector<TVector3>& track,const TVector3& magField, TVector3& momentum , TVector3& momentumLoss)
 {

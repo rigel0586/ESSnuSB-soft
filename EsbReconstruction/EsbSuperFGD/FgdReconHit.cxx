@@ -47,6 +47,8 @@ ReconHit::ReconHit(TVector3 mppcLoc
         , fmppc2(mppc2)
         , fIsVisited(false)
         , fIsLeaf(false)
+        , fXaxisAngle(0.)
+        , fYaxisAngle(0.)
         , fZaxisAngle(0.)
         , fChangeAngle(0.)
         , fpe(pe)
@@ -78,6 +80,8 @@ ReconHit::ReconHit(const ReconHit& c)
         , fAllHits(c.fAllHits)
         , fIsVisited(c.fIsVisited)
         , fIsLeaf(c.fIsLeaf)
+        , fXaxisAngle(c.fXaxisAngle)
+        , fYaxisAngle(c.fYaxisAngle)
         , fZaxisAngle(c.fZaxisAngle)
         , fChangeAngle(c.fChangeAngle)
         , fpe(c.fpe)
@@ -105,6 +109,8 @@ ReconHit& ReconHit::operator=(const ReconHit& c)
     fAllHits = c.fAllHits;
     fIsVisited = c.fIsVisited;
     fIsLeaf = c.fIsLeaf;
+    fXaxisAngle = c.fXaxisAngle;
+    fYaxisAngle = c.fYaxisAngle;
     fZaxisAngle = c.fZaxisAngle;
     fpe = c.fpe;
     return *this;

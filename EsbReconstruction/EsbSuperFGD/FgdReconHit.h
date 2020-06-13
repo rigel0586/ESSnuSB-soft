@@ -68,6 +68,8 @@ public:
     Int_t ftrackId;
     Bool_t fIsLeaf;
 
+    Double_t fXaxisAngle;
+    Double_t fYaxisAngle;
     Double_t fZaxisAngle;
     Double_t fChangeAngle;
     Double_t fpe;
