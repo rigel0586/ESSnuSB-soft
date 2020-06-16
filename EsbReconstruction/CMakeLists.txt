@@ -42,6 +42,7 @@ link_directories( ${LINK_DIRECTORIES})
 
 set(SRCS
 	EsbSuperFGD/FgdGenFitRecon.cxx
+	EsbSuperFGD/FgdGraphGenFitRecon.cxx
 	EsbSuperFGD/FgdMCGenFitRecon.cxx
 	EsbSuperFGD/FgdMCLeptonStats.cxx
 	EsbSuperFGD/FgdMCEventRecord.cxx
@@ -58,6 +59,7 @@ set(SRCS
 
 Set(HEADERS 
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdGenFitRecon.h
+	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdGraphGenFitRecon.h
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdMCGenFitRecon.h
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdMCLeptonStats.h
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdMCEventRecord.h

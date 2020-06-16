@@ -1,4 +1,4 @@
-#include "EsbReconstruction/EsbSuperFGD/FgdGenFitRecon.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdGraphGenFitRecon.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdReconTemplate.h"
 #include "EsbData/EsbSuperFGD/FgdDetectorPoint.h"
 
@@ -64,7 +64,7 @@ namespace reconstruction {
 namespace superfgd {
 
 // -----   Default constructor   -------------------------------------------
-FgdGenFitRecon::FgdGenFitRecon() :
+FgdGraphGenFitRecon::FgdGraphGenFitRecon() :
   FairTask(), fsuperFgdVol(nullptr)
   , fgdConstructor("")
   , fHitArray(nullptr)
@@ -78,13 +78,12 @@ FgdGenFitRecon::FgdGenFitRecon() :
   , fminGenFitInterations(2)
   , fmaxGenFitIterations(4)
   , fminHits(25)
-  , ffinder(TrackFinder::HOUGH_PATHFINDER_CURL)
 { 
 }
 // -------------------------------------------------------------------------
 
 // -----   Constructor   -------------------------------------------
-FgdGenFitRecon::FgdGenFitRecon(const char* name
+FgdGraphGenFitRecon::FgdGraphGenFitRecon(const char* name
                           , const char* geoConfigFile
                           , const char* mediaFile
                           , Int_t verbose
@@ -105,7 +104,6 @@ FgdGenFitRecon::FgdGenFitRecon(const char* name
   , fminGenFitInterations(2)
   , fmaxGenFitIterations(4)
   , fminHits(25)
-  , ffinder(TrackFinder::HOUGH_PATHFINDER_CURL)
 { 
   fParams.LoadPartParams(geoConfigFile);
 }
@@ -114,7 +112,7 @@ FgdGenFitRecon::FgdGenFitRecon(const char* name
 
 
 // -----   Destructor   ----------------------------------------------------
-FgdGenFitRecon::~FgdGenFitRecon() 
+FgdGraphGenFitRecon::~FgdGraphGenFitRecon() 
 {
   if(fHitArray) {
     fHitArray->Delete();
@@ -131,7 +129,7 @@ FgdGenFitRecon::~FgdGenFitRecon()
 
 
 // -----   Public method Init   --------------------------------------------
-InitStatus FgdGenFitRecon::Init() 
+InitStatus FgdGraphGenFitRecon::Init() 
 {   
   // Create the real Fgd geometry
   DefineMaterials();
@@ -183,7 +181,7 @@ InitStatus FgdGenFitRecon::Init()
   return kSUCCESS;
 }
 
-void FgdGenFitRecon::OutputFileInit(FairRootManager* manager)
+void FgdGraphGenFitRecon::OutputFileInit(FairRootManager* manager)
 {
   // Create and register output array
   fTracksArray = new TClonesArray(genfit::Track::Class(), 1000);
@@ -198,12 +196,12 @@ void FgdGenFitRecon::OutputFileInit(FairRootManager* manager)
 
 
 // -----   Public methods   --------------------------------------------
-void FgdGenFitRecon::FinishEvent()
+void FgdGraphGenFitRecon::FinishEvent()
 {
   
 }
 
-void FgdGenFitRecon::FinishTask()
+void FgdGraphGenFitRecon::FinishTask()
 {
   if(isGenFitVisualization)
   {
@@ -211,43 +209,18 @@ void FgdGenFitRecon::FinishTask()
   }
 }
 
-void FgdGenFitRecon::Exec(Option_t* opt) 
+void FgdGraphGenFitRecon::Exec(Option_t* opt) 
 {  
   try
   {
     std::vector<ReconHit> allhits;
-    std::vector<std::vector<TVector3>> foundTracks;
-    std::vector<TVector3> points;
+    std::vector<std::vector<ReconHit>> foundTracks;;
 
     bool rc = GetHits(allhits);
     if(rc)
     { 
       LOG(debug) <<" Hits to retrieve tracks from " << allhits.size();
-      switch(ffinder)
-      {
-        case TrackFinder::HOUGH_PATHFINDER_LINE:
-                                          ConvertHitToVec(points, allhits);
-                                          rc = FindUsingHough(points, allhits, foundTracks, FindTrackType::STRAIGHT_LINE);
-                                          break;
-        case TrackFinder::HOUGH_PATHFINDER_HELIX:
-                                          ConvertHitToVec(points, allhits);
-                                          rc = FindUsingHough(points, allhits, foundTracks, FindTrackType::HELIX);
-                                          break;
-        case TrackFinder::HOUGH_PATHFINDER_CURL:
-                                          ConvertHitToVec(points, allhits);
-                                          rc = FindUsingHough(points, allhits, foundTracks, FindTrackType::CURL);
-                                          break;
-        case TrackFinder::GRAPH:
-                                          rc = FindUsingGraph(allhits, foundTracks);
-                                          break;
-
-        case TrackFinder::GRAPH_HOUGH_PATHFINDER:
-                                          rc = FindUsingGraphHough(allhits, foundTracks);
-                                          break;
-        default: 
-                rc = false;
-                break;
-      }
+      rc = FindUsingGraph(allhits, foundTracks);
     }
 
     if(rc)
@@ -271,7 +244,7 @@ void FgdGenFitRecon::Exec(Option_t* opt)
 
 // -----   Protected methods   --------------------------------------------
 
-Bool_t FgdGenFitRecon::GetHits(std::vector<ReconHit>& allHits)
+Bool_t FgdGraphGenFitRecon::GetHits(std::vector<ReconHit>& allHits)
 {
   Double_t errPhotoLimit = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::FGD_ERR_PHOTO_LIMIT);
 
@@ -343,125 +316,8 @@ Bool_t FgdGenFitRecon::GetHits(std::vector<ReconHit>& allHits)
   return (allHits.size() > 0);
 }
 
-Bool_t FgdGenFitRecon::FindUsingHough(std::vector<TVector3>& points
-                                , std::vector<ReconHit>& hits
-                                , std::vector<std::vector<TVector3>>& foundTracks
-                                , FindTrackType trackType)
-{
-  LOG(debug) << "hits " << hits.size();
-
-  unsigned int use_vertex = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_USE_VERTEX);
-  double vertexX = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_VERTEXX);
-  double vertexY = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_VERTEXY);
-  double maxdistxy = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MAXDISTXY);
-  double maxdistsz = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MAXDISTSZ);
-  double maxdistxyfit = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MAXDISTXYFIT);
-  double maxdistszfit = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MAXDISTSZFIT);
-  unsigned int minhitnumber = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MINHITNUMBER);
-  unsigned int xythetabins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_XYTHETABINS);
-  unsigned int xyd0bins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_XYD0BINS);
-  unsigned int xyomegabins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_XYOMEGABINS);
-  unsigned int szthetabins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_SZTHETABINS);
-  unsigned int szd0bins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_SZD0BINS);
-  double maxdxy = f_total_X + f_total_Y;
-  double maxdsz = f_total_Z;
-  unsigned int searchneighborhood = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_SEACHINTHENEIGHBORHOOD);
-
-  pathfinder::FinderParameter* newFinderParameter = nullptr;
-  switch(trackType)
-  {
-    case FindTrackType::HELIX:
-        newFinderParameter= new pathfinder::FinderParameter(false, true); 
-        newFinderParameter -> setFindCurler(false);
-        break;
-    case FindTrackType::CURL:
-        newFinderParameter= new pathfinder::FinderParameter(false, true); 
-        newFinderParameter -> setFindCurler(true);
-        break;
-    case FindTrackType::STRAIGHT_LINE:
-    default:
-        newFinderParameter= new pathfinder::FinderParameter(true, false); 
-        newFinderParameter -> setFindCurler(false);
-        break;
-  }
-
-
-  //  if(use_vertex == 0) newFinderParameter -> setUseVertex(false);
-  //  if(use_vertex == 1) newFinderParameter->setUseVertex(true);
-
-  if(use_vertex == 1) 
-  {  
-    std::pair<double, double> vertex(vertexX, vertexY);
-    newFinderParameter -> setVertex(vertex);
-  }
-
-  newFinderParameter -> setMaxXYDistance(maxdistxy);
-  newFinderParameter -> setMaxSZDistance(maxdistsz);
-  newFinderParameter -> setMaxXYDistanceFit(maxdistxyfit);
-  newFinderParameter -> setMaxSZDistanceFit(maxdistszfit);
-  newFinderParameter -> setMinimumHitNumber(minhitnumber);
-  newFinderParameter -> setNumberXYThetaBins(xythetabins);
-  newFinderParameter -> setNumberXYDzeroBins(xyd0bins);
-  newFinderParameter -> setNumberXYOmegaBins(xyomegabins);
-  newFinderParameter -> setNumberSZThetaBins(szthetabins);
-  newFinderParameter -> setNumberSZDzeroBins(szd0bins);
-  newFinderParameter -> setMaxDxy(maxdxy);
-  newFinderParameter -> setMaxDsz(maxdsz);
-  
-  if(searchneighborhood == 0)
-  {
-    newFinderParameter -> setSearchNeighborhood(false);
-  }
-  else
-  {
-    newFinderParameter -> setSearchNeighborhood(true);
-  }
-  newFinderParameter -> setSaveRootFile(false);
-
-  std::vector<pathfinder::basicHit> allHits;
-  for(size_t i=0; i< points.size(); ++i)
-  {
-    allHits.emplace_back(pathfinder::basicHit(  points[i].X()
-                                                  , points[i].Y()
-                                                  , points[i].Z()
-                                                  )
-                            );
-  }
-  
-  pathfinder::HoughTrafoTrackFinder newTrackFinder;
-
-  //setting steering parameter
-  newTrackFinder.setFinderParameter(*newFinderParameter);
-
-  // If there is not time interval include all hits
-  newTrackFinder.setInitialHits(allHits);
-
-  //do the actual track finding
-  Bool_t found = newTrackFinder.find();
-  if(found)
-  {
-    std::vector<pathfinder::TrackFinderTrack> pfTracks = newTrackFinder.getTracks();
-    for(Int_t i =0; i <  pfTracks.size() ; i++)
-    {
-      LOG(debug) << "Track " << i;
-      pathfinder::TrackFinderTrack& trFinder = pfTracks[i];
-      const std::vector<pathfinder::basicHit>& hitsOnTrack = trFinder.getHitsOnTrack();
-      std::vector<TVector3> track;
-      for(size_t j =0; j< hitsOnTrack.size(); ++j)
-      {
-          track.emplace_back(hitsOnTrack[j].getX(),hitsOnTrack[j].getY(),hitsOnTrack[j].getZ());
-           LOG(debug) << "X " << hitsOnTrack[j].getX() << " Y " << hitsOnTrack[j].getY() << " Z " << hitsOnTrack[j].getZ();
-      }
-      foundTracks.push_back(track);
-      LOG(debug) << "============================ ";
-    }
-  }
-
-  return found;
-}
-
-Bool_t FgdGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
-                  , std::vector<std::vector<TVector3>>& foundTracks)
+Bool_t FgdGraphGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
+                  , std::vector<std::vector<ReconHit>>& foundTracks)
 {
   if(hits.empty())
   {
@@ -537,7 +393,7 @@ Bool_t FgdGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
   for(size_t i = 0; i<splitTracks.size(); ++i)
   {
     std::vector<ReconHit*>& track = splitTracks[i];
-    std::vector<TVector3> currentTrack;
+    std::vector<ReconHit> currentTrack;
     LOG(debug2) << "=============================== ";
     LOG(debug2) << "Track " << i;
     
@@ -554,9 +410,7 @@ Bool_t FgdGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
         LOG(debug2) << " \tmomX " << trackHit->fmom.X() << " \tmomY " << trackHit->fmom.Y() << " \tmomZ " << trackHit->fmom.Z();
       }
 
-      currentTrack.emplace_back(trackHit->fHitPos.X()
-                              , trackHit->fHitPos.Y()
-                              , trackHit->fHitPos.Z());   
+      currentTrack.emplace_back(*trackHit);   
 
       LOG(debug2) << " \tX " << trackHit->fmppcLoc.X() << " \tY " << trackHit->fmppcLoc.Y() << " \tZ " << trackHit->fmppcLoc.Z();    
 
@@ -577,122 +431,7 @@ Bool_t FgdGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
   return !foundTracks.empty();
 }
 
-Bool_t FgdGenFitRecon::FindUsingGraphHough(std::vector<ReconHit>& hits
-                  , std::vector<std::vector<TVector3>>& foundTracks)
-{
-  
-  Bool_t rc(false);
-
-  std::vector<std::vector<TVector3>> graphTracks;
-  rc = FindUsingGraph(hits, graphTracks);
-
-  if(rc)
-  {
-    // Traverse through the found graph tracks and use hough transform for each track
-    // add the found hough track with the biggest number of found hits
-    for(size_t i = 0; i < graphTracks.size(); ++i)
-    {
-      size_t biggestSize(0);
-      std::vector<TVector3>* trackToAdd = nullptr;
-
-      // 1. Line hough ========================
-      std::vector<std::vector<TVector3>> hough_Line;
-      if(FindUsingHough(graphTracks[i], hits, hough_Line, FindTrackType::STRAIGHT_LINE)
-          && !hough_Line.empty())
-      {
-        size_t localBiggest(0);
-        size_t ind(0);
-        for(size_t j = 0; j < hough_Line.size(); ++j)
-        {
-          if(localBiggest < hough_Line[j].size())
-          {
-            localBiggest = hough_Line[j].size();
-            ind = j;
-          }
-        }
-
-        if(localBiggest > biggestSize)
-        {
-          biggestSize = hough_Line[ind].size();
-          trackToAdd = &hough_Line[ind];
-          LOG(debug) << "Hough transform from graph [line] size of track is: " << hough_Line[ind].size();
-        }
-      }
-      LOG(debug)<< "Hough transform [line] " << hough_Line.size();
-
-      // ======================================
-
-      // 2. Helix hough ========================
-      std::vector<std::vector<TVector3>> hough_Helix;
-      if(FindUsingHough(graphTracks[i], hits, hough_Helix, FindTrackType::HELIX)
-        && !hough_Line.empty()) 
-      {
-        size_t localBiggest(0);
-        size_t ind(0);
-        for(size_t j = 0; j < hough_Helix.size(); ++j)
-        {
-          if(localBiggest < hough_Helix[j].size())
-          {
-            localBiggest = hough_Helix[j].size();
-            ind = j;
-          }
-        }
-
-        if(localBiggest > biggestSize)
-        {
-          biggestSize = hough_Helix[ind].size();
-          trackToAdd = &hough_Helix[ind];
-          LOG(debug) << "Hough transform from graph [helix] size of track is: " << hough_Helix[ind].size();
-        }
-      }
-      LOG(debug)<< "Hough transform [helix] " << hough_Helix.size();
-
-      // ======================================
-
-      // 3. Curl hough ========================
-      std::vector<std::vector<TVector3>> hough_Curl;
-      if(FindUsingHough(graphTracks[i], hits, hough_Curl, FindTrackType::CURL)
-        && !hough_Line.empty()) 
-      {
-        size_t localBiggest(0);
-        size_t ind(0);
-        for(size_t j = 0; j < hough_Curl.size(); ++j)
-        {
-          if(localBiggest < hough_Curl[j].size())
-          {
-            localBiggest = hough_Curl[j].size();
-            ind = j;
-          }
-        }
-
-        if(localBiggest > biggestSize)
-        {
-          biggestSize = hough_Curl[ind].size();
-          trackToAdd = &hough_Curl[ind];
-          LOG(debug) << "Hough transform from graph [helix] size of track is: " << hough_Curl[ind].size();
-        }
-      }
-      LOG(debug)<< "Hough transform [curl] " << hough_Curl.size();
-
-      // ======================================
-
-      if(trackToAdd!=nullptr)
-      {
-        foundTracks.emplace_back(*trackToAdd);
-      }
-      else
-      {
-        foundTracks.push_back(graphTracks[i]);
-        LOG(debug)<< "Hough transform could not find track, adding initial graph track. ";
-      }
-      
-    }
-  }
-
-  return rc;
-}
-
-void FgdGenFitRecon::BuildGraph(std::vector<ReconHit>& hits)
+void FgdGraphGenFitRecon::BuildGraph(std::vector<ReconHit>& hits)
 {
     // Create the position to which index in the vector it is pointing
     std::map<Long_t, Int_t> positionToId;
@@ -774,88 +513,8 @@ void FgdGenFitRecon::BuildGraph(std::vector<ReconHit>& hits)
     }
 }
 
-// void FgdGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks)
-// {
-//   const Int_t distToCalc = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_DIST);
-//   const Int_t intervalToCal = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_INTERVAL_DIST);
-//   const Double_t radToDeg = 180/TMath::Pi();
-//   TVector3 zAxisVec(0,0,1);
 
-//   for(Int_t i=0; i<tracks.size(); ++i)
-//   {
-//     std::vector<ReconHit*>& track = tracks[i];
-//     LOG(debug2) << "=================================== ";
-//     LOG(debug2) << "Track " << i;
-
-//     for(Int_t j=0; j<track.size(); ++j)
-//     {
-
-//       ReconHit* currentHit = track[j];
-
-//       // 1. Calculate direction from the previous hit
-//       TVector3 diffVec(0,0,0);
-//       if(j>=1)
-//       {
-//         ReconHit* previous = track[j-1];
-//         diffVec = currentHit->fmppcLoc - previous->fmppcLoc;
-//       }
-
-//       // 2.Calculate cosine change beween 2 consecutive vectors - gradient
-//       Double_t diffAngle(0);    // Difference angle between two vectors - the vectors are the difference in position (grad (position))
-//                                 // between two hits distToCalc cubes apart. The angles measures the angle change of the track
-//                                 // from hit to hit. distToCalc distance is selected to smooth out the change in angle.
-
-//       Double_t zAxisAngle(0);   // Vector angle between the z axis and the vector difference between the current hit and the hit distToCalc 
-//                                 // poisitions back.
-
-//       TVector3 diffVec1(0,0,0);
-//       TVector3 diffVec2(0,0,0);
-
-//       Int_t indOne = j - distToCalc + 1;
-//       Int_t indTwo = j; // current hit
-
-//       if(j>= (distToCalc -1) )
-//       {
-//         ReconHit* one = track[indOne];
-//         ReconHit* two = track[indTwo]; 
-//         diffVec1 = two->fmppcLoc - one->fmppcLoc;
-//         zAxisAngle = radToDeg * zAxisVec.Angle(diffVec1);
-
-//         // The z angle is calculated for the current hit
-//         currentHit->fZaxisAngle = zAxisAngle;
-//       }
-
-//       Int_t indOneP = indOne - intervalToCal;
-//       Int_t indTwoP = indTwo - intervalToCal;
-//       if(j>= (distToCalc + intervalToCal -1) )
-//       {
-//         ReconHit* oneP = track[indOneP];
-//         ReconHit* twoP = track[indTwoP];
-//         diffVec2 = twoP->fmppcLoc - oneP->fmppcLoc;
-
-//         diffAngle = radToDeg * diffVec1.Angle(diffVec2);
-
-//         // The angle is calculated for the current hit
-//         currentHit->fChangeAngle = diffAngle;
-//       }
-
-//       LOG(debug2) << "Id " << currentHit->fLocalId
-//                   << " \tX " << currentHit->fmppcLoc.X()
-//                   << " \tY " << currentHit->fmppcLoc.Y()
-//                   << " \tZ " << currentHit->fmppcLoc.Z() 
-//                   << " \tPhotons  " << "(" << currentHit->fphotons.X() << "," << currentHit->fphotons.Y() << "," << currentHit->fphotons.Z() << ")"
-//                   << " \tChange  " << "(" << diffVec.X() << "," << diffVec.Y() << "," << diffVec.Z() << ")"
-//                   // << " \t(" << diffVec1.X() << "," << diffVec1.Y() << "," << diffVec1.Z() << ") "
-//                   // << " \t(" << diffVec2.X() << "," << diffVec2.Y() << "," << diffVec2.Z() << ") "
-//                   << " \tAngle (dist = " << distToCalc << ", interval =" << intervalToCal << ") " << diffAngle
-//                   << " \tZ axis Angle (dist = " << distToCalc << ", interval =" << intervalToCal << ") " << zAxisAngle;
-//     }
-
-//     LOG(debug2) << "=================================== ";
-//   }
-// }
-
-void FgdGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks)
+void FgdGraphGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks)
 {
   const Int_t distToCalc = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_DIST);
   const Int_t intervalToCal = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_INTERVAL_DIST);
@@ -949,58 +608,8 @@ void FgdGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks)
   }
 }
 
-// void FgdGenFitRecon::SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks)
-// {
-//   const Double_t gradAllowedDiff = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::FGD_GRAD_ALLOWABLE_DIFF);
-//   LOG(debug) << "Initial tracks size " << originalTracks.size();
 
-//   for(Int_t i=0; i<originalTracks.size(); ++i)
-//   {
-//     std::vector<ReconHit*>& track = originalTracks[i];
-
-//     if(track.empty())
-//     {
-//       continue;
-//     }
-
-//     std::vector<ReconHit*> trackToAdd;
-//     trackToAdd.push_back(track[0]); // Add the first hit to start the track
-
-//     for(Int_t j=1; j<track.size(); ++j)
-//     {
-//       ReconHit* currentHit = track[j];
-//       ReconHit* previousHit = track[j-1];
-
-//       if(currentHit->fChangeAngle == 0)
-//       {
-//         // If there is no change add the track
-//         // Also '0' indicates that the track hit is too short to calculate the 
-//         // the change.
-//         // Only compare if both the current and previous angle is not zero.
-//         trackToAdd.push_back(currentHit);
-//       }
-//       else if(  (currentHit->fChangeAngle != 0) && (previousHit->fChangeAngle != 0)  )
-//       {
-//         Double_t differenceInAngle = currentHit->fChangeAngle - previousHit->fChangeAngle;
-//         Double_t absDiff = std::fabs(differenceInAngle);
-//         if(absDiff >= gradAllowedDiff)
-//         {
-//           // If the difference is not allowed add the current track hit points
-//           // and reset it to start a new track.
-//           splitTracks.emplace_back(trackToAdd);
-//           trackToAdd.clear();
-//         }
-//         trackToAdd.push_back(currentHit);
-//       }
-//     }
-
-//     splitTracks.emplace_back(trackToAdd);
-//   }
-
-//   LOG(debug) << "Split tracks size " << splitTracks.size();
-// }
-
-void FgdGenFitRecon::SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks)
+void FgdGraphGenFitRecon::SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks)
 {
   const Double_t gradAllowedDiff = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::FGD_GRAD_ALLOWABLE_DIFF);
   const Double_t previousHitToCompare = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::FGD_GRAD_INTERVAL_DIST);
@@ -1052,7 +661,7 @@ void FgdGenFitRecon::SplitTrack(std::vector<std::vector<ReconHit*>>& originalTra
   LOG(debug) << "Split tracks size " << splitTracks.size();
 }
 
-Bool_t FgdGenFitRecon::CalculateInitialMomentum(const std::vector<TVector3>& track,const TVector3& magField, TVector3& momentum , TVector3& momentumLoss)
+Bool_t FgdGraphGenFitRecon::CalculateInitialMomentum(const std::vector<ReconHit>& track,const TVector3& magField, TVector3& momentum , TVector3& momentumLoss)
 {
   if(track.empty())
   {
@@ -1079,8 +688,8 @@ Bool_t FgdGenFitRecon::CalculateInitialMomentum(const std::vector<TVector3>& tra
   for(size_t i = lengthSize; i< track.size() ; ++i)
   {
     size_t p1_pos = i - lengthSize;
-    TVector3 p1 = track[p1_pos];
-    TVector3 p3 = track[i];
+    TVector3 p1 = track[p1_pos].fHitPos;
+    TVector3 p3 = track[i].fHitPos;
 
     size_t p2_pos = p1_pos + 1;
     //size_t p2_pos = p1_pos + lengthSize/2;
@@ -1089,7 +698,7 @@ Bool_t FgdGenFitRecon::CalculateInitialMomentum(const std::vector<TVector3>& tra
     while(p2_pos<i)
     {
       TVector3 segmentMom(0,0,0);
-      TVector3 p2 = track[p2_pos];
+      TVector3 p2 = track[p2_pos].fHitPos;
       if(CalculateMomentum(p1, p2, p3, magField, segmentMom)  
           &&  segmentMom.Mag()!=inf
           && !std::isnan(momentum.Mag()))
@@ -1181,24 +790,8 @@ Bool_t FgdGenFitRecon::CalculateInitialMomentum(const std::vector<TVector3>& tra
   return isValid;
 }
 
-// Bool_t FgdGenFitRecon::CalculateInitialMomentum(const std::vector<TVector3>& track,const TVector3& magField, TVector3& momentum , TVector3& momentumLoss)
-// {
-//   momentum.SetXYZ(0.,0.,0);
-//   if(track.empty())
-//   {
-//       return false;
-//   }
 
-//   static const Double_t inf = std::numeric_limits<Double_t>::infinity();
-
-//   TVector3 p1 = track[0];
-//   TVector3 p2 = track[track.size()/2];
-//   TVector3 p3 = track[track.size()-1];
-
-//   return CalculateMomentum(p1, p2, p3, magField, momentum)  &&  momentum.Mag()!=inf;
-//}
-
-Bool_t FgdGenFitRecon::CalculateMomentum(const TVector3& p1, const TVector3& p2, const TVector3& p3 , const TVector3& magField, TVector3& momentum)
+Bool_t FgdGraphGenFitRecon::CalculateMomentum(const TVector3& p1, const TVector3& p2, const TVector3& p3 , const TVector3& magField, TVector3& momentum)
 {
   //
   //  p [Gev/c] = e [1.6 x 10^-19 coulumb] * B [T] * R [m]
@@ -1298,7 +891,7 @@ Bool_t FgdGenFitRecon::CalculateMomentum(const TVector3& p1, const TVector3& p2,
 
 
 // Calculate the radius from 3 points using the "Menger curvature" theorem
-Double_t FgdGenFitRecon::GetRadius(const TVector3& p1, const TVector3& p2, const TVector3& p3)
+Double_t FgdGraphGenFitRecon::GetRadius(const TVector3& p1, const TVector3& p2, const TVector3& p3)
 {
   //
   //          p1
@@ -1331,7 +924,7 @@ Double_t FgdGenFitRecon::GetRadius(const TVector3& p1, const TVector3& p2, const
   return R;
 }
 
-Int_t FgdGenFitRecon::GetPdgCode(const TVector3& momentum, const TVector3& momentumLoss , Int_t tryFit, Int_t& momCoeff)
+Int_t FgdGraphGenFitRecon::GetPdgCode(const TVector3& momentum, const TVector3& momentumLoss , Int_t tryFit, Int_t& momCoeff)
 {
   //Int_t pdgCode = 13; // Muon pdg code
 
@@ -1386,7 +979,7 @@ Int_t FgdGenFitRecon::GetPdgCode(const TVector3& momentum, const TVector3& momen
   return pdgCode;
 }
 
-void FgdGenFitRecon::ConvertHitToVec(std::vector<TVector3>& points, std::vector<ReconHit>& hits)
+void FgdGraphGenFitRecon::ConvertHitToVec(std::vector<TVector3>& points, std::vector<ReconHit>& hits)
 {
   for(size_t i=0; i< hits.size(); ++i)
   {
@@ -1396,7 +989,7 @@ void FgdGenFitRecon::ConvertHitToVec(std::vector<TVector3>& points, std::vector<
   }
 }
 
-void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
+void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks)
 {
     fTracksArray->Delete();
     
@@ -1415,15 +1008,6 @@ void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
     std::vector<genfit::Track*> genTracks;
     int detId(1); // Detector id, it is the same, we only have one detector
 
-    // If the track could not be fitted because of Bette-bloch calculations
-    // try to double the momentum
-    //Bool_t isMomentumLow(false);
-    // Int_t momCoef = 1;
-    // Int_t limitCoeff = 4;
-    // Bool_t tryFit(false);
-    // Int_t pdgGuessCounter(0);
-    // Int_t limitPdgGuess(4);
-
     Bool_t tryFit(false);
     Int_t tryCounter(1);
     Int_t limitTryFit = 12; // 3 times increse momentum by 2, 4 pdg codes to try
@@ -1431,19 +1015,6 @@ void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
 
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
-      // if(momCoef>=limitCoeff)
-      // {
-      //   isMomentumLow = false;
-      //   momCoef = 1;
-      // }
-
-      // if(isMomentumLow)
-      // {
-      //   momCoef = momCoef * 2;
-      //   --i;
-      //   isMomentumLow = false;
-      //   LOG(debug) << "Momentum too low, doubling momentum estimate";
-      // }
 
       if(tryFit && tryCounter < limitTryFit)
       {
@@ -1452,7 +1023,7 @@ void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
         --i;
       }
 
-      std::vector<TVector3>& hitsOnTrack = foundTracks[i];
+      std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
 
       // Set lower limit on track size
       if(hitsOnTrack.size()<fminHits)
@@ -1462,7 +1033,7 @@ void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
       }
       
     
-      TVector3 posM(hitsOnTrack[0].X(),hitsOnTrack[0].Y(),hitsOnTrack[0].Z());
+      TVector3 posM(hitsOnTrack[0].fHitPos.X(),hitsOnTrack[0].fHitPos.Y(),hitsOnTrack[0].fHitPos.Z());
       TVector3 momM(0,0,0);
       TVector3 momLoss(0,0,0);
 
@@ -1474,7 +1045,7 @@ void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
 
       Int_t momCoeff(1);
       Int_t pdg = GetPdgCode(momM, momLoss, tryCounter, momCoeff);
-      momM = momM * momCoeff;
+      //momM = momM * momCoeff;
       
 
       // approximate covariance
@@ -1505,12 +1076,12 @@ void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
       genfit::Track* toFitTrack = new genfit::Track(rep, seedState, seedCov);
 
       size_t bhlimit = hitsOnTrack.size();
-      //bhlimit = bhlimit * (1./tryCounter);
+      bhlimit = bhlimit * (1./tryCounter);
 
       LOG(debug) << "******************************************* ";
       LOG(debug) << "******    Track "<< i << "  ************************";
       LOG(debug) << "******************************************* ";
-      LOG(debug) << " \tPdg code " << pdg;
+      LOG(debug) << " \tPdg code " << pdg << " [MC pdg = " << hitsOnTrack[0].fpdg <<" ]";
       LOG(debug) << " \tHits in track "<< bhlimit;
       LOG(debug) << " \tTrack Momentum [" << momM.Mag() << "]" << "(" << momM.X() << "," << momM.Y() << "," << momM.Z() << ")";
       LOG(debug) << " \tTrack Momentum Loss [" << momLoss.Mag() << "]" << "(" << momLoss.X() << "," << momLoss.Y() << "," << momLoss.Z() << ")";
@@ -1520,9 +1091,9 @@ void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
       for(Int_t bh = 0; bh < bhlimit; ++bh)
       {
         TVectorD hitPos(3);
-        hitPos(0) = hitsOnTrack[bh].X();
-        hitPos(1) = hitsOnTrack[bh].Y();
-        hitPos(2) = hitsOnTrack[bh].Z();
+        hitPos(0) = hitsOnTrack[bh].fHitPos.X();
+        hitPos(1) = hitsOnTrack[bh].fHitPos.Y();
+        hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
 
         genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, 0, nullptr);
         std::vector<genfit::AbsMeasurement*> measurements{measurement};
@@ -1575,7 +1146,7 @@ void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
     }
 }
 
-void FgdGenFitRecon::DefineMaterials() 
+void FgdGraphGenFitRecon::DefineMaterials() 
 {
   if(isDefinedMaterials) return; // Define materials only once
 
@@ -1664,7 +1235,7 @@ void FgdGenFitRecon::DefineMaterials()
   geoBuild->createMedium(vacuum);
 }
 
-void FgdGenFitRecon::PrintFitTrack(genfit::Track& fitTrack)
+void FgdGraphGenFitRecon::PrintFitTrack(genfit::Track& fitTrack)
 {
   const genfit::MeasuredStateOnPlane& me = fitTrack.getFittedState();
   //LOG(debug)<< "Momentum  " << (me.getMom()).Mag();
@@ -1680,7 +1251,7 @@ void FgdGenFitRecon::PrintFitTrack(genfit::Track& fitTrack)
   LOG(debug)<< "fitTrack.getNumPoints() " << fitTrack.getNumPoints();
 }
 
-Long_t FgdGenFitRecon::ArrInd(int x, int y, int z)
+Long_t FgdGraphGenFitRecon::ArrInd(int x, int y, int z)
 {
   return (x*f_bin_Y*f_bin_Z + y*f_bin_Z+z);
 }

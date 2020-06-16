@@ -1,5 +1,5 @@
-#ifndef ESBROOT_ESBDRECONSTRUCTION_FGD_GENFIT_H
-#define ESBROOT_ESBDRECONSTRUCTION_FGD_GENFIT_H
+#ifndef ESBROOT_ESB_GRAPH_RECONSTRUCTION_FGD_GENFIT_H
+#define ESBROOT_ESB_GRAPH_RECONSTRUCTION_FGD_GENFIT_H
 
 // EsbRoot headers
 #include "EsbData/EsbSuperFGD/FgdHit.h"
@@ -22,18 +22,10 @@ namespace esbroot {
 namespace reconstruction {
 namespace superfgd {
 
-class FgdGenFitRecon : public FairTask
+class FgdGraphGenFitRecon : public FairTask
 {
 
  public:
-
-  enum TrackFinder{
-    HOUGH_PATHFINDER_LINE,
-    HOUGH_PATHFINDER_HELIX,
-    HOUGH_PATHFINDER_CURL,
-    GRAPH,
-    GRAPH_HOUGH_PATHFINDER
-  };
 
   enum PDG_FIT_TRACK
   {
@@ -44,7 +36,7 @@ class FgdGenFitRecon : public FairTask
   };
 
   /** Default constructor **/  
-  FgdGenFitRecon();
+  FgdGraphGenFitRecon();
 
   /** Constructor with argument
    *@param name       Name of task
@@ -55,7 +47,7 @@ class FgdGenFitRecon : public FairTask
    *@param visualize -  to visualize the event using genfit::EventDisplay
    *@param visOption -  option to be passed to genfit::EventDisplay
   **/  
-  FgdGenFitRecon(const char* name
+  FgdGraphGenFitRecon(const char* name
               , const char* geoConfigFile
               , const char* mediaFile
               , Int_t verbose = 1
@@ -64,12 +56,11 @@ class FgdGenFitRecon : public FairTask
               , std::string visOption ="D");
 
   /** Destructor **/
-  virtual ~FgdGenFitRecon();
+  virtual ~FgdGraphGenFitRecon();
 
   void SetMinInterations(Int_t minIterations) {fminGenFitInterations = minIterations;}
   void SetMaxInterations(Int_t maxIterations) {fmaxGenFitIterations = maxIterations;}
   void SetMinHits(Int_t minHits) {fminHits = minHits;}
-  void SetUseTracker(FgdGenFitRecon::TrackFinder finder){ffinder=finder;}
   void AddPdgMomLoss(Int_t pdg, Double_t momLoss, Double_t allowDiff){ fpdgFromMomLoss.emplace_back(pdg, momLoss, allowDiff);}
 
   /** Virtual method Init **/
@@ -93,31 +84,21 @@ protected:
   /** Get all hits **/
   Bool_t GetHits(std::vector<ReconHit>& allHits);
 
-  /** Extrack tracks from the hit using Hough Transform **/
-  Bool_t FindUsingHough(std::vector<TVector3>& points
-                  , std::vector<ReconHit>& hits
-                  , std::vector<std::vector<TVector3>>& foundTracks
-                  , FindTrackType trackType);
-
   /** Extrack tracks using graph traversal and track gradient  **/
   Bool_t FindUsingGraph(std::vector<ReconHit>& hits
-                  , std::vector<std::vector<TVector3>>& foundTracks);
-
-  /** Extrack tracks using graph traversal and track gradient and then apply Hough transform for each track **/
-  Bool_t FindUsingGraphHough(std::vector<ReconHit>& hits
-                  , std::vector<std::vector<TVector3>>& foundTracks);
+                  , std::vector<std::vector<ReconHit>>& foundTracks);
   
   void BuildGraph(std::vector<ReconHit>& hits);
   void CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks);
   void SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks);
-  Bool_t CalculateInitialMomentum(const std::vector<TVector3>& track,const TVector3& magField, TVector3& momentum, TVector3& momentumLoss);
+  Bool_t CalculateInitialMomentum(const std::vector<ReconHit>& track,const TVector3& magField, TVector3& momentum, TVector3& momentumLoss);
   Bool_t CalculateMomentum(const TVector3& p1, const TVector3& p2, const TVector3& p3 , const TVector3& magField, TVector3& momentum);
   Double_t GetRadius(const TVector3& p1, const TVector3& p2, const TVector3& p3);
   Int_t GetPdgCode(const TVector3& momentum, const TVector3& momentumLoss, Int_t tryFit, Int_t& momCoeff);
   void ConvertHitToVec(std::vector<TVector3>& points, std::vector<ReconHit>& hits);
 
   /** Fit the found tracks using genfit **/
-  void FitTracks(std::vector<std::vector<TVector3>>& foundTracks);
+  void FitTracks(std::vector<std::vector<ReconHit>>& foundTracks);
 
   /** Define materials used in the reconstruction phase **/
   void DefineMaterials();
@@ -160,8 +141,6 @@ protected:
   //  2- detail info
   double fDebuglvl_genfit;
 
-  FgdGenFitRecon::TrackFinder ffinder;
-
   /** Path to the used media.geo file - containing definitions of materials **/
   std::string fmediaFile;
 
@@ -180,7 +159,7 @@ protected:
   std::vector<PdgFromMomentumLoss> fpdgFromMomLoss;//!<!
 
   	   
-  ClassDef(FgdGenFitRecon, 2);
+  ClassDef(FgdGraphGenFitRecon, 2);
 
 };
 
@@ -188,4 +167,4 @@ protected:
 } //reconstruction
 } //esbroot
 
-#endif // ESBROOT_ESBDRECONSTRUCTION_FGD_GENFIT_H
+#endif // ESBROOT_ESB_GRAPH_RECONSTRUCTION_FGD_GENFIT_H
