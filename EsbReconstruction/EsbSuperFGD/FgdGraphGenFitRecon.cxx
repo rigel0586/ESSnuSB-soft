@@ -273,11 +273,11 @@ Bool_t FgdGraphGenFitRecon::GetHits(std::vector<ReconHit>& allHits)
     if(visited[ind])
     {
       // If already exists, add the photons
-      ReconHit toFind;
-      toFind.fmppcLoc = mppcLoc;
-      std::vector<ReconHit>::iterator recHit = find(allHits.begin(), allHits.end(), toFind);
-      ReconHit& foundHit = *recHit;
-      foundHit.fphotons = foundHit.fphotons + photoE;
+      // ReconHit toFind;
+      // toFind.fmppcLoc = mppcLoc;
+      // std::vector<ReconHit>::iterator recHit = find(allHits.begin(), allHits.end(), toFind);
+      // ReconHit& foundHit = *recHit;
+      // foundHit.fphotons = foundHit.fphotons + photoE;
       continue;
     }
     visited[ind] = true;
@@ -405,11 +405,11 @@ Bool_t FgdGraphGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
       ReconHit* trackHit = track[j];
 
       //if(j==0) // first hit
-      {
-        LOG(debug2) << "Pdg code particle " << trackHit->fpdg;
-        LOG(debug2) << "Particle momentum " << trackHit->fmom.Mag();
-        LOG(debug2) << " \tmomX " << trackHit->fmom.X() << " \tmomY " << trackHit->fmom.Y() << " \tmomZ " << trackHit->fmom.Z();
-      }
+      // {
+      //   LOG(debug2) << "Pdg code particle " << trackHit->fpdg;
+      //   LOG(debug2) << "Particle momentum " << trackHit->fmom.Mag();
+      //   LOG(debug2) << " \tmomX " << trackHit->fmom.X() << " \tmomY " << trackHit->fmom.Y() << " \tmomZ " << trackHit->fmom.Z();
+      // }
 
       currentTrack.emplace_back(*trackHit);   
 
@@ -686,7 +686,7 @@ Bool_t FgdGraphGenFitRecon::CalculateInitialMomentum(const std::vector<ReconHit>
   std::vector<TVector3> trackMomentums;
   std::vector<TVector3> tarckMomentumLosses;
 
-  for(size_t i = lengthSize; i< track.size() ; ++i)
+  for(size_t i = lengthSize; i < track.size(); ++i)
   {
     size_t p1_pos = i - lengthSize;
     TVector3 p1 = track[p1_pos].fHitPos;
@@ -735,18 +735,18 @@ Bool_t FgdGraphGenFitRecon::CalculateInitialMomentum(const std::vector<ReconHit>
   Double_t xTrackMom(0);
   Double_t yTrackMom(0);
   Double_t zTrackMom(0);
-  for(size_t i = 0; i < avgInitialPoints && i < trackMomentums.size() ; ++i)
+  Int_t limit = avgInitialPoints < trackMomentums.size()? avgInitialPoints : trackMomentums.size();
+
+  for(size_t i = 0; i < limit ; ++i)
   {
     xTrackMom+=trackMomentums[i].X();
     yTrackMom+=trackMomentums[i].Y();
     zTrackMom+=trackMomentums[i].Z();;
   }
 
-  Int_t del = avgInitialPoints < trackMomentums.size()? avgInitialPoints : trackMomentums.size();
-
-  xTrackMom = xTrackMom/ del;
-  yTrackMom = yTrackMom/ del;
-  zTrackMom = zTrackMom/ del;
+  xTrackMom = xTrackMom/ limit;
+  yTrackMom = yTrackMom/ limit;
+  zTrackMom = zTrackMom/ limit;
 
   momentum.SetXYZ(xTrackMom, yTrackMom, zTrackMom);
 
@@ -754,18 +754,17 @@ Bool_t FgdGraphGenFitRecon::CalculateInitialMomentum(const std::vector<ReconHit>
   Double_t xTrackMomLoss(0);
   Double_t yTrackMomLoss(0);
   Double_t zTrackMomLoss(0);
-  for(size_t i = 0; i < avgInitialPoints && i < tarckMomentumLosses.size() ; ++i)
+  Int_t limitLoss = avgInitialPoints < tarckMomentumLosses.size()? avgInitialPoints : tarckMomentumLosses.size();
+  for(size_t i = 0; i < limitLoss ; ++i)
   {
     xTrackMomLoss+=tarckMomentumLosses[i].X();
     yTrackMomLoss+=tarckMomentumLosses[i].Y();
     zTrackMomLoss+=tarckMomentumLosses[i].Z();;
   }
 
-  Int_t delLoss = avgInitialPoints < tarckMomentumLosses.size()? avgInitialPoints : tarckMomentumLosses.size();
-
-  xTrackMomLoss = xTrackMomLoss/ delLoss;
-  yTrackMomLoss = yTrackMomLoss/ delLoss;
-  zTrackMomLoss = zTrackMomLoss/ delLoss;
+  xTrackMomLoss = xTrackMomLoss/ limitLoss;
+  yTrackMomLoss = yTrackMomLoss/ limitLoss;
+  zTrackMomLoss = zTrackMomLoss/ limitLoss;
 
   momentumLoss.SetXYZ(xTrackMomLoss, yTrackMomLoss, zTrackMomLoss);
 
@@ -1021,12 +1020,12 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
 
-      if(tryFit && tryCounter < limitTryFit)
-      {
-        tryCounter++;
-        tryFit = false;
-        --i;
-      }
+      // if(tryFit && tryCounter < limitTryFit)
+      // {
+      //   tryCounter++;
+      //   tryFit = false;
+      //   --i;
+      // }
 
       std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
 
@@ -1055,7 +1054,7 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
       
 
       // approximate covariance
-      const double resolution = 1;// Default in example is 0.1;
+      const double resolution = 2;// Default in example is 0.1;
       TMatrixDSym hitCov(3);
       hitCov(0,0) = resolution*resolution;
       hitCov(1,1) = resolution*resolution;
@@ -1082,7 +1081,7 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
       genfit::Track* toFitTrack = new genfit::Track(rep, seedState, seedCov);
 
       size_t bhlimit = hitsOnTrack.size();
-      bhlimit = bhlimit * (1. - (0.1 * tryCounter)); // Reduce the queue by 10% to see if the track can be fitted
+      //bhlimit = bhlimit / (1 + tryCounter); 
 
       LOG(debug) << "******************************************* ";
       LOG(debug) << "******    Track "<< i << "  ************************";
@@ -1129,9 +1128,7 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
           genTracks.push_back(toFitTrack);
         }
         
-        //isMomentumLow = fiStatuStatus->isFitted() && !fiStatuStatus->isFitConverged();
-        tryFit = fiStatuStatus->isFitted() && !fiStatuStatus->isFitConverged();
-        
+         tryFit = fiStatuStatus->isFitted() && !fiStatuStatus->isFitConverged();
       }
       catch(genfit::Exception& e)
       {
@@ -1142,7 +1139,6 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
           Bool_t isFittedError = (e.getExcString().find("KalmanFitterInfo::getFittedState") != std::string::npos)
                                   || (e.getExcString().find("Track::getFittedState") != std::string::npos);
           
-          //isMomentumLow = (e.getExcString().find("KalmanFitterInfo::getFittedState") != std::string::npos);
           tryFit = isFittedError && (tryCounter <= limitTryFit);
       }
     }

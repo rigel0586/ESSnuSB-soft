@@ -300,11 +300,11 @@ Bool_t FgdGenFitRecon::GetHits(std::vector<ReconHit>& allHits)
     if(visited[ind])
     {
       // If already exists, add the photons
-      ReconHit toFind;
-      toFind.fmppcLoc = mppcLoc;
-      std::vector<ReconHit>::iterator recHit = find(allHits.begin(), allHits.end(), toFind);
-      ReconHit& foundHit = *recHit;
-      foundHit.fphotons = foundHit.fphotons + photoE;
+      // ReconHit toFind;
+      // toFind.fmppcLoc = mppcLoc;
+      // std::vector<ReconHit>::iterator recHit = find(allHits.begin(), allHits.end(), toFind);
+      // ReconHit& foundHit = *recHit;
+      // foundHit.fphotons = foundHit.fphotons + photoE;
       continue;
     }
     visited[ind] = true;
