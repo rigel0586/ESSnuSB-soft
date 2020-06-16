@@ -469,7 +469,7 @@ Bool_t FgdMCLeptonStats::FitTrack(std::vector<ReconHit>& hitsOnTrack, TVector3& 
     }
 
     // approximate covariance
-    double resolution = 0.1;
+    const double resolution = 1;// Default in example is 0.1;
     TMatrixDSym hitCov(3);
     hitCov(0,0) = resolution*resolution;
     hitCov(1,1) = resolution*resolution;

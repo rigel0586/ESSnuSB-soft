@@ -306,6 +306,7 @@ Bool_t FgdMCGenFitRecon::GetHits(std::vector<ReconHit>& allHits)
       allHits.emplace_back(ReconHit(
                                 mppcLoc
                               , TVector3(hitPos(0),hitPos(1),hitPos(2))
+                              , hit->GetDpos()
                               , photoE
                               , hit->GetTime()
                               , hit->GetMomentum()
@@ -406,7 +407,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       }
 
       // approximate covariance
-      double resolution = 0.1;
+      const double resolution = 1;// Default in example is 0.1;
       TMatrixDSym hitCov(3);
       hitCov(0,0) = resolution*resolution;
       hitCov(1,1) = resolution*resolution;

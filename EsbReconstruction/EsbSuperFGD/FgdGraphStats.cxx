@@ -321,6 +321,7 @@ Bool_t FgdGraphStats::GetMCHits(std::vector<ReconHit>& allHits)
       allHits.emplace_back(ReconHit(
                                 mppcLoc
                               , TVector3(hitPos(0),hitPos(1),hitPos(2))
+                              , hit->GetDpos()
                               , photoE
                               , hit->GetTime()
                               , hit->GetMomentum()
@@ -389,6 +390,7 @@ Bool_t FgdGraphStats::GetGraphHits(std::vector<ReconHit>& allHits)
       allHits.emplace_back(ReconHit(
                                 mppcLoc
                               , TVector3(hitPos(0),hitPos(1),hitPos(2))
+                              , hit->GetDpos()
                               , photoE
                               , hit->GetTime()
                               , hit->GetMomentum()

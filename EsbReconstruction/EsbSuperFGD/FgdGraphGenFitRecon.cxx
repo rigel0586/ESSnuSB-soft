@@ -293,6 +293,7 @@ Bool_t FgdGraphGenFitRecon::GetHits(std::vector<ReconHit>& allHits)
       allHits.emplace_back(ReconHit(
                                 mppcLoc
                               , TVector3(hitPos(0),hitPos(1),hitPos(2))
+                              , hit->GetDpos()
                               , photoE
                               , hit->GetTime()
                               , hit->GetMomentum()
@@ -741,9 +742,11 @@ Bool_t FgdGraphGenFitRecon::CalculateInitialMomentum(const std::vector<ReconHit>
     zTrackMom+=trackMomentums[i].Z();;
   }
 
-  xTrackMom = xTrackMom/ avgInitialPoints;
-  yTrackMom = yTrackMom/ avgInitialPoints;
-  zTrackMom = zTrackMom/ avgInitialPoints;
+  Int_t del = avgInitialPoints < trackMomentums.size()? avgInitialPoints : trackMomentums.size();
+
+  xTrackMom = xTrackMom/ del;
+  yTrackMom = yTrackMom/ del;
+  zTrackMom = zTrackMom/ del;
 
   momentum.SetXYZ(xTrackMom, yTrackMom, zTrackMom);
 
@@ -758,9 +761,11 @@ Bool_t FgdGraphGenFitRecon::CalculateInitialMomentum(const std::vector<ReconHit>
     zTrackMomLoss+=tarckMomentumLosses[i].Z();;
   }
 
-  xTrackMomLoss = xTrackMomLoss/ avgInitialPoints;
-  yTrackMomLoss = yTrackMomLoss/ avgInitialPoints;
-  zTrackMomLoss = zTrackMomLoss/ avgInitialPoints;
+  Int_t delLoss = avgInitialPoints < tarckMomentumLosses.size()? avgInitialPoints : tarckMomentumLosses.size();
+
+  xTrackMomLoss = xTrackMomLoss/ delLoss;
+  yTrackMomLoss = yTrackMomLoss/ delLoss;
+  zTrackMomLoss = zTrackMomLoss/ delLoss;
 
   momentumLoss.SetXYZ(xTrackMomLoss, yTrackMomLoss, zTrackMomLoss);
 
@@ -975,7 +980,7 @@ Int_t FgdGraphGenFitRecon::GetPdgCode(const TVector3& momentum, const TVector3& 
   }
 
   momCoeff = (1 << (tryFit % 3));
-  LOG(debug) << "Trying with pdg code = " << pdgCode << " , momCoeff = " << momCoeff;
+  //LOG(debug) << "Trying with pdg code = " << pdgCode << " , momCoeff = " << momCoeff;
   return pdgCode;
 }
 
@@ -1009,8 +1014,8 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
     int detId(1); // Detector id, it is the same, we only have one detector
 
     Bool_t tryFit(false);
-    Int_t tryCounter(1);
-    Int_t limitTryFit = 12; // 3 times increse momentum by 2, 4 pdg codes to try
+    Int_t tryCounter(0);
+    Int_t limitTryFit = 7; // 70% track reduction limit
 
 
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
@@ -1046,10 +1051,11 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
       Int_t momCoeff(1);
       Int_t pdg = GetPdgCode(momM, momLoss, tryCounter, momCoeff);
       //momM = momM * momCoeff;
+      pdg = hitsOnTrack[0].fpdg;
       
 
       // approximate covariance
-      double resolution = 0.1;
+      const double resolution = 1;// Default in example is 0.1;
       TMatrixDSym hitCov(3);
       hitCov(0,0) = resolution*resolution;
       hitCov(1,1) = resolution*resolution;
@@ -1076,16 +1082,17 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
       genfit::Track* toFitTrack = new genfit::Track(rep, seedState, seedCov);
 
       size_t bhlimit = hitsOnTrack.size();
-      bhlimit = bhlimit * (1./tryCounter);
+      bhlimit = bhlimit * (1. - (0.1 * tryCounter)); // Reduce the queue by 10% to see if the track can be fitted
 
       LOG(debug) << "******************************************* ";
       LOG(debug) << "******    Track "<< i << "  ************************";
       LOG(debug) << "******************************************* ";
       LOG(debug) << " \tPdg code " << pdg << " [MC pdg = " << hitsOnTrack[0].fpdg <<" ]";
       LOG(debug) << " \tHits in track "<< bhlimit;
-      LOG(debug) << " \tTrack Momentum [" << momM.Mag() << "]" << "(" << momM.X() << "," << momM.Y() << "," << momM.Z() << ")";
-      LOG(debug) << " \tTrack Momentum Loss [" << momLoss.Mag() << "]" << "(" << momLoss.X() << "," << momLoss.Y() << "," << momLoss.Z() << ")";
-      LOG(debug) << " \tMomentum / Momentum Loss [" << momM.Mag()/momLoss.Mag() << "]";
+      LOG(debug) << " \tMC Momentum [" << hitsOnTrack[0].fmom.Mag() << "]" << "(" << hitsOnTrack[0].fmom.X() << "," << hitsOnTrack[0].fmom.Y() << "," << hitsOnTrack[0].fmom.Z() << ")";
+      LOG(debug) << " \tEstimated Momentum [" << momM.Mag() << "]" << "(" << momM.X() << "," << momM.Y() << "," << momM.Z() << ")";
+      //LOG(debug) << " \tTrack Momentum Loss [" << momLoss.Mag() << "]" << "(" << momLoss.X() << "," << momLoss.Y() << "," << momLoss.Z() << ")";
+      //LOG(debug) << " \tMomentum / Momentum Loss [" << momM.Mag()/momLoss.Mag() << "]";
       
       
       for(Int_t bh = 0; bh < bhlimit; ++bh)

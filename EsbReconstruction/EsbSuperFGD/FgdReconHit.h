@@ -20,6 +20,7 @@ public:
 
     ReconHit(TVector3 mppcLoc
             , TVector3 hitPosition
+            , TVector3 mCPos
             , TVector3 photons
             , Double_t time
             , TVector3 mom
@@ -53,6 +54,7 @@ public:
 
     TVector3 fmppcLoc; // from 0 to N (mppcLoc)
     TVector3 fHitPos;  // -f_total_X/2 + f_step_X*mppcLoc.X()  +f_step_X/2;
+    TVector3 fMCPos;  // MC real position of the hit;
     TVector3 fphotons;
     TVector3 fph1;
     TVector3 fmppc1;
