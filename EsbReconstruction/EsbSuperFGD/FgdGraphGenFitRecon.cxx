@@ -328,8 +328,12 @@ void FgdGraphGenFitRecon::Exec(Option_t* opt)
 {  
   try
   {
+
+    FgdTMVAEventRecord& tvmaEventRecord = feventRecords[feventNum];
+    tvmaEventRecord.ReadEventData();
+
     std::vector<ReconHit> allhits;
-    std::vector<std::vector<ReconHit>> foundTracks;;
+    std::vector<std::vector<ReconHit>> foundTracks;
 
     bool rc = GetHits(allhits);
     if(rc)
@@ -350,7 +354,7 @@ void FgdGraphGenFitRecon::Exec(Option_t* opt)
 
     if(rc)
     {
-      LOG(debug) <<" Extracting tmva data ";;
+      LOG(debug) <<" Extracting tmva data ";
       ExtractTMVAdata(allhits);
     }
     else
@@ -390,10 +394,10 @@ Bool_t FgdGraphGenFitRecon::GetHits(std::vector<ReconHit>& allHits)
     Int_t&& y = mppcLoc.Y();
     Int_t&& z = mppcLoc.Z();
 
-    LOG(debug) << "TrackId " << hit->GetTrackId();
-    LOG(debug) << "GetPgd " << hit->GetPgd();
-    LOG(debug) << "GetTrackLengthOrigin " << hit->GetTrackLengthOrigin();
-    LOG(debug) << "GetTrackLenght " << hit->GetTrackLenght();
+    LOG(debug2) << "TrackId " << hit->GetTrackId();
+    LOG(debug2) << "GetPgd " << hit->GetPgd();
+    LOG(debug2) << "GetTrackLengthOrigin " << hit->GetTrackLengthOrigin();
+    LOG(debug2) << "GetTrackLenght " << hit->GetTrackLenght();
     
     Int_t ind = ArrInd(x,y,z);
     if(visited[ind])
@@ -456,17 +460,17 @@ Bool_t FgdGraphGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
   // Print out the build graph
   for(Int_t i=0; i<hits.size(); ++i)
   {
-    LOG(debug) << "i " << i;
+    LOG(debug2) << "i " << i;
     ReconHit* center = &hits[i];
     for(Int_t j=0; j<hits[i].fAllHits.size(); ++j)
     {
       ReconHit* localHit = hits[i].fAllHits[j];
       TVector3 diff = center->fmppcLoc - localHit->fmppcLoc;
-      LOG(debug) << " Local Id "<< hits[i].fAllHits[j]->fLocalId << " \t X " << diff.X() << " \t Y " << diff.Y() << " \t Z " << diff.Z();
+      LOG(debug2) << " Local Id "<< hits[i].fAllHits[j]->fLocalId << " \t X " << diff.X() << " \t Y " << diff.Y() << " \t Z " << diff.Z();
     }
-    LOG(debug) << "X " << hits[i].fmppcLoc.X() << " Y " << hits[i].fmppcLoc.Y()<< " Z " << hits[i].fmppcLoc.Z();
-    LOG(debug) << "Photons "<< " X " << hits[i].fphotons.X() << " Y " << hits[i].fphotons.Y()<< " Z " << hits[i].fphotons.Z();
-    LOG(debug) << "=====";
+    LOG(debug2) << "X " << hits[i].fmppcLoc.X() << " Y " << hits[i].fmppcLoc.Y()<< " Z " << hits[i].fmppcLoc.Z();
+    LOG(debug2) << "Photons "<< " X " << hits[i].fphotons.X() << " Y " << hits[i].fphotons.Y()<< " Z " << hits[i].fphotons.Z();
+    LOG(debug2) << "=====";
   }
 
 
@@ -788,6 +792,141 @@ void FgdGraphGenFitRecon::SplitTrack(std::vector<std::vector<ReconHit*>>& origin
   LOG(debug) << "Split tracks size " << splitTracks.size();
 }
 
+// Bool_t FgdGraphGenFitRecon::CalculateInitialMomentum(const std::vector<ReconHit>& track,const TVector3& magField, TVector3& momentum , TVector3& momentumLoss)
+// {
+//   if(track.empty())
+//   {
+//       momentum.SetXYZ(0.,0.,0);
+//       momentumLoss.SetXYZ(0.,0.,0);
+//       return false;
+//   }
+
+//   Int_t segment = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_TRACK_MOMENTUM_SEGMENT);
+//   Int_t avgInitialPoints = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_INITIAL_TRACK_POINTS_MOMENTUM);
+//   static const Double_t inf = std::numeric_limits<Double_t>::infinity();
+
+//   const Int_t defaultSegment = 3;
+//   segment = (segment<=0) ? defaultSegment : segment;
+//   avgInitialPoints = (avgInitialPoints<=0) ? defaultSegment : avgInitialPoints;
+
+//   // If the track  lenght is less than the set segment, calculate the momentum from the arc of the whole track
+//   // using for the 3 points the begin, end and all the middle points between them
+//   Int_t lengthSize = (track.size() < segment ) ? (track.size() -1) : (segment -1) ;
+
+//   std::vector<TVector3> trackMomentums;
+//   std::vector<TVector3> tarckMomentumLosses;
+
+//   TVector3 trackVector = track[track.size()-1].fHitPos - track[0].fHitPos;
+
+//   for(size_t i = lengthSize; i < track.size(); i+=3)
+//   {
+//     size_t p1_pos = i - lengthSize;
+//     TVector3 p1 = track[p1_pos].fHitPos;
+//     TVector3 p3 = track[i].fHitPos;
+
+//     size_t p2_pos = p1_pos + 1;
+//     //size_t p2_pos = p1_pos + lengthSize/2;
+//     std::vector<TVector3> segmentMomentums;
+
+//     while(p2_pos<i)
+//     {
+//       TVector3 segmentMom(0,0,0);
+//       TVector3 p2 = track[p2_pos].fHitPos;
+//       if(CalculateMomentum(trackVector, p1, p2, p3, magField, segmentMom)  
+//           &&  segmentMom.Mag()!=inf
+//           && !std::isnan(momentum.Mag()))
+//       {
+//         segmentMomentums.push_back(segmentMom);
+//       }
+//       ++p2_pos;
+//     }
+
+//     Double_t xMom(0);
+//     Double_t yMom(0);
+//     Double_t zMom(0);
+//     for(size_t j = 0; j< segmentMomentums.size() ; ++j)
+//     {
+//       xMom+=segmentMomentums[j].X();
+//       yMom+=segmentMomentums[j].Y();
+//       zMom+=segmentMomentums[j].Z();
+//     }
+
+//     xMom = xMom/segmentMomentums.size();
+//     yMom = yMom/segmentMomentums.size();
+//     zMom = zMom/segmentMomentums.size();
+
+//     trackMomentums.emplace_back(xMom, yMom, zMom);
+//   }
+
+//   for(size_t i = 1; i< trackMomentums.size() ; ++i)
+//   {
+//     TVector3 momLoss = trackMomentums[i] - trackMomentums[i-1];
+//     tarckMomentumLosses.push_back(momLoss);
+//   }
+
+//   Double_t xTrackMom(0);
+//   Double_t yTrackMom(0);
+//   Double_t zTrackMom(0);
+//   Int_t limit = avgInitialPoints < trackMomentums.size()? avgInitialPoints : trackMomentums.size();
+
+//   for(size_t i = 0; i < limit ; ++i)
+//   {
+//     xTrackMom+=trackMomentums[i].X();
+//     yTrackMom+=trackMomentums[i].Y();
+//     zTrackMom+=trackMomentums[i].Z();;
+//   }
+
+//   xTrackMom = xTrackMom/ limit;
+//   yTrackMom = yTrackMom/ limit;
+//   zTrackMom = zTrackMom/ limit;
+
+//   momentum.SetXYZ(xTrackMom, yTrackMom, zTrackMom);
+
+
+//   Double_t xTrackMomLoss(0);
+//   Double_t yTrackMomLoss(0);
+//   Double_t zTrackMomLoss(0);
+//   Int_t limitLoss = avgInitialPoints < tarckMomentumLosses.size()? avgInitialPoints : tarckMomentumLosses.size();
+//   for(size_t i = 0; i < limitLoss ; ++i)
+//   {
+//     xTrackMomLoss+=tarckMomentumLosses[i].X();
+//     yTrackMomLoss+=tarckMomentumLosses[i].Y();
+//     zTrackMomLoss+=tarckMomentumLosses[i].Z();;
+//   }
+
+//   xTrackMomLoss = xTrackMomLoss/ limitLoss;
+//   yTrackMomLoss = yTrackMomLoss/ limitLoss;
+//   zTrackMomLoss = zTrackMomLoss/ limitLoss;
+
+//   momentumLoss.SetXYZ(xTrackMomLoss, yTrackMomLoss, zTrackMomLoss);
+
+
+//   LOG(debug3) << " =========================== Track Momentum =========================== ";
+//   for(size_t i = 0; i < trackMomentums.size() ; ++i)
+//   {
+//     LOG(debug3) << " Track Momentum " << "\tMag " <<  trackMomentums[i].Mag() 
+//                                       << "\tX " <<  trackMomentums[i].X()
+//                                       << "\tY " <<  trackMomentums[i].Y()
+//                                       << "\tZ " <<  trackMomentums[i].Z();
+//   }
+//   LOG(debug3) << " ====================================================== ";
+
+//   LOG(debug3) << " =========================== Track Momentum Loss =========================== ";
+//   for(size_t i = 0; i < tarckMomentumLosses.size() ; ++i)
+//   {
+//     LOG(debug3) << " Track Momentum " << "\tMag " <<  tarckMomentumLosses[i].Mag() 
+//                                       << "\tX " <<  tarckMomentumLosses[i].X()
+//                                       << "\tY " <<  tarckMomentumLosses[i].Y()
+//                                       << "\tZ " <<  tarckMomentumLosses[i].Z();
+//   }
+//   LOG(debug3) << " ====================================================== ";
+
+//   Bool_t isValid = (!std::isnan(momentum.Mag()) && momentum.Mag()!=inf && trackMomentums.size() > 0 );
+
+//   return isValid;
+// }
+
+
 Bool_t FgdGraphGenFitRecon::CalculateInitialMomentum(const std::vector<ReconHit>& track,const TVector3& magField, TVector3& momentum , TVector3& momentumLoss)
 {
   if(track.empty())
@@ -796,132 +935,24 @@ Bool_t FgdGraphGenFitRecon::CalculateInitialMomentum(const std::vector<ReconHit>
       momentumLoss.SetXYZ(0.,0.,0);
       return false;
   }
-
-  Int_t segment = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_TRACK_MOMENTUM_SEGMENT);
-  Int_t avgInitialPoints = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_INITIAL_TRACK_POINTS_MOMENTUM);
   static const Double_t inf = std::numeric_limits<Double_t>::infinity();
+  TVector3 trackVector = track[track.size()-1].fHitPos - track[0].fHitPos;
 
-  const Int_t defaultSegment = 3;
-  segment = (segment<=0) ? defaultSegment : segment;
-  avgInitialPoints = (avgInitialPoints<=0) ? defaultSegment : avgInitialPoints;
+  TVector3 p1 = track[0].fHitPos;
+  TVector3 p2 = track[track.size()/2].fHitPos;
+  TVector3 p3 = track[track.size()-1].fHitPos;
 
-  // If the track  lenght is less than the set segment, calculate the momentum from the arc of the whole track
-  // using for the 3 points the begin, end and all the middle points between them
-  Int_t lengthSize = (track.size() < segment ) ? (track.size() -1) : (segment -1) ;
+  CalculateMomentum(trackVector, p1, p2, p3, magField, momentum);
 
-  std::vector<TVector3> trackMomentums;
-  std::vector<TVector3> tarckMomentumLosses;
+  //momentum = momentum * 1.1; // Increase momentum due to energy losses
 
-  for(size_t i = lengthSize; i < track.size(); ++i)
-  {
-    size_t p1_pos = i - lengthSize;
-    TVector3 p1 = track[p1_pos].fHitPos;
-    TVector3 p3 = track[i].fHitPos;
-
-    size_t p2_pos = p1_pos + 1;
-    //size_t p2_pos = p1_pos + lengthSize/2;
-    std::vector<TVector3> segmentMomentums;
-
-    while(p2_pos<i)
-    {
-      TVector3 segmentMom(0,0,0);
-      TVector3 p2 = track[p2_pos].fHitPos;
-      if(CalculateMomentum(p1, p2, p3, magField, segmentMom)  
-          &&  segmentMom.Mag()!=inf
-          && !std::isnan(momentum.Mag()))
-      {
-        segmentMomentums.push_back(segmentMom);
-      }
-      ++p2_pos;
-    }
-
-    Double_t xMom(0);
-    Double_t yMom(0);
-    Double_t zMom(0);
-    for(size_t j = 0; j< segmentMomentums.size() ; ++j)
-    {
-      xMom+=segmentMomentums[j].X();
-      yMom+=segmentMomentums[j].Y();
-      zMom+=segmentMomentums[j].Z();
-    }
-
-    xMom = xMom/segmentMomentums.size();
-    yMom = yMom/segmentMomentums.size();
-    zMom = zMom/segmentMomentums.size();
-
-    trackMomentums.emplace_back(xMom, yMom, zMom);
-  }
-
-  for(size_t i = 1; i< trackMomentums.size() ; ++i)
-  {
-    TVector3 momLoss = trackMomentums[i] - trackMomentums[i-1];
-    tarckMomentumLosses.push_back(momLoss);
-  }
-
-  Double_t xTrackMom(0);
-  Double_t yTrackMom(0);
-  Double_t zTrackMom(0);
-  Int_t limit = avgInitialPoints < trackMomentums.size()? avgInitialPoints : trackMomentums.size();
-
-  for(size_t i = 0; i < limit ; ++i)
-  {
-    xTrackMom+=trackMomentums[i].X();
-    yTrackMom+=trackMomentums[i].Y();
-    zTrackMom+=trackMomentums[i].Z();;
-  }
-
-  xTrackMom = xTrackMom/ limit;
-  yTrackMom = yTrackMom/ limit;
-  zTrackMom = zTrackMom/ limit;
-
-  momentum.SetXYZ(xTrackMom, yTrackMom, zTrackMom);
-
-
-  Double_t xTrackMomLoss(0);
-  Double_t yTrackMomLoss(0);
-  Double_t zTrackMomLoss(0);
-  Int_t limitLoss = avgInitialPoints < tarckMomentumLosses.size()? avgInitialPoints : tarckMomentumLosses.size();
-  for(size_t i = 0; i < limitLoss ; ++i)
-  {
-    xTrackMomLoss+=tarckMomentumLosses[i].X();
-    yTrackMomLoss+=tarckMomentumLosses[i].Y();
-    zTrackMomLoss+=tarckMomentumLosses[i].Z();;
-  }
-
-  xTrackMomLoss = xTrackMomLoss/ limitLoss;
-  yTrackMomLoss = yTrackMomLoss/ limitLoss;
-  zTrackMomLoss = zTrackMomLoss/ limitLoss;
-
-  momentumLoss.SetXYZ(xTrackMomLoss, yTrackMomLoss, zTrackMomLoss);
-
-
-  LOG(debug3) << " =========================== Track Momentum =========================== ";
-  for(size_t i = 0; i < trackMomentums.size() ; ++i)
-  {
-    LOG(debug3) << " Track Momentum " << "\tMag " <<  trackMomentums[i].Mag() 
-                                      << "\tX " <<  trackMomentums[i].X()
-                                      << "\tY " <<  trackMomentums[i].Y()
-                                      << "\tZ " <<  trackMomentums[i].Z();
-  }
-  LOG(debug3) << " ====================================================== ";
-
-  LOG(debug3) << " =========================== Track Momentum Loss =========================== ";
-  for(size_t i = 0; i < tarckMomentumLosses.size() ; ++i)
-  {
-    LOG(debug3) << " Track Momentum " << "\tMag " <<  tarckMomentumLosses[i].Mag() 
-                                      << "\tX " <<  tarckMomentumLosses[i].X()
-                                      << "\tY " <<  tarckMomentumLosses[i].Y()
-                                      << "\tZ " <<  tarckMomentumLosses[i].Z();
-  }
-  LOG(debug3) << " ====================================================== ";
-
-  Bool_t isValid = (!std::isnan(momentum.Mag()) && momentum.Mag()!=inf && trackMomentums.size() > 0 );
+  Bool_t isValid = (!std::isnan(momentum.Mag()) && momentum.Mag()!=inf );
 
   return isValid;
 }
 
 
-Bool_t FgdGraphGenFitRecon::CalculateMomentum(const TVector3& p1, const TVector3& p2, const TVector3& p3 , const TVector3& magField, TVector3& momentum)
+Bool_t FgdGraphGenFitRecon::CalculateMomentum(const TVector3& trackVector, const TVector3& p1, const TVector3& p2, const TVector3& p3 , const TVector3& magField, TVector3& momentum)
 {
   //
   //  p [Gev/c] = e [1.6 x 10^-19 coulumb] * B [T] * R [m]
@@ -938,10 +969,9 @@ Bool_t FgdGraphGenFitRecon::CalculateMomentum(const TVector3& p1, const TVector3
   TVector3 y_axis(0,1,0);
   TVector3 z_axis(0,0,1);
 
-  TVector3 length = p3 - p1;
-  Double_t x_angle = x_axis.Angle(length);
-  Double_t y_angle = y_axis.Angle(length);
-  Double_t z_angle = z_axis.Angle(length);
+  Double_t x_angle = x_axis.Angle(trackVector);
+  Double_t y_angle = y_axis.Angle(trackVector);
+  Double_t z_angle = z_axis.Angle(trackVector);
 
   // For each magnetic field plane calculate it for the perpendicular projections
   if(magField.X()!=0)
@@ -1019,6 +1049,59 @@ Bool_t FgdGraphGenFitRecon::CalculateMomentum(const TVector3& p1, const TVector3
   return rc;
 }
 
+
+
+
+Bool_t FgdGraphGenFitRecon::CalculateCalorimetricMomentum(const std::vector<ReconHit>& track, TVector3& momentum)
+{
+  static const double EdepToPhotConv_FGD = 70.8 / CLHEP::MeV; // contains both collection in fiber and edep->gamma conversion 
+  static const double EdepToPhotConv_SuperFGD = EdepToPhotConv_FGD * 1.3;
+
+  static const Double_t a = -22.67;
+  static const Double_t b =  12.124;
+
+  static const TVector3 x_axis(1,0,0);
+  static const TVector3 y_axis(0,1,0);
+  static const TVector3 z_axis(0,0,1);
+
+  if(track.empty()) return false;
+
+  Double_t totalEdep(0.);
+
+  for(size_t i = 0; i<track.size(); ++i)
+  {
+    const ReconHit& hit = track[i];
+    totalEdep+= hit.fphotons.X() + hit.fphotons.Y() +hit.fphotons.Z();
+  }
+
+  Double_t trackLength = track.size() * f_step_X;
+
+  LOG(info) << "Cal totalEdep-> " << totalEdep;
+  totalEdep = 10*totalEdep/EdepToPhotConv_FGD;
+  LOG(info) << "Cal totalEdep [after]-> " << totalEdep;
+  Double_t dedx = totalEdep/trackLength;
+
+  Double_t mom = (dedx - b)/a;
+
+  LOG(info) << "Cal dedx-> " << dedx;
+  LOG(info) << "Cal trackLength-> " << trackLength;
+
+  TVector3 trackVector = track[track.size()-1].fHitPos - track[0].fHitPos;
+  Double_t x_angle = x_axis.Angle(trackVector);
+  Double_t y_angle = y_axis.Angle(trackVector);
+  Double_t z_angle = z_axis.Angle(trackVector);
+
+
+  Double_t mom_x = std::cos(x_angle) * mom;
+  Double_t mom_y = std::cos(y_angle) * mom;
+  Double_t mom_z = std::cos(z_angle) * mom;
+
+  momentum.SetX(mom_x);
+  momentum.SetY(mom_y);
+  momentum.SetZ(mom_z);
+  
+  return true;
+}
 
 // Calculate the radius from 3 points using the "Menger curvature" theorem
 Double_t FgdGraphGenFitRecon::GetRadius(const TVector3& p1, const TVector3& p2, const TVector3& p3)
@@ -1185,8 +1268,14 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
 
     if(!CalculateInitialMomentum(hitsOnTrack, magField, momM, momLoss))
     {
-      LOG(debug) << "Track " << trackId << " unable to extract momentum. Continue with next track";
-      return false;
+      //LOG(debug) << "Track " << trackId << " unable to extract momentum. Continue with next track";
+      //return false;
+    }
+
+    TVector3 calMom(0.,0.,0.);
+    if(CalculateCalorimetricMomentum(hitsOnTrack, calMom))
+    {
+        LOG(debug) << " \tCalorimetricMomentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
     }
     
 
@@ -1208,8 +1297,9 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
 
     // smeared start state
     genfit::MeasuredStateOnPlane stateSmeared(rep);
-    stateSmeared.setPosMomCov(posM, momM, covM);
-
+    //stateSmeared.setPosMomCov(posM, momM, covM);
+    stateSmeared.setPosMomCov(posM, calMom, covM);
+    
     // create track
     TVectorD seedState(6);
     TMatrixDSym seedCov(6);
@@ -1228,7 +1318,19 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
     LOG(debug) << " \tEstimated Momentum [" << momM.Mag() << "]" << "(" << momM.X() << "," << momM.Y() << "," << momM.Z() << ")";
     //LOG(debug) << " \tTrack Momentum Loss [" << momLoss.Mag() << "]" << "(" << momLoss.X() << "," << momLoss.Y() << "," << momLoss.Z() << ")";
     //LOG(debug) << " \tMomentum / Momentum Loss [" << momM.Mag()/momLoss.Mag() << "]";
-    
+    FgdTMVAEventRecord& tvmaEventRecord = feventRecords[feventNum];
+    const std::vector<std::pair<Int_t, TVector3>>& particles = tvmaEventRecord.GetPrimaryParticles();
+    for(size_t p = 0; p < particles.size(); ++p)
+    {
+      std::pair<Int_t, TVector3> pp = particles[p];
+      if(genie::pdg::IsMuon(pp.first) || genie::pdg::IsAntiMuon(pp.first))
+      {
+        LOG(debug) << " \tEvent Muon Momentum [" << pp.second.Mag() << "]" << "(" << pp.second.X() << "," << pp.second.Y() << "," << pp.second.Z() << ")";
+        break;
+      }
+    }
+
+    LOG(debug) << " \tCalorimetricMomentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
     
     for(Int_t bh = 0; bh < bhlimit; ++bh)
     {
@@ -1293,7 +1395,6 @@ void FgdGraphGenFitRecon::ExtractTMVAdata(std::vector<ReconHit>& allhits)
     }
 
     FgdTMVAEventRecord& tvmaEventRecord = feventRecords[feventNum];
-    tvmaEventRecord.ReadEventData();
 
     Int_t sumTotalCubes = 0;
     TVector3 sumTotalPhoto(0,0,0);

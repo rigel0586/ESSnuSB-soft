@@ -97,7 +97,8 @@ protected:
   void CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks);
   void SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks);
   Bool_t CalculateInitialMomentum(const std::vector<ReconHit>& track,const TVector3& magField, TVector3& momentum, TVector3& momentumLoss);
-  Bool_t CalculateMomentum(const TVector3& p1, const TVector3& p2, const TVector3& p3 , const TVector3& magField, TVector3& momentum);
+  Bool_t CalculateMomentum(const TVector3& trackVector, const TVector3& p1, const TVector3& p2, const TVector3& p3 , const TVector3& magField, TVector3& momentum);
+  Bool_t CalculateCalorimetricMomentum(const std::vector<ReconHit>& track, TVector3& momentum);
   Double_t GetRadius(const TVector3& p1, const TVector3& p2, const TVector3& p3);
   Int_t GetPdgCode(const TVector3& momentum, const TVector3& momentumLoss, Int_t tryFit, Int_t& momCoeff);
   void ConvertHitToVec(std::vector<TVector3>& points, std::vector<ReconHit>& hits);
