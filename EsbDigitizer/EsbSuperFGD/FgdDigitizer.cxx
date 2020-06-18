@@ -218,25 +218,36 @@ const double FgdDigitizer::CBIRKS = 0.0208; // We use directly cm and GeV [and c
 const double FgdDigitizer::EdepToPhotConv_FGD = 70.8 / CLHEP::MeV; // contains both collection in fiber and edep->gamma conversion 
 const double FgdDigitizer::EdepToPhotConv_SuperFGD = EdepToPhotConv_FGD * 1.3;
 
+// double FgdDigitizer::ApplyScintiResponse(double edep, double trackLength, double charge)
+// {
+//     // Calculated as in 
+//     //  geant4/examples/advanced/amsEcal/src/SteppingAction.cc
+//     //  G4double SteppingAction::BirksAttenuation(const G4Step* aStep)
+//     //  light attenuation (Birks' formula)
+//     double dedx = edep/trackLength;
+//     double edep_birk = edep/(1. + CBIRKS*dedx);
+//     // Calculate edep to photons
+//     return edep_birk * EdepToPhotConv_SuperFGD;  
+// }
+
 double FgdDigitizer::ApplyScintiResponse(double edep, double trackLength, double charge)
 {
-    // Calculated as in 
-    //  geant4/examples/advanced/amsEcal/src/SteppingAction.cc
-    //  G4double SteppingAction::BirksAttenuation(const G4Step* aStep)
-    //  light attenuation (Birks' formula)
-    double dedx = edep/trackLength;
-    double edep_birk = edep/(1. + CBIRKS*dedx);
-    // Calculate edep to photons
-    return edep_birk * EdepToPhotConv_SuperFGD;  
+    // Simplified calculation using deposited energy and a constant to convert photons
+    return edep * EdepToPhotConv_SuperFGD;  
 }
+
+// double FgdDigitizer::RevertScintiResponse(double edep, double trackLength, double charge, double pe)
+// {
+//   double dedx = edep/trackLength;
+//   double edep_birk = (pe/EdepToPhotConv_SuperFGD);
+//   double rec_Edep = edep_birk * (1. + CBIRKS*dedx);
+
+//   return rec_Edep;
+// }
 
 double FgdDigitizer::RevertScintiResponse(double edep, double trackLength, double charge, double pe)
 {
-  double dedx = edep/trackLength;
-  double edep_birk = (pe/EdepToPhotConv_SuperFGD);
-  double rec_Edep = edep_birk * (1. + CBIRKS*dedx);
-
-  return rec_Edep;
+  return pe/EdepToPhotConv_SuperFGD;
 }
 
 void FgdDigitizer::ApplyFiberResponse(double& numPhotons, double& time, double distance)

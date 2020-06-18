@@ -14,7 +14,10 @@
 void simulate_3_graph_reconstruction(TString inFile = "fgd_dig.root", 
 	      TString parFile = "params.root",
 	      TString outFile = "fgd_recon.root",
-              Int_t nStartEvent = 3, Int_t nEvents = 1)
+        Int_t nStartEvent = 0,
+        Int_t nEvents = 15,
+        TString eventDat = "../../EsbMacro/tests/eventsData.dat",
+        TString outputRootdata = "../../EsbMacro/tests/tmva_graph_data.root")
 {
   using namespace esbroot;
 
@@ -44,6 +47,8 @@ void simulate_3_graph_reconstruction(TString inFile = "fgd_dig.root",
     "Reconstruction Task"             // name of the task
     ,"../../EsbGeometry/EsbSuperFGD/EsbConfig/fgdconfig"  //File with detector configuration
     ,"../../geometry/media.geo"       // Media file with defined materials
+    , eventDat                        // events data file
+    , outputRootdata                  // output root file
     , 1                               // Verbose level
     , debugLvl                        // debug level of genfit (0 - little, 1 - debug info, 2 - detailed)
     , false                           // To visualize the tracks using genfit::Eventdisplay

@@ -7,6 +7,7 @@
 #include "EsbGeometry/EsbSuperFGD/EsbSuperFGDDetectorConstruction.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdReconHit.h"
 #include "EsbReconstruction/EsbSuperFGD/PdgFromMomentumLoss.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdTMVAEventRecord.h"
 
 // FairRoot headers
 #include <FairTask.h>
@@ -42,6 +43,8 @@ class FgdGraphGenFitRecon : public FairTask
    *@param name       Name of task
    *@param geoConfigFile  - Configuration file detector
    *@param mediaFile  - Configuration file for the used mediums
+   *@param eventData  - events data file (generated from fgd generator)
+   *@param outputRootFile - full path to the output root file
    *@param verbose  - Verbosity level
    *@param debugLlv - debug level for genfit
    *@param visualize -  to visualize the event using genfit::EventDisplay
@@ -50,6 +53,8 @@ class FgdGraphGenFitRecon : public FairTask
   FgdGraphGenFitRecon(const char* name
               , const char* geoConfigFile
               , const char* mediaFile
+              , const char* eventData
+              , const char* outputRootFile
               , Int_t verbose = 1
               , double debugLlv = 0
               , bool visualize = false
@@ -99,6 +104,13 @@ protected:
 
   /** Fit the found tracks using genfit **/
   void FitTracks(std::vector<std::vector<ReconHit>>& foundTracks);
+  bool FitTrack(std::vector<ReconHit>& track
+    , std::shared_ptr<genfit::AbsKalmanFitter>& fitter
+    , Int_t pdg
+    , TVector3& momentum
+    , int trackId);
+
+  void ExtractTMVAdata(std::vector<ReconHit>& allhits);
 
   /** Define materials used in the reconstruction phase **/
   void DefineMaterials();
@@ -143,6 +155,13 @@ protected:
 
   /** Path to the used media.geo file - containing definitions of materials **/
   std::string fmediaFile;
+
+  /** Path to the used data file containing genie events infos **/
+  std::string feventData;//!<!
+  std::string foutputRootFile;//!<!
+  std::vector<FgdTMVAEventRecord> feventRecords;//!<!
+  std::vector<TVector3> fFittedMomentum;//!<!
+  int feventNum;//!<!
 
   Int_t fminGenFitInterations;
   Int_t fmaxGenFitIterations;
