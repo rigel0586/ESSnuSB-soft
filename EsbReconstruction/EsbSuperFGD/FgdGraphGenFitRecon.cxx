@@ -1,5 +1,6 @@
 #include "EsbReconstruction/EsbSuperFGD/FgdGraphGenFitRecon.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdReconTemplate.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdCalorimetric.h"
 #include "EsbData/EsbSuperFGD/FgdDetectorPoint.h"
 
 // FairRoot headers
@@ -1079,11 +1080,15 @@ Bool_t FgdGraphGenFitRecon::CalculateCalorimetricMomentum(const std::vector<Reco
   LOG(info) << "Cal totalEdep-> " << totalEdep;
   totalEdep = 10*totalEdep/EdepToPhotConv_FGD;
   LOG(info) << "Cal totalEdep [after]-> " << totalEdep;
-  Double_t dedx = totalEdep/trackLength;
+  Double_t dedx1 = totalEdep/trackLength;
+
+  Double_t dedx = RevertToDeDx(track);
 
   Double_t mom = (dedx - b)/a;
 
   LOG(info) << "Cal dedx-> " << dedx;
+  LOG(info) << "Cal dedx1-> " << dedx1;
+  LOG(info) << "Cal dedx with coeff -> " << dedxToP(dedx);
   LOG(info) << "Cal trackLength-> " << trackLength;
 
   TVector3 trackVector = track[track.size()-1].fHitPos - track[0].fHitPos;

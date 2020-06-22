@@ -53,4 +53,4 @@ gradDiff=35             # Allowable difference between grad to consider a differ
 # the second and for each point in between). Since the are energy losses and the momentum decreases, take the particle momentum from as the average from the 
 # first'avgTrackMomentum' points
 momTrackSegment=20
-avgTrackMomentum=1000
+avgTrackMomentum=100

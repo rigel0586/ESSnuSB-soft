@@ -1,5 +1,6 @@
 #include "EsbReconstruction/EsbSuperFGD/FgdMCLeptonStats.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdReconTemplate.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdCalorimetric.h"
 //#include "EsbData/EsbSuperFGD/FgdDetectorPoint.h"
 #include "EsbDigitizer/EsbSuperFGD/FgdDigitizer.h"
 
@@ -353,6 +354,22 @@ Bool_t FgdMCLeptonStats::ProcessStats(std::vector<std::vector<ReconHit>>& foundT
                     sumEdep += CalculatePhotoEdep(hit);
                 }
                 mcEventRecord.SetProtonEdep(sumEdep);
+                break;
+            }
+        }
+    }
+
+    // 7. Determine the muon dedx = a*p + b coeff
+    if(mcEventRecord.IsPrimaryLeptonMuon())
+    {
+        for(size_t i = 0; i <  foundTracks.size() ; ++i)
+        {
+            std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
+            if(hitsOnTrack.empty()) continue;
+            if(hitsOnTrack[0].fpdg == genie::kPdgMuon || hitsOnTrack[0].fpdg == genie::kPdgAntiMuon)
+            {
+                Double_t dedx = RevertToDeDxMC(hitsOnTrack);
+                mcEventRecord.SetDeDx(dedx);
                 break;
             }
         }

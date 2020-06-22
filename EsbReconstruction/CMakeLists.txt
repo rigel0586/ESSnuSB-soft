@@ -55,6 +55,7 @@ set(SRCS
 	EsbSuperFGD/FgdTMVAData.cxx
 	EsbSuperFGD/FgdTMVAData2.cxx
 	EsbSuperFGD/FgdEdepAnalyzer.cxx
+	EsbSuperFGD/FgdCalorimetric.cxx
 )
 
 Set(HEADERS 
@@ -72,6 +73,7 @@ Set(HEADERS
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdTMVAData.h
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdTMVAData2.h
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdEdepAnalyzer.h
+	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdCalorimetric.h
 )
 
 Set(LINKDEF ${CMAKE_SOURCE_DIR}/EsbReconstruction/ReconLinkDef.h)

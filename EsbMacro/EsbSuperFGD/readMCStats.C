@@ -6,6 +6,12 @@ void readMCStats()
     esbroot::reconstruction::superfgd::FgdMCEventRecord* dat = nullptr;
     tr->SetBranchAddress("FgdMCLeptonStatsBranch", &dat);
 
+    std::ofstream outputFile("../../EsbMacro/tests/dedx.dat", std::ios::app);
+    if(outputFile.is_open())
+    {
+        outputFile << "#dE/dx" << "  " <<  "muon momentum " << endl;
+    }
+
     int entries = tr->GetEntries();
     for(int i=0; i < entries; ++i) 
     { 
@@ -19,10 +25,19 @@ void readMCStats()
         cout << "               IsWeakCC " << dat->IsWeakCC() << endl;
         cout << "               IsWeakNC " << dat->IsWeakNC() << endl;
         cout << "         IsQuasiElastic " << dat->IsQuasiElastic() << endl;
+        cout << "                   DeDx " << dat->GetDeDx() << endl;
         for(int j = 0; j < primPars.size(); ++j)
         {
             cout << "                        Pdg " << primPars[j].first << endl;
         }
         cout << "=======================================" << endl;
+
+        if(dat->IsPrimaryLeptonMuon() && outputFile.is_open()
+            && dat->GetDeDx()!=0)
+        {
+            outputFile << dat->GetDeDx()  << "  " <<    dat->GetMuonMom().Mag()<< endl;
+        }
     }
+
+    outputFile.close();
 }

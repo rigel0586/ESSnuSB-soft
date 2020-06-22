@@ -1,5 +1,6 @@
 #include "EsbReconstruction/EsbSuperFGD/FgdMCGenFitRecon.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdReconTemplate.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdCalorimetric.h"
 #include "EsbData/EsbSuperFGD/FgdDetectorPoint.h"
 
 // FairRoot headers
@@ -439,6 +440,13 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       LOG(debug) << " \tPdg code " << pdg;
       LOG(debug) << " \tHits in track "<< hitsOnTrack.size();
       LOG(debug) << " \tTrack Momentum [" << momM.Mag() << "]" << "(" << momM.X() << "," << momM.Y() << "," << momM.Z() << ")";
+
+      if(hitsOnTrack[0].fpdg == genie::kPdgMuon || hitsOnTrack[0].fpdg == genie::kPdgAntiMuon)
+      {
+          Double_t dedx = RevertToDeDxMC(hitsOnTrack);
+          Double_t muonP = dedxToP(dedx);
+          LOG(debug) << " \tCalorimetric Momentum [" << muonP << "]";
+      }
       
       for(Int_t bh = 0; bh < hitsOnTrack.size(); ++bh)
       {
