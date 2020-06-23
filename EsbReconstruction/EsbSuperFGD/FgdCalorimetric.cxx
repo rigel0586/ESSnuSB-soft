@@ -168,9 +168,9 @@ double RevertEdepToDeDx(const std::vector<esbroot::reconstruction::superfgd::Rec
 
 double dedxToP(double dedx)
 {
-    double del  = dedx*dedx;
-    double coeff =  4.62;
-    return coeff* ( 
-                        ( a_coeff /  del ) + b_coeff
+    double a = dedx < coeff_sep ? a_coeff : a_coeff_2;
+    double b = dedx < coeff_sep ? b_coeff : b_coeff_2;
+    return ( 
+                        ( a /  dedx ) + b
                     );
 }

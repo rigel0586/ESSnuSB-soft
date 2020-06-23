@@ -445,7 +445,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       {
           Double_t dedx = RevertToDeDxMC(hitsOnTrack);
           Double_t muonP = dedxToP(dedx);
-          LOG(debug) << " \tCalorimetric Momentum [" << muonP << "]";
+          LOG(debug) << " \tCalorimetric Momentum [" << muonP << ", " << dedx  << "]";
       }
       
       for(Int_t bh = 0; bh < hitsOnTrack.size(); ++bh)

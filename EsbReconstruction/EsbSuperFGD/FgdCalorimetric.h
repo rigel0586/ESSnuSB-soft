@@ -16,8 +16,18 @@ static const double DecayLength_FGD = 0.0858 / CLHEP::mm;
 static const double Lbar_FGD = 1864.3 * CLHEP::mm;
 static const double TransTimeInFiber = 1./28.;  //  1cm/2.8e10[cm/s] * 1e9 [ns]
 
-static const double a_coeff = 1.34951;
-static const double b_coeff = -0.0418155;
+
+
+static const double a_coeff = 1.52375;
+static const double b_coeff = -0.0825768;
+
+static const double coeff_sep = 5; // MeV / cm
+
+static const double a_coeff_2 = 0.980461;
+static const double b_coeff_2 = 0.00125502;
+
+
+
 
 
 double RevertScintiResponse(double edep, double trackLength, double charge, double pe);
