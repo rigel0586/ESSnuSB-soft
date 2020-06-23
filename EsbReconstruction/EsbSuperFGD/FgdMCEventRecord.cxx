@@ -30,7 +30,7 @@ FgdMCEventRecord::FgdMCEventRecord(std::string eventData)
         , fIsMuonExiting(false), fMuonExitMomentum(TVector3(0,0,0))
         , fMuonPolarAngle(0.), fMuonAzumAngle(0.), fElectronNumOfExitingParticles(0)
         , fGenfitMom(TVector3(0,0,0)), fMC_GentFitError(0.), fProtonEdep(0.)
-        , fHasHits(false), fDeDx(0.)
+        , fHasHits(false), fDeDx(0.), fEdepDeDx(0.)
 {
     Init();
 }
@@ -56,6 +56,7 @@ FgdMCEventRecord::FgdMCEventRecord(const FgdMCEventRecord& c)
     this->fProtonEdep = c.fProtonEdep;
     this->fHasHits = c.fHasHits;
     this->fDeDx = c.fDeDx;
+    this->fEdepDeDx = c.fEdepDeDx;
 
     this->Init();
 }
@@ -207,6 +208,7 @@ FgdMCEventRecord& FgdMCEventRecord::operator=(const FgdMCEventRecord& c)
     this->fProtonEdep = c.fProtonEdep;
     this->fHasHits = c.fHasHits;
     this->fDeDx = c.fDeDx;
+    this->fEdepDeDx = c.fEdepDeDx;
 
     this->Init();
     return *this;

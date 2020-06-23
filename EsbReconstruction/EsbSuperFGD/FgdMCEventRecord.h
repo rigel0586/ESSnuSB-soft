@@ -83,6 +83,9 @@ public:
     void SetDeDx(Double_t e) { fDeDx = e;}
     Double_t GetDeDx() {return fDeDx;}
 
+    void SetEdepDeDx(Double_t e) { fEdepDeDx = e;}
+    Double_t GetEdepDeDx() {return fEdepDeDx;}
+
     std::string GetEventData(){return feventData; }
 
     void PrintData(std::ostream & stream);
@@ -154,6 +157,7 @@ protected:
 
     Double_t fProtonEdep;
     Double_t fDeDx;
+    Double_t fEdepDeDx;
     
     std::vector<std::string> fDataTokens;
     std::vector<std::pair<Int_t, TVector3>> fPrimaryParticles;//!<!

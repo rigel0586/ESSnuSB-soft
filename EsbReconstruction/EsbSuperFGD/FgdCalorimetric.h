@@ -16,8 +16,8 @@ static const double DecayLength_FGD = 0.0858 / CLHEP::mm;
 static const double Lbar_FGD = 1864.3 * CLHEP::mm;
 static const double TransTimeInFiber = 1./28.;  //  1cm/2.8e10[cm/s] * 1e9 [ns]
 
-static const double a_coeff = 4.09185;
-static const double b_coeff = 0.0511127;
+static const double a_coeff = 1.34951;
+static const double b_coeff = -0.0418155;
 
 
 double RevertScintiResponse(double edep, double trackLength, double charge, double pe);
@@ -29,6 +29,7 @@ void RevertFiberResponse(double &numPhotons, double &time, double distance);
 
 double RevertToDeDx(const std::vector<esbroot::reconstruction::superfgd::ReconHit>& track);
 double RevertToDeDxMC(const std::vector<esbroot::reconstruction::superfgd::ReconHit>& track);
+double RevertEdepToDeDx(const std::vector<esbroot::reconstruction::superfgd::ReconHit>& track);
 
 double RevertEdep(esbroot::reconstruction::superfgd::ReconHit& hit);
 double Calcl(const std::vector<esbroot::reconstruction::superfgd::ReconHit>& track, size_t i);

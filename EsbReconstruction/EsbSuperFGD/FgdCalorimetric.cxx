@@ -147,10 +147,30 @@ double RevertToDeDxMC(const std::vector<esbroot::reconstruction::superfgd::Recon
     return E/l;
 }
 
+double RevertEdepToDeDx(const std::vector<esbroot::reconstruction::superfgd::ReconHit>& track)
+{
+    double l(0);
+    double E(0);
+
+    Double_t firstL = track[0].ftrackLengthOrigin;
+    Double_t lastL = track[track.size() - 1].ftrackLengthOrigin;
+
+    l = firstL < lastL ? lastL : firstL;
+
+    for(size_t i = 0; i < track.size(); ++i)
+    {
+        const esbroot::reconstruction::superfgd::ReconHit& hit = track[i];
+        E += hit.fEdep;
+    }
+
+    return E/l;
+}
+
 double dedxToP(double dedx)
 {
     double del  = dedx*dedx;
-    return ( 
-                ( a_coeff /  del ) + b_coeff
-            );
+    double coeff =  4.62;
+    return coeff* ( 
+                        ( a_coeff /  del ) + b_coeff
+                    );
 }

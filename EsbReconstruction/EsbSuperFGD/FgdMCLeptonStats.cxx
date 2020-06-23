@@ -370,6 +370,9 @@ Bool_t FgdMCLeptonStats::ProcessStats(std::vector<std::vector<ReconHit>>& foundT
             {
                 Double_t dedx = RevertToDeDxMC(hitsOnTrack);
                 mcEventRecord.SetDeDx(dedx);
+
+                Double_t edepdedx = RevertEdepToDeDx(hitsOnTrack);
+                mcEventRecord.SetEdepDeDx(edepdedx);
                 break;
             }
         }
