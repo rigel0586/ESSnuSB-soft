@@ -32,6 +32,7 @@
 #include <FieldManager.h>
 #include "FitStatus.h"
 #include <KalmanFitterRefTrack.h>
+#include <KalmanFitter.h>
 #include "MaterialEffects.h"
 #include "MeasuredStateOnPlane.h"
 #include <PlanarMeasurement.h>
@@ -160,6 +161,14 @@ InitStatus FgdGraphGenFitRecon::Init()
   f_total_Y = f_step_Y * f_bin_Y;
   f_total_Z = f_step_Z * f_bin_Z;
 
+  // init geometry and mag. field
+  TVector3 magField = fgdConstructor.GetMagneticField(); // values are in kGauss
+  genfit::FieldManager::getInstance()->init(new genfit::ConstField(magField.X(),magField.Y(), magField.Z())); 
+  genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
+  genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(true);
+  genfit::MaterialEffects::getInstance()->setEnergyLossBrems(true);
+  genfit::MaterialEffects::getInstance()->setDebugLvl(fDebuglvl_genfit);
+
   // Get RootManager
   FairRootManager* manager = FairRootManager::Instance();
   if ( !manager ) {
@@ -281,11 +290,11 @@ void FgdGraphGenFitRecon::FinishTask()
         LOG(debug2) << "Writing data for event " << ind;
         dataEvent = &feventRecords[ind];
 
-        bool isQuasiCC = dataEvent->IsWeakCC() && dataEvent->IsQuasiElastic();
-        if(!isQuasiCC)
-        {
-            continue;
-        }
+        // bool isQuasiCC = dataEvent->IsWeakCC() && dataEvent->IsQuasiElastic();
+        // if(!isQuasiCC)
+        // {
+        //     continue;
+        // }
 
         lnuEnergy = dataEvent->GetNuE();
         const std::vector<std::pair<Int_t, TVector3>>& particles = dataEvent->GetPrimaryParticles();
@@ -309,6 +318,9 @@ void FgdGraphGenFitRecon::FinishTask()
 
         trainTree->Fill();
         fittedMomTree->Fill();
+
+        Double_t percentage = 100*(muon_mom - fit_muon_mom)/muon_mom;
+        LOG(info) << "Event muon momentum " << muon_mom << " , fitted momentum " << fit_muon_mom << "[ " << percentage << " %]";
      }
 
 
@@ -1211,14 +1223,9 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
 {
     fTracksArray->Delete();
     
-    // init geometry and mag. field
-    TVector3 magField = fgdConstructor.GetMagneticField(); // values are in kGauss
-    genfit::FieldManager::getInstance()->init(new genfit::ConstField(magField.X(),magField.Y(), magField.Z())); 
-    genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
-    genfit::MaterialEffects::getInstance()->setDebugLvl(fDebuglvl_genfit);
-
     // init fitter
     std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
+    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
     fitter->setMinIterations(fminGenFitInterations);
     fitter->setMaxIterations(fmaxGenFitIterations);
     fitter->setDebugLvl(fDebuglvl_genfit);
@@ -1271,17 +1278,17 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
     TVector3 momM(0,0,0);
     TVector3 momLoss(0,0,0);
 
-    if(!CalculateInitialMomentum(hitsOnTrack, magField, momM, momLoss))
-    {
-      //LOG(debug) << "Track " << trackId << " unable to extract momentum. Continue with next track";
-      //return false;
-    }
+    // if(!CalculateInitialMomentum(hitsOnTrack, magField, momM, momLoss))
+    // {
+    //   //LOG(debug) << "Track " << trackId << " unable to extract momentum. Continue with next track";
+    //   //return false;
+    // }
 
-    TVector3 calMom(0.,0.,0.);
-    if(CalculateCalorimetricMomentum(hitsOnTrack, calMom))
-    {
-        LOG(debug) << " \tCalorimetricMomentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
-    }
+    TVector3 calMom = getCalorimetricMomentum(hitsOnTrack);
+    // if(CalculateCalorimetricMomentum(hitsOnTrack, calMom))
+    // {
+    //     LOG(debug) << " \tCalorimetricMomentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
+    // }
     
 
     // approximate covariance
@@ -1320,9 +1327,11 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
     LOG(debug) << " \tPdg code " << pdg << " [MC pdg = " << hitsOnTrack[0].fpdg <<" ]";
     LOG(debug) << " \tHits in track "<< bhlimit;
     LOG(debug) << " \tMC Momentum [" << hitsOnTrack[0].fmom.Mag() << "]" << "(" << hitsOnTrack[0].fmom.X() << "," << hitsOnTrack[0].fmom.Y() << "," << hitsOnTrack[0].fmom.Z() << ")";
-    LOG(debug) << " \tEstimated Momentum [" << momM.Mag() << "]" << "(" << momM.X() << "," << momM.Y() << "," << momM.Z() << ")";
+    //LOG(debug) << " \tEstimated Momentum [" << momM.Mag() << "]" << "(" << momM.X() << "," << momM.Y() << "," << momM.Z() << ")";
     //LOG(debug) << " \tTrack Momentum Loss [" << momLoss.Mag() << "]" << "(" << momLoss.X() << "," << momLoss.Y() << "," << momLoss.Z() << ")";
     //LOG(debug) << " \tMomentum / Momentum Loss [" << momM.Mag()/momLoss.Mag() << "]";
+    LOG(debug) << " \tCalorimetric Momentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
+    
     FgdTMVAEventRecord& tvmaEventRecord = feventRecords[feventNum];
     const std::vector<std::pair<Int_t, TVector3>>& particles = tvmaEventRecord.GetPrimaryParticles();
     for(size_t p = 0; p < particles.size(); ++p)
@@ -1334,8 +1343,6 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
         break;
       }
     }
-
-    LOG(debug) << " \tCalorimetricMomentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
     
     for(Int_t bh = 0; bh < bhlimit; ++bh)
     {
@@ -1365,7 +1372,7 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
 
       LOG(debug) <<"******************************************* ";
       genfit::FitStatus* fiStatuStatus = toFitTrack->getFitStatus();
-      rc = fiStatuStatus->isFitted() && fiStatuStatus->isFitConverged();
+      rc = fiStatuStatus->isFitted() && (fiStatuStatus->isFitConverged() || fiStatuStatus->isFitConvergedPartially());
 
       if(rc)
       {

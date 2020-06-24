@@ -174,3 +174,27 @@ double dedxToP(double dedx)
                         ( a /  dedx ) + b
                     );
 }
+
+
+TVector3 getCalorimetricMomentum(const std::vector<esbroot::reconstruction::superfgd::ReconHit>& track)
+{
+    Double_t dedx = RevertToDeDxMC(track);
+    Double_t p = dedxToP(dedx);
+    TVector3 dir = track[track.size()/2].fHitPos - track[0].fHitPos;
+
+    Double_t x_angle = x_axis.Angle(dir);
+    Double_t y_angle = y_axis.Angle(dir);
+    Double_t z_angle = z_axis.Angle(dir);
+
+
+    Double_t mom_x = std::cos(x_angle) * p;
+    Double_t mom_y = std::cos(y_angle) * p;
+    Double_t mom_z = std::cos(z_angle) * p;
+
+    TVector3 momentum;
+    momentum.SetX(mom_x);
+    momentum.SetY(mom_y);
+    momentum.SetZ(mom_z);
+
+    return momentum;
+}

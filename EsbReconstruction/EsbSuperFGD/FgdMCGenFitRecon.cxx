@@ -32,6 +32,7 @@
 #include <FieldManager.h>
 #include "FitStatus.h"
 #include <KalmanFitterRefTrack.h>
+#include <KalmanFitter.h>
 #include "MaterialEffects.h"
 #include "MeasuredStateOnPlane.h"
 #include <PlanarMeasurement.h>
@@ -153,6 +154,14 @@ InitStatus FgdMCGenFitRecon::Init()
   f_total_X = f_step_X * f_bin_X;
   f_total_Y = f_step_Y * f_bin_Y;
   f_total_Z = f_step_Z * f_bin_Z;
+
+  //init geometry and mag. field
+  TVector3 magField = fgdConstructor.GetMagneticField(); // values are in kGauss
+  genfit::FieldManager::getInstance()->init(new genfit::ConstField(magField.X(),magField.Y(), magField.Z())); 
+  genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
+  genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(true);
+  genfit::MaterialEffects::getInstance()->setEnergyLossBrems(true);
+  genfit::MaterialEffects::getInstance()->setDebugLvl(fDebuglvl_genfit);
 
   // Get RootManager
   FairRootManager* manager = FairRootManager::Instance();
@@ -362,14 +371,9 @@ void FgdMCGenFitRecon::SplitTrack(std::vector<ReconHit>& allHits, std::vector<st
 
 void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks)
 {
-    // init geometry and mag. field
-    TVector3 magField = fgdConstructor.GetMagneticField(); // values are in kGauss
-    genfit::FieldManager::getInstance()->init(new genfit::ConstField(magField.X(),magField.Y(), magField.Z())); 
-    genfit::MaterialEffects::getInstance()->init(new genfit::TGeoMaterialInterface());
-    genfit::MaterialEffects::getInstance()->setDebugLvl(fDebuglvl_genfit);
-
     // init fitter
-    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
+    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
+    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
     fitter->setMinIterations(fminGenFitInterations);
     fitter->setMaxIterations(fmaxGenFitIterations);
     fitter->setDebugLvl(fDebuglvl_genfit);
@@ -401,6 +405,19 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       TVector3 posM(hitsOnTrack[0].fHitPos);
       TVector3 momM(hitsOnTrack[0].fmom);
 
+      //genfit::MaterialEffects::getInstance()->drawdEdx(pdg);
+
+      TVector3 calMom;
+      if(hitsOnTrack[0].fpdg == genie::kPdgMuon || hitsOnTrack[0].fpdg == genie::kPdgAntiMuon)
+      {
+          calMom = getCalorimetricMomentum(hitsOnTrack);
+          momM = calMom;
+      }
+
+      Bool_t inlcudeBetheBloch = (pdg != genie::kPdgProton); // For proton ignore bethe bloch
+      genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(inlcudeBetheBloch);
+
+
       if(isParticleNeutral(pdg))
       {
         LOG(debug) << "Track " << i << " is of neutral particle ["<< pdg << "] continue with next track.";
@@ -426,6 +443,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       // smeared start state
       genfit::MeasuredStateOnPlane stateSmeared(rep);
       stateSmeared.setPosMomCov(posM, momM, covM);
+      
 
       // create track
       TVectorD seedState(6);
@@ -439,15 +457,14 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       LOG(debug) << "******************************************* ";
       LOG(debug) << " \tPdg code " << pdg;
       LOG(debug) << " \tHits in track "<< hitsOnTrack.size();
-      LOG(debug) << " \tTrack Momentum [" << momM.Mag() << "]" << "(" << momM.X() << "," << momM.Y() << "," << momM.Z() << ")";
+      LOG(debug) << " \tTrack Momentum [" << hitsOnTrack[0].fmom.Mag() << "]" << "(" << hitsOnTrack[0].fmom.X() << "," << hitsOnTrack[0].fmom.Y() << "," << hitsOnTrack[0].fmom.Z() << ")";
 
       if(hitsOnTrack[0].fpdg == genie::kPdgMuon || hitsOnTrack[0].fpdg == genie::kPdgAntiMuon)
       {
-          Double_t dedx = RevertToDeDxMC(hitsOnTrack);
-          Double_t muonP = dedxToP(dedx);
-          LOG(debug) << " \tCalorimetric Momentum [" << muonP << ", " << dedx  << "]";
+          LOG(debug) << " \tCalorimetric Momentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
       }
       
+      //for(Int_t bh = 0; bh < hitsOnTrack.size(); bh+=3)
       for(Int_t bh = 0; bh < hitsOnTrack.size(); ++bh)
       {
         TVectorD hitPos(3);

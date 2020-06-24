@@ -26,6 +26,10 @@ static const double coeff_sep = 5; // MeV / cm
 static const double a_coeff_2 = 0.980461;
 static const double b_coeff_2 = 0.00125502;
 
+static const TVector3 x_axis(1,0,0);
+static const TVector3 y_axis(0,1,0);
+static const TVector3 z_axis(0,0,1);
+
 
 
 
@@ -45,5 +49,7 @@ double RevertEdep(esbroot::reconstruction::superfgd::ReconHit& hit);
 double Calcl(const std::vector<esbroot::reconstruction::superfgd::ReconHit>& track, size_t i);
 
 double dedxToP(double dedx);
+
+TVector3 getCalorimetricMomentum(const std::vector<esbroot::reconstruction::superfgd::ReconHit>& track);
 
 #endif // ESBROOT_ESBDRECONSTRUCTION_FGD_CALORIMETRIC_H

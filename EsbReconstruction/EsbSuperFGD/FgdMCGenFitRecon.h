@@ -142,7 +142,6 @@ protected:
   bool isGenFitVisualization;//!<!
   std::string fGenFitVisOption;//!<!
   std::vector<genfit::Track*> fgenTracks;//!<!
-
   	   
   ClassDef(FgdMCGenFitRecon, 2);
 
