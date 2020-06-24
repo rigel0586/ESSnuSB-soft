@@ -82,7 +82,7 @@ FgdTMVAData::FgdTMVAData(const char* name
                           , const char* outputRootFile
                           , Int_t verbose
                           , double debugLlv) :
-  FgdMCGenFitRecon(name, geoConfigFile, mediaFile, verbose, 
+  FgdMCGenFitRecon(name, geoConfigFile, mediaFile, eventData, verbose, 
                     debugLlv, false /* no visualization */, "D")
     , feventData(eventData), foutputRootFile(outputRootFile)
     , feventNum(0), fmagField_X(0.), fmagField_Y(0.), fmagField_Z(0.)

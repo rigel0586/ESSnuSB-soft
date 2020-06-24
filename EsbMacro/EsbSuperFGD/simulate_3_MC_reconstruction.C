@@ -14,7 +14,10 @@
 void simulate_3_MC_reconstruction(TString inFile = "fgd_dig.root", 
 	      TString parFile = "params.root",
 	      TString outFile = "fgd_mc_recon.root",
-              Int_t nStartEvent = 0, Int_t nEvents = 50)
+        TString eventDat = "../../EsbMacro/tests/eventsData.dat",
+        std::string outputRootdata = "../../EsbMacro/tests/tmva_mc_recon_data.root",
+        Int_t nStartEvent = 0,
+        Int_t nEvents = 15)
 {
   using namespace esbroot;
 
@@ -44,12 +47,14 @@ void simulate_3_MC_reconstruction(TString inFile = "fgd_dig.root",
     "Reconstruction MC Task"             // name of the task
     ,"../../EsbGeometry/EsbSuperFGD/EsbConfig/fgdconfig"  //File with detector configuration
     ,"../../geometry/media.geo"       // Media file with defined materials
+    , eventDat
     , 1                               // Verbose level
     , debugLvl                        // debug level of genfit (0 - little, 1 - debug info, 2 - detailed)
     , false                            // To visualize the tracks using genfit::Eventdisplay
     , "D");                           // Option to be passed for genfit::Eventdisplay if used
 
   ((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetMinHits(3);
+  ((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetOutputRootFile(outputRootdata);
 
   
   fRun->AddTask(recon);   

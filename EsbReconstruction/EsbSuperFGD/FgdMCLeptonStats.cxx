@@ -80,7 +80,7 @@ FgdMCLeptonStats::FgdMCLeptonStats(const char* name
                           , const char* outputRootFile
                           , Int_t verbose
                           , double debugLlv) :
-  FgdMCGenFitRecon(name, geoConfigFile, mediaFile, verbose, 
+  FgdMCGenFitRecon(name, geoConfigFile, mediaFile, eventData, verbose, 
                     debugLlv, false /* no visualization */, "D")
     , feventData(eventData), foutputRootFile(outputRootFile)
     , feventNum(0)

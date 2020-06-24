@@ -83,7 +83,7 @@ FgdEdepAnalyzer::FgdEdepAnalyzer(const char* name
                           , Int_t photoInterval
                           , Int_t verbose
                           , double debugLlv) :
-  FgdMCGenFitRecon(name, geoConfigFile, mediaFile, verbose, 
+  FgdMCGenFitRecon(name, geoConfigFile, mediaFile,eventData,  verbose, 
                     debugLlv, false /* no visualization */, "D")
     , feventData(eventData)
     , foutputEdepFile(outputEdepFile), fphotoInterval(photoInterval)

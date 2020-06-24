@@ -82,6 +82,9 @@ FgdMCGenFitRecon::FgdMCGenFitRecon() :
   , fminGenFitInterations(2)
   , fmaxGenFitIterations(4)
   , fminHits(25)
+  , fMCeventData("")
+  , foutputRootFile("")
+  , fMCeventNum(0)
 { 
 }
 // -------------------------------------------------------------------------
@@ -90,6 +93,7 @@ FgdMCGenFitRecon::FgdMCGenFitRecon() :
 FgdMCGenFitRecon::FgdMCGenFitRecon(const char* name
                           , const char* geoConfigFile
                           , const char* mediaFile
+                          , const char* eventData
                           , Int_t verbose
                           , double debugLlv
                           , bool visualize
@@ -108,6 +112,9 @@ FgdMCGenFitRecon::FgdMCGenFitRecon(const char* name
   , fminGenFitInterations(2)
   , fmaxGenFitIterations(4)
   , fminHits(25)
+  , fMCeventData(eventData)
+  , foutputRootFile("")
+  , fMCeventNum(0)
 { 
   fParams.LoadPartParams(geoConfigFile);
 }
@@ -162,6 +169,30 @@ InitStatus FgdMCGenFitRecon::Init()
   genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(true);
   genfit::MaterialEffects::getInstance()->setEnergyLossBrems(true);
   genfit::MaterialEffects::getInstance()->setDebugLvl(fDebuglvl_genfit);
+
+  std::ifstream eventFileStream;
+  try
+  {        
+      eventFileStream.open(fMCeventData.c_str(), std::ios::in);
+
+      if(eventFileStream.is_open())
+      {
+          std::string line;
+          while(std::getline(eventFileStream,line))
+          {
+            fMCeventRecords.emplace_back(FgdTMVAEventRecord(line));
+          }
+      }
+  }
+  catch(const std::exception& e)
+  {
+      LOG(fatal) << e.what();
+  }
+
+  if(eventFileStream.is_open())
+  {
+      eventFileStream.close();
+  } 
 
   // Get RootManager
   FairRootManager* manager = FairRootManager::Instance();
@@ -224,6 +255,96 @@ void FgdMCGenFitRecon::FinishTask()
   {
     fdisplay->open();
   }
+
+  if(foutputRootFile.empty()) return;
+
+  TFile * outFile = new TFile(foutputRootFile.c_str(), "RECREATE", "Fitted TVMA data from Fgd Detector");
+  outFile->SetCompressionLevel(9);
+
+  try
+  {
+    TTree * trainTree = new TTree("trainTree"
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+
+    Float_t lnuEnergy = 0.;
+    Float_t muon_mom = 0;
+    Float_t totPh = 0.;
+    Float_t totCubes = 0;
+
+    trainTree->Branch("totalCubes", &totCubes);
+    trainTree->Branch("totalPhotons", &totPh);
+    trainTree->Branch("nuEnergy", &lnuEnergy);
+    trainTree->Branch("muon_mom", &muon_mom);
+
+
+    TTree * fittedMomTree = new TTree("fittedMomTree"
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+
+
+    Float_t fit_lnuEnergy = 0.;
+    Float_t fit_muon_mom = 0;
+    Float_t fit_totPh = 0.;
+    Float_t fit_totCubes = 0;
+
+    fittedMomTree->Branch("totalCubes", &fit_totCubes);
+    fittedMomTree->Branch("totalPhotons", &fit_totPh);
+    fittedMomTree->Branch("nuEnergy", &fit_lnuEnergy);
+    fittedMomTree->Branch("muon_mom", &fit_muon_mom);
+
+    const Int_t evInd = fMCeventRecords.size();
+    FgdTMVAEventRecord* dataEvent = nullptr;
+    for(size_t ind = 0 ; ind < evInd && ind < fMCeventNum; ind++)
+    {
+        LOG(debug2) << "Writing data for event " << ind;
+        dataEvent = &fMCeventRecords[ind];
+
+        // bool isQuasiCC = dataEvent->IsWeakCC() && dataEvent->IsQuasiElastic();
+        // if(!isQuasiCC)
+        // {
+        //     continue;
+        // }
+
+        lnuEnergy = dataEvent->GetNuE();
+        // const std::vector<std::pair<Int_t, TVector3>>& particles = dataEvent->GetPrimaryParticles();
+        // for(size_t p = 0; p < particles.size(); ++p)
+        // {
+        //   std::pair<Int_t, TVector3> pp = particles[p];
+        //   if(genie::pdg::IsMuon(pp.first) || genie::pdg::IsAntiMuon(pp.first))
+        //   {
+        //     muon_mom = pp.second.Mag();
+        //     break;
+        //   }
+        // }
+
+        muon_mom = dataEvent->GetMuonMom().Mag();
+        totPh = dataEvent->GetTotalPhotons().X() + dataEvent->GetTotalPhotons().Y() + dataEvent->GetTotalPhotons().Z();
+        totCubes = dataEvent->GetTotalCubes();
+
+        fit_lnuEnergy = lnuEnergy;
+        fit_totPh = totPh;
+        fit_totCubes = totCubes;
+        fit_muon_mom = fFittedMomentum[ind].Mag();
+
+
+        trainTree->Fill();
+        fittedMomTree->Fill();
+
+        Double_t percentage = 100*(muon_mom - fit_muon_mom)/muon_mom;
+        LOG(info) << "Event muon momentum " << muon_mom << " , fitted momentum " << fit_muon_mom << "[ " << percentage << " %]";
+     }
+
+
+    outFile->WriteTObject(trainTree);  
+    outFile->WriteTObject(fittedMomTree);                      
+  }
+  catch(...)
+  {
+
+  }
+  
+  outFile->Close();
+  
+  delete outFile;
 }
 
 void FgdMCGenFitRecon::Exec(Option_t* opt) 
@@ -256,6 +377,7 @@ void FgdMCGenFitRecon::Exec(Option_t* opt)
       LOG(fatal) << "Exception, when tryng to fit track";
       LOG(fatal) << e.what();
   }
+  ++fMCeventNum;
 }
 // -------------------------------------------------------------------------
 
@@ -372,11 +494,13 @@ void FgdMCGenFitRecon::SplitTrack(std::vector<ReconHit>& allHits, std::vector<st
 void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks)
 {
     // init fitter
-    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
-    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
+    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
+    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
     fitter->setMinIterations(fminGenFitInterations);
     fitter->setMaxIterations(fmaxGenFitIterations);
     fitter->setDebugLvl(fDebuglvl_genfit);
+
+    bool primaryMuonFound(false);
 
     int detId(1); // Detector id, it is the same, we only have one detector
 
@@ -387,9 +511,35 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       std::sort(hitsOnTrack.begin(), hitsOnTrack.end(), [](ReconHit& bh1, ReconHit& bh2){return bh1.ftime<bh2.ftime;});
     }
 
+    FgdTMVAEventRecord& tvmaEventRecord = fMCeventRecords[fMCeventNum];
+
+    Int_t sumTotalCubes = 0;
+    TVector3 sumTotalPhoto(0,0,0);
+
+    // Extract TVMA photon and cube data
+    for(size_t i = 0; i <  foundTracks.size() ; ++i)
+    {
+        std::vector<ReconHit>& track = foundTracks[i];
+        if(isParticleNeutral(track[0].fpdg))
+        {
+          continue;
+        }
+        for(size_t j = 0; j <  track.size() ; ++j)
+        {
+            ReconHit& hit = track[j];
+            sumTotalPhoto +=hit.fphotons; 
+            ++sumTotalCubes;
+        } 
+    }
+
+    tvmaEventRecord.SetTotalPhotons(sumTotalPhoto);
+    tvmaEventRecord.SetTotalCubes(sumTotalCubes);
+    // =========================================
+
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
       std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
+      bool isMuontrack = (hitsOnTrack[0].fpdg == genie::kPdgMuon || hitsOnTrack[0].fpdg == genie::kPdgAntiMuon);
 
       // Set lower limit on track size
       if(hitsOnTrack.size()<fminHits)
@@ -408,10 +558,11 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       //genfit::MaterialEffects::getInstance()->drawdEdx(pdg);
 
       TVector3 calMom;
-      if(hitsOnTrack[0].fpdg == genie::kPdgMuon || hitsOnTrack[0].fpdg == genie::kPdgAntiMuon)
+      if(isMuontrack)
       {
-          calMom = getCalorimetricMomentum(hitsOnTrack);
-          momM = calMom;
+          // calMom = getCalorimetricMomentum(hitsOnTrack);
+          // momM = calMom;
+          momM = tvmaEventRecord.GetMuonMom();
       }
 
       Bool_t inlcudeBetheBloch = (pdg != genie::kPdgProton); // For proton ignore bethe bloch
@@ -459,7 +610,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       LOG(debug) << " \tHits in track "<< hitsOnTrack.size();
       LOG(debug) << " \tTrack Momentum [" << hitsOnTrack[0].fmom.Mag() << "]" << "(" << hitsOnTrack[0].fmom.X() << "," << hitsOnTrack[0].fmom.Y() << "," << hitsOnTrack[0].fmom.Z() << ")";
 
-      if(hitsOnTrack[0].fpdg == genie::kPdgMuon || hitsOnTrack[0].fpdg == genie::kPdgAntiMuon)
+      if(isMuontrack)
       {
           LOG(debug) << " \tCalorimetric Momentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
       }
@@ -502,6 +653,21 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
         {
           fgenTracks.push_back(toFitTrack);
         }
+
+        if(isMuontrack && !primaryMuonFound )
+        {
+          if(fiStatuStatus->isFitted() && (fiStatuStatus->isFitConverged() || fiStatuStatus->isFitConvergedPartially()) )
+          {
+            TVector3 fitmom = (toFitTrack->getFittedState()).getMom();
+            fFittedMomentum.emplace_back(fitmom);
+            primaryMuonFound = true;
+          }
+          else
+          {
+            fFittedMomentum.emplace_back(TVector3(0,0,0));
+          }
+        }
+        
         LOG(debug) <<"******************************************* ";
       }
       catch(genfit::Exception& e)

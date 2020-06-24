@@ -22,6 +22,7 @@ class FgdMuonRecon : public FgdMCGenFitRecon
     *@param geoConfigFile  - Configuration file detector
     *@param mediaFile  - Configuration file for the used mediums
     *@param outputFile  - path to the root file to write the output to
+    *@param eventData  - events data file (generated from fgd generator)
     *@param nuEFile  - path to the file generated from the Fgd generatr containing neutrino energy per event
     *@param verbose  - Verbosity level
     *@param debugLlv - debug level for genfit
@@ -32,6 +33,7 @@ class FgdMuonRecon : public FgdMCGenFitRecon
                 , const char* geoConfigFile
                 , const char* mediaFile
                 , const char* outputFile
+                , const char* eventData
                 , const char* nuEFile
                 , Int_t verbose = 1
                 , double debugLlv = 0

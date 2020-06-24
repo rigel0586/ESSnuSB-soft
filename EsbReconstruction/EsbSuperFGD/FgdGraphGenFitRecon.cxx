@@ -217,7 +217,7 @@ InitStatus FgdGraphGenFitRecon::Init()
   if(eventFileStream.is_open())
   {
       eventFileStream.close();
-    } 
+  } 
   
 
   return kSUCCESS;
@@ -297,16 +297,18 @@ void FgdGraphGenFitRecon::FinishTask()
         // }
 
         lnuEnergy = dataEvent->GetNuE();
-        const std::vector<std::pair<Int_t, TVector3>>& particles = dataEvent->GetPrimaryParticles();
-        for(size_t p = 0; p < particles.size(); ++p)
-        {
-          std::pair<Int_t, TVector3> pp = particles[p];
-          if(genie::pdg::IsMuon(pp.first) || genie::pdg::IsAntiMuon(pp.first))
-          {
-            muon_mom = pp.second.Mag();
-            break;
-          }
-        }
+        // const std::vector<std::pair<Int_t, TVector3>>& particles = dataEvent->GetPrimaryParticles();
+        // for(size_t p = 0; p < particles.size(); ++p)
+        // {
+        //   std::pair<Int_t, TVector3> pp = particles[p];
+        //   if(genie::pdg::IsMuon(pp.first) || genie::pdg::IsAntiMuon(pp.first))
+        //   {
+        //     muon_mom = pp.second.Mag();
+        //     break;
+        //   }
+        // }
+
+        muon_mom = dataEvent->GetMuonMom().Mag();
         totPh = dataEvent->GetTotalPhotons().X() + dataEvent->GetTotalPhotons().Y() + dataEvent->GetTotalPhotons().Z();
         totCubes = dataEvent->GetTotalCubes();
 
@@ -1224,8 +1226,8 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
     fTracksArray->Delete();
     
     // init fitter
-    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
-    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
+    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
+    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
     fitter->setMinIterations(fminGenFitInterations);
     fitter->setMaxIterations(fmaxGenFitIterations);
     fitter->setDebugLvl(fDebuglvl_genfit);
@@ -1261,7 +1263,7 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
 {
     TVector3 magField = fgdConstructor.GetMagneticField(); // values are in kGauss
     std::vector<genfit::Track*> genTracks;
-    int detId(1); // Detector id, it is the same, we only have one detector
+    static int detId(1); // Detector id, it is the same, we only have one detector
     Bool_t rc(false);
 
     std::vector<ReconHit>& hitsOnTrack = track;
@@ -1276,7 +1278,9 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
   
     TVector3 posM(hitsOnTrack[0].fHitPos.X(),hitsOnTrack[0].fHitPos.Y(),hitsOnTrack[0].fHitPos.Z());
     TVector3 momM(0,0,0);
-    TVector3 momLoss(0,0,0);
+    //TVector3 momLoss(0,0,0);
+
+    //momM = hitsOnTrack[0].fmom;
 
     // if(!CalculateInitialMomentum(hitsOnTrack, magField, momM, momLoss))
     // {
@@ -1285,11 +1289,11 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
     // }
 
     TVector3 calMom = getCalorimetricMomentum(hitsOnTrack);
+    momM = calMom;
     // if(CalculateCalorimetricMomentum(hitsOnTrack, calMom))
     // {
     //     LOG(debug) << " \tCalorimetricMomentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
     // }
-    
 
     // approximate covariance
     const double resolution = 2;// Default in example is 0.1;
@@ -1309,8 +1313,8 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
 
     // smeared start state
     genfit::MeasuredStateOnPlane stateSmeared(rep);
-    //stateSmeared.setPosMomCov(posM, momM, covM);
-    stateSmeared.setPosMomCov(posM, calMom, covM);
+    stateSmeared.setPosMomCov(posM, momM, covM);
+    //stateSmeared.setPosMomCov(posM, calMom, covM);
     
     // create track
     TVectorD seedState(6);
@@ -1318,6 +1322,10 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
     stateSmeared.get6DStateCov(seedState, seedCov);
 
     genfit::Track* toFitTrack = new genfit::Track(rep, seedState, seedCov);
+    // genfit::Track* toFitTrack = new genfit::Track();
+    // toFitTrack->setStateSeed(seedState);
+    // toFitTrack->setCovSeed(seedCov);
+    // toFitTrack->addTrackRep(rep);
 
     size_t bhlimit = hitsOnTrack.size();
 
@@ -1327,7 +1335,7 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
     LOG(debug) << " \tPdg code " << pdg << " [MC pdg = " << hitsOnTrack[0].fpdg <<" ]";
     LOG(debug) << " \tHits in track "<< bhlimit;
     LOG(debug) << " \tMC Momentum [" << hitsOnTrack[0].fmom.Mag() << "]" << "(" << hitsOnTrack[0].fmom.X() << "," << hitsOnTrack[0].fmom.Y() << "," << hitsOnTrack[0].fmom.Z() << ")";
-    //LOG(debug) << " \tEstimated Momentum [" << momM.Mag() << "]" << "(" << momM.X() << "," << momM.Y() << "," << momM.Z() << ")";
+    LOG(debug) << " \tEstimated Momentum [" << momM.Mag() << "]" << "(" << momM.X() << "," << momM.Y() << "," << momM.Z() << ")";
     //LOG(debug) << " \tTrack Momentum Loss [" << momLoss.Mag() << "]" << "(" << momLoss.X() << "," << momLoss.Y() << "," << momLoss.Z() << ")";
     //LOG(debug) << " \tMomentum / Momentum Loss [" << momM.Mag()/momLoss.Mag() << "]";
     LOG(debug) << " \tCalorimetric Momentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
@@ -1345,6 +1353,7 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
     }
     
     for(Int_t bh = 0; bh < bhlimit; ++bh)
+    //for(Int_t bh = 0; bh < bhlimit; bh+=2)
     {
       TVectorD hitPos(3);
       hitPos(0) = hitsOnTrack[bh].fHitPos.X();
@@ -1359,11 +1368,27 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
 
     try
     {
+      //((genfit::KalmanFitter*)fitter.get())->useSquareRootFormalism();
+
+      // int nFailedHits(0);
+      // bool res = ((genfit::KalmanFitterRefTrack*)fitter.get())->prepareTrack(toFitTrack, rep, true, nFailedHits);
+      // LOG(debug) <<"prepareTrack " << res;
+      // while(res)
+      // {
+      //   res = ((genfit::KalmanFitterRefTrack*)fitter.get())->prepareTrack(toFitTrack, rep, true, nFailedHits);
+      //   LOG(debug) <<"prepareTrack " << res;
+      // }
+    
       //check
       toFitTrack->checkConsistency();
 
       // do the fit
       fitter->processTrack(toFitTrack, true);
+      //fitter->processTrackWithRep(toFitTrack, toFitTrack->getCardinalRep(), false);
+      // double chi2(0);
+      // double ndf(0);
+      // int direction(-1);
+      // ((genfit::KalmanFitterRefTrack*)fitter.get())->fitTrack(toFitTrack, rep, chi2, ndf, direction);
 
       //check
       toFitTrack->checkConsistency();
@@ -1371,7 +1396,7 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
       PrintFitTrack(*toFitTrack);
 
       LOG(debug) <<"******************************************* ";
-      genfit::FitStatus* fiStatuStatus = toFitTrack->getFitStatus();
+      genfit::FitStatus* fiStatuStatus = toFitTrack->getFitStatus(rep);
       rc = fiStatuStatus->isFitted() && (fiStatuStatus->isFitConverged() || fiStatuStatus->isFitConvergedPartially());
 
       if(rc)
@@ -1388,7 +1413,6 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
         LOG(error) << "e.what() " << e.what();
         LOG(error) << "e.getExcString() " << e.getExcString();
     }
-    
   
     if(isGenFitVisualization)
     {
@@ -1524,6 +1548,8 @@ void FgdGraphGenFitRecon::PrintFitTrack(genfit::Track& fitTrack)
   LOG(debug)<< "fiStatuStatus->isFitConvergedFully()  " << fiStatuStatus->isFitConvergedFully();
   LOG(debug)<< "fiStatuStatus->isFitConvergedPartially()  " << fiStatuStatus->isFitConvergedPartially();
   LOG(debug)<< "fitTrack.getNumPoints() " << fitTrack.getNumPoints();
+  LOG(debug)<< "fitTrack.getNumReps() " << fitTrack.getNumReps();
+  
 }
 
 Long_t FgdGraphGenFitRecon::ArrInd(int x, int y, int z)

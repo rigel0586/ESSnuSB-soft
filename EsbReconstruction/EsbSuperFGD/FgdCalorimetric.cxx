@@ -180,7 +180,7 @@ TVector3 getCalorimetricMomentum(const std::vector<esbroot::reconstruction::supe
 {
     Double_t dedx = RevertToDeDxMC(track);
     Double_t p = dedxToP(dedx);
-    TVector3 dir = track[track.size()/2].fHitPos - track[0].fHitPos;
+    TVector3 dir = track[track.size()-1].fHitPos - track[0].fHitPos;
 
     Double_t x_angle = x_axis.Angle(dir);
     Double_t y_angle = y_axis.Angle(dir);

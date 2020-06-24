@@ -43,12 +43,13 @@ FgdMuonRecon::FgdMuonRecon(const char* name
               , const char* geoConfigFile
               , const char* mediaFile
               , const char* outputFile
+              , const char* eventData
               , const char* nuEFile
               , Int_t verbose 
               , double debugLlv 
               , bool visualize 
               , std::string visOption)
-    : FgdMCGenFitRecon(name, geoConfigFile, mediaFile, verbose, debugLlv, visualize, visOption)
+    : FgdMCGenFitRecon(name, geoConfigFile, mediaFile, eventData, verbose, debugLlv, visualize, visOption)
     , foutputFile(outputFile)
     , fnuEFile(nuEFile)
     , fEventCount(0)

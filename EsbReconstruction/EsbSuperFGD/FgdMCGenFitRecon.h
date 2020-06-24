@@ -7,6 +7,7 @@
 #include "EsbGeometry/EsbSuperFGD/EsbSuperFGDDetectorConstruction.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdReconHit.h"
 #include "EsbReconstruction/EsbSuperFGD/PdgFromMomentumLoss.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdTMVAEventRecord.h"
 
 // FairRoot headers
 #include <FairTask.h>
@@ -34,6 +35,7 @@ class FgdMCGenFitRecon : public FairTask
    *@param name       Name of task
    *@param geoConfigFile  - Configuration file detector
    *@param mediaFile  - Configuration file for the used mediums
+   *@param eventData  - events data file (generated from fgd generator)
    *@param verbose  - Verbosity level
    *@param debugLlv - debug level for genfit
    *@param visualize -  to visualize the event using genfit::EventDisplay
@@ -42,6 +44,7 @@ class FgdMCGenFitRecon : public FairTask
   FgdMCGenFitRecon(const char* name
               , const char* geoConfigFile
               , const char* mediaFile
+              , const char* eventData
               , Int_t verbose = 1
               , double debugLlv = 0
               , bool visualize = false
@@ -70,6 +73,8 @@ class FgdMCGenFitRecon : public FairTask
                           , const TVector3& mcMom
                           , const genfit::Track& fitTrack
                           , genfit::FitStatus*& fiStatuStatus);
+
+  void SetOutputRootFile(std::string rootFIlePath){foutputRootFile = rootFIlePath;}
 
 protected:
 
@@ -142,6 +147,12 @@ protected:
   bool isGenFitVisualization;//!<!
   std::string fGenFitVisOption;//!<!
   std::vector<genfit::Track*> fgenTracks;//!<!
+
+  std::string fMCeventData;//!<!
+  std::vector<FgdTMVAEventRecord> fMCeventRecords;//!<!
+  std::vector<TVector3> fFittedMomentum;//!<!
+  std::string foutputRootFile;//!<!
+  int fMCeventNum;//!<!
   	   
   ClassDef(FgdMCGenFitRecon, 2);
 
