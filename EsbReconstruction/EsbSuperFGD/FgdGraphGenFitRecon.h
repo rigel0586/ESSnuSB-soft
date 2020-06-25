@@ -109,6 +109,7 @@ protected:
     , std::shared_ptr<genfit::AbsKalmanFitter>& fitter
     , Int_t pdg
     , TVector3& momentum
+    , TVector3& calMom
     , int trackId);
 
   void ExtractTMVAdata(std::vector<ReconHit>& allhits);
@@ -162,6 +163,7 @@ protected:
   std::string foutputRootFile;//!<!
   std::vector<FgdTMVAEventRecord> feventRecords;//!<!
   std::vector<TVector3> fFittedMomentum;//!<!
+  std::vector<TVector3> fcalorimetricMomentum;//!<!
   int feventNum;//!<!
 
   Int_t fminGenFitInterations;

@@ -37,6 +37,7 @@
 #include <FieldManager.h>
 #include "FitStatus.h"
 #include <KalmanFitterRefTrack.h>
+#include <KalmanFitter.h>
 #include "MaterialEffects.h"
 #include "MeasuredStateOnPlane.h"
 #include <PlanarMeasurement.h>
@@ -471,7 +472,8 @@ Bool_t FgdMCLeptonStats::FitTrack(std::vector<ReconHit>& hitsOnTrack, TVector3& 
     genfit::MaterialEffects::getInstance()->setDebugLvl(fDebuglvl_genfit);
 
     // init fitter
-    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
+    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
+    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
     fitter->setMinIterations(fminGenFitInterations);
     fitter->setMaxIterations(fmaxGenFitIterations);
     fitter->setDebugLvl(fDebuglvl_genfit);

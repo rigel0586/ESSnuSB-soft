@@ -250,6 +250,8 @@ void FgdGraphGenFitRecon::FinishTask()
     fdisplay->open();
   }
 
+  static const TVector3 z_axis(0,0,1);
+
   TFile * outFile = new TFile(foutputRootFile.c_str(), "RECREATE", "Fitted TVMA data from Fgd Detector");
   outFile->SetCompressionLevel(9);
 
@@ -260,6 +262,7 @@ void FgdGraphGenFitRecon::FinishTask()
 
     Float_t lnuEnergy = 0.;
     Float_t muon_mom = 0;
+    Float_t muon_Angle = 0;
     Float_t totPh = 0.;
     Float_t totCubes = 0;
 
@@ -267,14 +270,16 @@ void FgdGraphGenFitRecon::FinishTask()
     trainTree->Branch("totalPhotons", &totPh);
     trainTree->Branch("nuEnergy", &lnuEnergy);
     trainTree->Branch("muon_mom", &muon_mom);
+    trainTree->Branch("muon_angle", &muon_Angle);
 
-
+    //========================================================
     TTree * fittedMomTree = new TTree("fittedMomTree"
                                 ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
 
 
     Float_t fit_lnuEnergy = 0.;
     Float_t fit_muon_mom = 0;
+    Float_t fit_muon_Angle = 0;
     Float_t fit_totPh = 0.;
     Float_t fit_totCubes = 0;
 
@@ -282,6 +287,26 @@ void FgdGraphGenFitRecon::FinishTask()
     fittedMomTree->Branch("totalPhotons", &fit_totPh);
     fittedMomTree->Branch("nuEnergy", &fit_lnuEnergy);
     fittedMomTree->Branch("muon_mom", &fit_muon_mom);
+    fittedMomTree->Branch("muon_angle", &fit_muon_Angle);
+
+    //========================================================
+    TTree * calorimetricMomTree = new TTree("CalMomTree"
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+
+
+    Float_t cal_lnuEnergy = 0.;
+    Float_t cal_muon_mom = 0;
+    Float_t cal_muon_Angle = 0;
+    Float_t cal_totPh = 0.;
+    Float_t cal_totCubes = 0;
+
+    calorimetricMomTree->Branch("totalCubes", &cal_totCubes);
+    calorimetricMomTree->Branch("totalPhotons", &cal_totPh);
+    calorimetricMomTree->Branch("nuEnergy", &cal_lnuEnergy);
+    calorimetricMomTree->Branch("muon_mom", &cal_muon_mom);
+    calorimetricMomTree->Branch("muon_angle", &cal_muon_Angle);
+    //========================================================
+
 
     const Int_t evInd = feventRecords.size();
     FgdTMVAEventRecord* dataEvent = nullptr;
@@ -290,11 +315,11 @@ void FgdGraphGenFitRecon::FinishTask()
         LOG(debug2) << "Writing data for event " << ind;
         dataEvent = &feventRecords[ind];
 
-        // bool isQuasiCC = dataEvent->IsWeakCC() && dataEvent->IsQuasiElastic();
-        // if(!isQuasiCC)
-        // {
-        //     continue;
-        // }
+        bool isQuasiCC = dataEvent->IsWeakCC() && dataEvent->IsQuasiElastic();
+        if(!isQuasiCC)
+        {
+            continue;
+        }
 
         lnuEnergy = dataEvent->GetNuE();
         // const std::vector<std::pair<Int_t, TVector3>>& particles = dataEvent->GetPrimaryParticles();
@@ -309,6 +334,7 @@ void FgdGraphGenFitRecon::FinishTask()
         // }
 
         muon_mom = dataEvent->GetMuonMom().Mag();
+        muon_Angle = z_axis.Angle(dataEvent->GetMuonMom());
         totPh = dataEvent->GetTotalPhotons().X() + dataEvent->GetTotalPhotons().Y() + dataEvent->GetTotalPhotons().Z();
         totCubes = dataEvent->GetTotalCubes();
 
@@ -316,18 +342,25 @@ void FgdGraphGenFitRecon::FinishTask()
         fit_totPh = totPh;
         fit_totCubes = totCubes;
         fit_muon_mom = fFittedMomentum[ind].Mag();
+        fit_muon_Angle = z_axis.Angle(fFittedMomentum[ind]);
+
+
+        cal_lnuEnergy = lnuEnergy;
+        cal_totPh = totPh;
+        cal_totCubes = totCubes;
+        cal_muon_mom = fcalorimetricMomentum[ind].Mag();
+        cal_muon_Angle = z_axis.Angle(fcalorimetricMomentum[ind]);
 
 
         trainTree->Fill();
         fittedMomTree->Fill();
-
-        Double_t percentage = 100*(muon_mom - fit_muon_mom)/muon_mom;
-        LOG(info) << "Event muon momentum " << muon_mom << " , fitted momentum " << fit_muon_mom << "[ " << percentage << " %]";
+        calorimetricMomTree->Fill();
      }
 
 
     outFile->WriteTObject(trainTree);  
-    outFile->WriteTObject(fittedMomTree);                      
+    outFile->WriteTObject(fittedMomTree);   
+    outFile->WriteTObject(calorimetricMomTree);                   
   }
   catch(...)
   {
@@ -1245,7 +1278,8 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
 
     // Assume that the longest track is that of the muon
     TVector3 mom(0,0,0);
-    if(FitTrack(longestTrack,fitter, PDG_FIT_TRACK::MUON, mom, ltId))
+    TVector3 calMom(0,0,0);
+    if(FitTrack(longestTrack,fitter, PDG_FIT_TRACK::MUON, mom, calMom, ltId))
     {
       fFittedMomentum.emplace_back(mom);
     }
@@ -1253,12 +1287,14 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
     {
       fFittedMomentum.emplace_back(TVector3(0,0,0));
     }
+    fcalorimetricMomentum.emplace_back(calMom);
 }
 
 bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
     , std::shared_ptr<genfit::AbsKalmanFitter>& fitter
     , Int_t pdg
     , TVector3& momentum
+    , TVector3& calMom
     , int trackId)
 {
     TVector3 magField = fgdConstructor.GetMagneticField(); // values are in kGauss
@@ -1288,7 +1324,7 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
     //   //return false;
     // }
 
-    TVector3 calMom = getCalorimetricMomentum(hitsOnTrack);
+    calMom = getCalorimetricMomentum(hitsOnTrack);
     momM = calMom;
     // if(CalculateCalorimetricMomentum(hitsOnTrack, calMom))
     // {

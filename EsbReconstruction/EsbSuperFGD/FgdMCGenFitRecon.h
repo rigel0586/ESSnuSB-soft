@@ -151,6 +151,7 @@ protected:
   std::string fMCeventData;//!<!
   std::vector<FgdTMVAEventRecord> fMCeventRecords;//!<!
   std::vector<TVector3> fFittedMomentum;//!<!
+  std::vector<TVector3> fcalorimetricMomentum;//!<!
   std::string foutputRootFile;//!<!
   int fMCeventNum;//!<!
   	   
