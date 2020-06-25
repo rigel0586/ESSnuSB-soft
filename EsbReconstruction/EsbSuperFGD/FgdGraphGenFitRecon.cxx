@@ -309,8 +309,13 @@ void FgdGraphGenFitRecon::FinishTask()
 
 
     const Int_t evInd = feventRecords.size();
+    Int_t fittedId = fFittedMomentum.size();
+    
+    Int_t limit = evInd < fittedId ? evInd : fittedId;
+    limit = limit < feventNum ? limit : feventNum;
+
     FgdTMVAEventRecord* dataEvent = nullptr;
-    for(size_t ind = 0 ; ind < evInd && ind < feventNum; ind++)
+    for(size_t ind = 0 ; ind < limit; ind++)
     {
         LOG(debug2) << "Writing data for event " << ind;
         dataEvent = &feventRecords[ind];

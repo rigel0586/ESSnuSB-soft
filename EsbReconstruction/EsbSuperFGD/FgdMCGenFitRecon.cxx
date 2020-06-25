@@ -315,8 +315,13 @@ void FgdMCGenFitRecon::FinishTask()
     calorimetricMomTree->Branch("muon_angle", &cal_muon_Angle);
 
     const Int_t evInd = fMCeventRecords.size();
+    Int_t fittedId = fFittedMomentum.size();
+    
+    Int_t limit = evInd < fittedId ? evInd : fittedId;
+    limit = limit < fMCeventNum ? limit : fMCeventNum;
+
     FgdTMVAEventRecord* dataEvent = nullptr;
-    for(size_t ind = 0 ; ind < evInd && ind < fMCeventNum; ind++)
+    for(size_t ind = 0 ; ind < limit; ind++)
     {
         LOG(debug2) << "Writing data for event " << ind;
         dataEvent = &fMCeventRecords[ind];
@@ -579,7 +584,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
 
       if(!isMuontrack)
       {
-        LOG(debug) << " Fitting only muon tracks";
+        LOG(debug) << " Fitting only muon tracks pdg = " << hitsOnTrack[0].fpdg;
         continue;
       }
 
