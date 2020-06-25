@@ -309,10 +309,8 @@ void FgdGraphGenFitRecon::FinishTask()
 
 
     const Int_t evInd = feventRecords.size();
-    Int_t fittedId = fFittedMomentum.size();
     
-    Int_t limit = evInd < fittedId ? evInd : fittedId;
-    limit = limit < feventNum ? limit : feventNum;
+    Int_t limit = evInd < feventNum ? evInd : feventNum;
 
     FgdTMVAEventRecord* dataEvent = nullptr;
     for(size_t ind = 0 ; ind < limit; ind++)
@@ -346,15 +344,15 @@ void FgdGraphGenFitRecon::FinishTask()
         fit_lnuEnergy = lnuEnergy;
         fit_totPh = totPh;
         fit_totCubes = totCubes;
-        fit_muon_mom = fFittedMomentum[ind].Mag();
-        fit_muon_Angle = z_axis.Angle(fFittedMomentum[ind]);
+        fit_muon_mom =  dataEvent->GetMuonFitMom().Mag();
+        fit_muon_Angle = z_axis.Angle(dataEvent->GetMuonFitMom());
 
 
         cal_lnuEnergy = lnuEnergy;
         cal_totPh = totPh;
         cal_totCubes = totCubes;
-        cal_muon_mom = fcalorimetricMomentum[ind].Mag();
-        cal_muon_Angle = z_axis.Angle(fcalorimetricMomentum[ind]);
+        cal_muon_mom = dataEvent->GetMuonCalorimetricMom().Mag();
+        cal_muon_Angle = z_axis.Angle(dataEvent->GetMuonCalorimetricMom());
 
 
         trainTree->Fill();
@@ -1281,18 +1279,15 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
       }
     }
 
+    FgdTMVAEventRecord& tvmaEventRecord = feventRecords[feventNum];
     // Assume that the longest track is that of the muon
     TVector3 mom(0,0,0);
     TVector3 calMom(0,0,0);
     if(FitTrack(longestTrack,fitter, PDG_FIT_TRACK::MUON, mom, calMom, ltId))
     {
-      fFittedMomentum.emplace_back(mom);
+      tvmaEventRecord.SetMuonFitMom(mom);
     }
-    else
-    {
-      fFittedMomentum.emplace_back(TVector3(0,0,0));
-    }
-    fcalorimetricMomentum.emplace_back(calMom);
+    tvmaEventRecord.SetMuonCalorimetricMom(calMom);
 }
 
 bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track

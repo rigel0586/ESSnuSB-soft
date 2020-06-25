@@ -162,8 +162,6 @@ protected:
   std::string feventData;//!<!
   std::string foutputRootFile;//!<!
   std::vector<FgdTMVAEventRecord> feventRecords;//!<!
-  std::vector<TVector3> fFittedMomentum;//!<!
-  std::vector<TVector3> fcalorimetricMomentum;//!<!
   int feventNum;//!<!
 
   Int_t fminGenFitInterations;

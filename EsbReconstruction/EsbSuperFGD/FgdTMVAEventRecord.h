@@ -60,10 +60,17 @@ public:
     Double_t GetMuonAzumuteAngle();
 
     TVector3 GetMuonMom();
-    Double_t SetMuonTrackLength(Double_t ml) {fMuonTrackLength = ml;}
+    void SetMuonTrackLength(Double_t ml) {fMuonTrackLength = ml;}
     Double_t GetMuonTrackLength();
-    Double_t SetMuonTrackLengthOrigin(Double_t ml) {fMuonTrackLengthOrigin = ml;}
+    void SetMuonTrackLengthOrigin(Double_t ml) {fMuonTrackLengthOrigin = ml;}
     Double_t GetMuonTrackLengthOrigin();
+
+    void SetMuonFitMom(TVector3 v) {fPrimaryMuonFitMom = v;}
+    TVector3 GetMuonFitMom() {return fPrimaryMuonFitMom;}
+
+    void SetMuonCalorimetricMom(TVector3 v) {fPrimaryMuonCalMom = v;}
+    TVector3 GetMuonCalorimetricMom() {return fPrimaryMuonCalMom;}
+
 
     void SetTotalEdep(Double_t e){fTotalEdep = e;} // in [MeV]
     Double_t GetTotalEdep(){return fTotalEdep;}
@@ -152,6 +159,9 @@ protected:
 
     TVector3 fPrimaryMuonMom;
     TVector3 fPrimaryElectronMom;
+
+    TVector3 fPrimaryMuonFitMom;
+    TVector3 fPrimaryMuonCalMom;
 
     Double_t fMuonTrackLength;
     Double_t fMuonTrackLengthOrigin;

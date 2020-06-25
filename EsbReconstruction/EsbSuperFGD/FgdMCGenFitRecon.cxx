@@ -315,10 +315,8 @@ void FgdMCGenFitRecon::FinishTask()
     calorimetricMomTree->Branch("muon_angle", &cal_muon_Angle);
 
     const Int_t evInd = fMCeventRecords.size();
-    Int_t fittedId = fFittedMomentum.size();
     
-    Int_t limit = evInd < fittedId ? evInd : fittedId;
-    limit = limit < fMCeventNum ? limit : fMCeventNum;
+    Int_t limit = evInd < fMCeventNum ? evInd : fMCeventNum;
 
     FgdTMVAEventRecord* dataEvent = nullptr;
     for(size_t ind = 0 ; ind < limit; ind++)
@@ -352,14 +350,14 @@ void FgdMCGenFitRecon::FinishTask()
         fit_lnuEnergy = lnuEnergy;
         fit_totPh = totPh;
         fit_totCubes = totCubes;
-        fit_muon_mom = fFittedMomentum[ind].Mag();
-        fit_muon_Angle = z_axis.Angle(fFittedMomentum[ind]);
+        fit_muon_mom = dataEvent->GetMuonFitMom().Mag();
+        fit_muon_Angle = z_axis.Angle(dataEvent->GetMuonFitMom());
 
         cal_lnuEnergy = lnuEnergy;
         cal_totPh = totPh;
         cal_totCubes = totCubes;
-        cal_muon_mom = fcalorimetricMomentum[ind].Mag();
-        cal_muon_Angle = z_axis.Angle(fcalorimetricMomentum[ind]);
+        cal_muon_mom = dataEvent->GetMuonCalorimetricMom().Mag();
+        cal_muon_Angle = z_axis.Angle(dataEvent->GetMuonCalorimetricMom());
 
         trainTree->Fill();
         fittedMomTree->Fill();
@@ -699,14 +697,11 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
           if(fiStatuStatus->isFitted() && (fiStatuStatus->isFitConverged() || fiStatuStatus->isFitConvergedPartially()) )
           {
             TVector3 fitmom = (toFitTrack->getFittedState()).getMom();
-            fFittedMomentum.emplace_back(fitmom);
+            tvmaEventRecord.SetMuonFitMom(fitmom);
             primaryMuonFound = true;
           }
-          else
-          {
-            fFittedMomentum.emplace_back(TVector3(0,0,0));
-          }
-          fcalorimetricMomentum.emplace_back(calMom);
+
+          tvmaEventRecord.SetMuonCalorimetricMom(calMom);
         }
         
         LOG(debug) <<"******************************************* ";
@@ -717,10 +712,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
           LOG(error) << e.what();
           LOG(error) << e.getExcString();
 
-
-          fFittedMomentum.emplace_back(TVector3(0,0,0));
-          fcalorimetricMomentum.emplace_back(calMom);
-          
+          tvmaEventRecord.SetMuonCalorimetricMom(calMom); 
       }
     }
 }

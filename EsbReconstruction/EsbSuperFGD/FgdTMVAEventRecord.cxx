@@ -26,11 +26,13 @@ FgdTMVAEventRecord::FgdTMVAEventRecord(std::string eventData)
         , fIsNuElectronElastic(false), fIsElectronScattering(false)
         , fIsPrimaryMuon(false)
         , fIsPrimaryElectron(false), fPrimaryMuonMom(TVector3(0,0,0))
-        , fPrimaryElectronMom(TVector3(0,0,0)), fMuonTrackLength(0.)
+        , fPrimaryElectronMom(TVector3(0,0,0)), fMuonTrackLength(0.) , fMuonTrackLengthOrigin(0.)
         , fIsMuonExiting(false), fMuonExitMomentum(TVector3(0,0,0))
         , fMuonPolarAngle(0.), fMuonAzumAngle(0.), fElectronNumOfExitingParticles(0)
         , fTotalEdep(0.), fTotalPhotons(0,0,0), fTotalCubes(0)
         , fHasHits(false), fTrueEdep(0), fpe(0)
+        , fPrimaryMuonFitMom(TVector3(0,0,0))
+        , fPrimaryMuonCalMom(TVector3(0,0,0))
 {
     Init();
 }
@@ -56,6 +58,9 @@ FgdTMVAEventRecord::FgdTMVAEventRecord(const FgdTMVAEventRecord& c)
     this->fHasHits = c.fHasHits;
     this->fTrueEdep = c.fTrueEdep;
     this->fpe = c.fpe;
+    this->fPrimaryMuonFitMom = c.fPrimaryMuonFitMom;
+    this->fPrimaryMuonCalMom = c.fPrimaryMuonCalMom;
+    this->fMuonTrackLengthOrigin = c.fMuonTrackLengthOrigin;
 
     this->Init();
 }
@@ -207,6 +212,10 @@ FgdTMVAEventRecord& FgdTMVAEventRecord::operator=(const FgdTMVAEventRecord& c)
     this->fHasHits = c.fHasHits;
     this->fTrueEdep = c.fTrueEdep;
     this->fpe = c.fpe;
+
+    this->fPrimaryMuonFitMom = c.fPrimaryMuonFitMom;
+    this->fPrimaryMuonCalMom = c.fPrimaryMuonCalMom;
+    this->fMuonTrackLengthOrigin = c.fMuonTrackLengthOrigin;
 
     this->Init();
     return *this;
