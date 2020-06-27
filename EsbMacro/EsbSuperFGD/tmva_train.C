@@ -47,10 +47,18 @@
 
 using namespace TMVA;
 
-void tmva_train( Int_t numToTrain = 3000
-                  , Int_t numToTest = 693
+void tmva_train( Int_t numToTrain = 300
+                  , Int_t numToTest = 75
                   ,TString myMethodList = "" 
-                  , TString inFileName = "tmva_data.root"
+                  //,TString inFileName = "tmva_data.root"              // simulate_3_TMVA_data2.C and simulate_3_TMVA_data.C
+                  ,TString inFileName = "tmva_graph_data.root"          // simulate_3_graph_reconstruction.C
+                  //,TString inFileName = "tmva_mc_recon_data.root"     // simulate_3_MC_reconstruction.C
+
+                  //,TString treeName = "FgdLongestProjectionTree"      // simulate_3_TMVA_data2.C and simulate_3_TMVA_data.C 
+                  ,TString treeName = "trainTree"                     // MC muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C
+                  //,TString treeName = "fittedMomTree"                 // Genfit muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C
+                  //,TString treeName = "CalMomTree"                    // Calorimetric muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C    
+   
                               )
 {
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
@@ -149,11 +157,12 @@ void tmva_train( Int_t numToTrain = 3000
 
    dataloader->AddVariable( "totalPhotons", "Total photons", "units", 'F' );
    //dataloader->AddVariable( "tr1", "1st track", "units", 'F' );
-   //dataloader->AddVariable( "totalCubes", "Total cubes", "units", 'F' );
+   dataloader->AddVariable( "totalCubes", "Total cubes", "units", 'F' );
+   dataloader->AddVariable( "muon_mom", "Muon momentum", "units", 'F' );
 
    // Add the variable carrying the regression target
-   //dataloader->AddTarget( "nuEnergy" );
-   dataloader->AddTarget( "trueEdep" );
+   dataloader->AddTarget( "nuEnergy" );
+   //dataloader->AddTarget( "trueEdep" );
    //dataloader->AddTarget( "nuPdg" );
    //dataloader->AddTarget( "isCC" );
 
@@ -172,9 +181,7 @@ void tmva_train( Int_t numToTrain = 3000
    std::cout << "--- TMVARegression           : Using input file: " << input->GetName() << std::endl;
 
    // Register the regression tree
-
-   TTree *regTree = (TTree*)input->Get("FgdLongestProjectionTree");
-
+   TTree *regTree = (TTree*)input->Get(treeName);
    // global event weights per tree (see below for setting event-wise weights)
    Double_t regWeight  = 1.0;
 

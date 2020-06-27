@@ -30,7 +30,17 @@
 
 using namespace TMVA;
 
-void tmva_app( TString myMethodList = "", TString inFileName = "tmva_data.root" ) 
+void tmva_app( TString myMethodList = ""
+               //,TString inFileName = "tmva_data.root"              // simulate_3_TMVA_data2.C and simulate_3_TMVA_data.C
+               ,TString inFileName = "tmva_graph_data.root"          // simulate_3_graph_reconstruction.C
+               //,TString inFileName = "tmva_mc_recon_data.root"     // simulate_3_MC_reconstruction.C
+
+               //,TString treeName = "FgdLongestProjectionTree"      // simulate_3_TMVA_data2.C and simulate_3_TMVA_data.C 
+               //,TString treeName = "trainTree"                       // MC muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C
+               //,TString treeName = "fittedMomTree"                 // Genfit muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C
+               ,TString treeName = "CalMomTree"                    // Calorimetric muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C    
+   
+               ) 
 {
    //---------------------------------------------------------------
    // This loads the library
@@ -105,14 +115,15 @@ void tmva_app( TString myMethodList = "", TString inFileName = "tmva_data.root" 
     //reader->AddVariable( "ph_tr2", &ph_tr2 );
     //reader->AddVariable( "ph_tr3", &ph_tr3 );
 
-    Float_t totalPhotons, totalCubes, totalEdep;
+    Float_t totalPhotons, totalCubes, totalEdep, muon_mom;
     //reader->AddVariable( "totalPhotons", &totalPhotons );
     //reader->AddVariable( "totalCubes", &totalCubes );
     //reader->AddVariable( "totalEdep", &totalEdep );
 
     reader->AddVariable( "totalPhotons", &totalPhotons );
     //reader->AddVariable( "tr1", &tr1 );
-    //reader->AddVariable( "totalCubes", &totalCubes );
+    reader->AddVariable( "totalCubes", &totalCubes );
+    reader->AddVariable( "muon_mom", &muon_mom );
 
    // --- Book the MVA methods
 
@@ -162,7 +173,8 @@ void tmva_app( TString myMethodList = "", TString inFileName = "tmva_data.root" 
    // - you can use the same variables as above which is slightly faster,
    //   but of course you can use different ones and copy the values inside the event loop
    //
-   TTree* theTree = (TTree*)input->Get("FgdLongestProjectionTree");
+   TTree *theTree = (TTree*)input->Get(treeName);    
+
    std::cout << "--- Select signal sample" << std::endl;
    //theTree->SetBranchAddress( "tr1", &tr1 );
    //theTree->SetBranchAddress( "tr2", &tr2 );
