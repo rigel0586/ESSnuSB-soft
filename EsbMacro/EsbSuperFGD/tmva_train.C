@@ -54,10 +54,10 @@ void tmva_train( Int_t numToTrain = 300
                   ,TString inFileName = "tmva_graph_data.root"          // simulate_3_graph_reconstruction.C
                   //,TString inFileName = "tmva_mc_recon_data.root"     // simulate_3_MC_reconstruction.C
 
-                  //,TString treeName = "FgdLongestProjectionTree"      // simulate_3_TMVA_data2.C and simulate_3_TMVA_data.C 
-                  ,TString treeName = "trainTree"                     // MC muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C
-                  //,TString treeName = "fittedMomTree"                 // Genfit muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C
-                  //,TString treeName = "CalMomTree"                    // Calorimetric muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C    
+                  //,std::string treeName = "FgdLongestProjectionTree"      // simulate_3_TMVA_data2.C and simulate_3_TMVA_data.C 
+                  ,std::string treeName = "trainTree"                     // MC muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C
+                  //,std::string treeName = "fittedMomTree"                 // Genfit muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C
+                  //,std::string treeName = "CalMomTree"                    // Calorimetric muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C    
    
                               )
 {
@@ -158,7 +158,10 @@ void tmva_train( Int_t numToTrain = 300
    dataloader->AddVariable( "totalPhotons", "Total photons", "units", 'F' );
    //dataloader->AddVariable( "tr1", "1st track", "units", 'F' );
    dataloader->AddVariable( "totalCubes", "Total cubes", "units", 'F' );
-   dataloader->AddVariable( "muon_mom", "Muon momentum", "units", 'F' );
+   if(treeName.compare("FgdLongestProjectionTree") !=0 )
+   {
+      dataloader->AddVariable( "muon_mom", "Muon momentum", "units", 'F' );
+   }
 
    // Add the variable carrying the regression target
    dataloader->AddTarget( "nuEnergy" );
@@ -181,7 +184,7 @@ void tmva_train( Int_t numToTrain = 300
    std::cout << "--- TMVARegression           : Using input file: " << input->GetName() << std::endl;
 
    // Register the regression tree
-   TTree *regTree = (TTree*)input->Get(treeName);
+   TTree *regTree = (TTree*)input->Get(TString(treeName));
    // global event weights per tree (see below for setting event-wise weights)
    Double_t regWeight  = 1.0;
 
