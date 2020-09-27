@@ -191,8 +191,35 @@ void FgdGraphStats::Exec(Option_t* opt)
         if(rc)
         {
             LOG(info) << "==============================";
-            LOG(info) <<" MC tracks found " << foundMCTracks.size();
-            LOG(info) <<" Graph tracks found " << foundGRTracks.size();
+            //LOG(info) <<" MC tracks found " << foundMCTracks.size();
+            size_t numMC = 0;
+            for(size_t i = 0; i < foundMCTracks.size(); ++i)
+            {
+                std::vector<ReconHit>& track = foundMCTracks[i];
+                if(IsChargedParticle(track[0]) && (track.size() >= fMinTrackLenght) )
+                {
+                  ++numMC;
+                  LOG(info) << " pdg " << track[0].fpdg << " length " << track.size();
+                  // for(size_t j = 0; j< track.size();++j)
+                  // {
+                  //   ReconHit& hit = track[j];
+                  //   //LOG(info) <<" xyz " << hit.fmppcLoc.X() << " " << hit.fmppcLoc.Y() << " " << hit.fmppcLoc.Z();
+                  // }
+                } 
+            }
+            LOG(info) <<" MC tracks found " << numMC;
+
+            size_t numGRMC = 0;
+            for(size_t i = 0; i < foundGRTracks.size(); ++i)
+            {
+                std::vector<ReconHit*>& track = foundGRTracks[i];
+                if(track.size() >= fMinTrackLenght)
+                {
+                  ++numGRMC;
+                } 
+            }
+            //LOG(info) <<" Graph tracks found " << foundGRTracks.size();
+            LOG(info) <<" Graph tracks found " << numGRMC;
             CompareTracks(foundMCTracks, foundGRTracks);
         }
         else
@@ -261,7 +288,7 @@ void FgdGraphStats::CompareTracks(std::vector<std::vector<ReconHit>>& mcTracks, 
 
         LOG(info) << "+++++++++++++++++++++++++++++++++";
         LOG(info) << " Graph track" << "[ " << grInd << " (size " << grtrack.size() << ")] best fit is " << maxFit;
-        LOG(info) << " MC trakc length for best fit = " << mcTracks[indOfMcMaxFit].size();
+        LOG(info) << " MC track length for best fit = " << mcTracks[indOfMcMaxFit].size();
         LOG(info) << "+++++++++++++++++++++++++++++++++";
     }
 }
@@ -276,6 +303,9 @@ Double_t FgdGraphStats::CmpGrToMCTrack(std::vector<ReconHit>& mc, std::vector<Re
             ++isInMC;
         } 
     }
+    LOG(info) << "Graph cube 1 =>" << (*gr[0]).fmppcLoc.X() << " " << (*gr[0]).fmppcLoc.Y() << " " << (*gr[0]).fmppcLoc.Z();
+    size_t grsize = gr.size();
+    LOG(info) << "Graph cube " << grsize << " => " << (*gr[grsize-1]).fmppcLoc.X() << " " << (*gr[grsize-1]).fmppcLoc.Y() << " " << (*gr[grsize-1]).fmppcLoc.Z();
     return (1.0 * isInMC) / mc.size();
 }
 
@@ -310,8 +340,8 @@ Bool_t FgdGraphStats::GetMCHits(std::vector<ReconHit>& allHits)
     Int_t&& y = mppcLoc.Y();
     Int_t&& z = mppcLoc.Z();
 
-    Double_t totalPhotons = photoE.X() + photoE.Y() + photoE.Z();
-    if(totalPhotons >= errPhotoLimit)
+    //Double_t totalPhotons = photoE.X() + photoE.Y() + photoE.Z();
+    //if(totalPhotons >= errPhotoLimit)
     {
       TVectorD hitPos(3);
       hitPos(0) = -f_total_X/2 + f_step_X*mppcLoc.X()  +f_step_X/2;
@@ -379,8 +409,8 @@ Bool_t FgdGraphStats::GetGraphHits(std::vector<ReconHit>& allHits)
     }
     visited[ind] = true;
 
-    Double_t totalPhotons = photoE.X() + photoE.Y() + photoE.Z();
-    if(totalPhotons >= errPhotoLimit)
+    //Double_t totalPhotons = photoE.X() + photoE.Y() + photoE.Z();
+    //if(totalPhotons >= errPhotoLimit)
     {
       TVectorD hitPos(3);
       hitPos(0) = -f_total_X/2 + f_step_X*mppcLoc.X()  +f_step_X/2;
@@ -435,8 +465,12 @@ void FgdGraphStats::SplitMCTrack(std::vector<ReconHit>& allHits, std::vector<std
   for(auto iter = tracks.begin(); iter!=tracks.end(); ++iter)
   {
       LOG(debug2) << iter->first << " track size " << (iter->second).size();
-      foundTracks.emplace_back(iter->second);
+      //LOG(info) << iter->first << " track size " << (iter->second).size();
+      //foundTracks.emplace_back(iter->second);
+      foundTracks.push_back(iter->second);
   }
+
+  //LOG(info) << "allHits.size() " << allHits.size();
 }
 
 
@@ -565,6 +599,9 @@ Bool_t FgdGraphStats::FindUsingGraph(std::vector<ReconHit>& hits
   ReconHit* previousHit = nullptr;
   for(size_t i=0; i<hits.size(); ++i)
   {
+    previousHit = nullptr;
+    nextHit = nullptr;
+    currentHit = nullptr;
     if(hits[i].fIsVisited)
     {
       continue;
@@ -572,11 +609,14 @@ Bool_t FgdGraphStats::FindUsingGraph(std::vector<ReconHit>& hits
 
     if(reconTemplates.IsLeaf(&hits[i]))
     {
+      LOG(info) << "Leaf X " << hits[i].fmppcLoc.X() << " Y " << hits[i].fmppcLoc.Y()<< " Z " << hits[i].fmppcLoc.Z();
       std::vector<ReconHit*> track;
       track.push_back(&hits[i]);
 
       hits[i].fIsLeaf = true;
       currentHit = &hits[i];
+
+      int comp = 0;
 
       while(reconTemplates.GetNextHit(previousHit, currentHit, nextHit)) 
       {
@@ -588,13 +628,17 @@ Bool_t FgdGraphStats::FindUsingGraph(std::vector<ReconHit>& hits
         currentHit->fIsVisited = true;
         previousHit = currentHit;
         currentHit = nextHit;
+
+        ++comp;
       }
 
+      LOG(info) <<"Added " << comp << " Nodes";
       tracks.push_back(track);
     }
   }
 
-  LOG(debug) <<"Leaves found " << tracks.size(); // Initially leaves are equal to the number of tracks
+  LOG(info) <<"Leaves found " << tracks.size(); // Initially leaves are equal to the number of tracks
+  LOG(debug) << "All hits -> " << hits.size(); 
 
   CalculateGrad(tracks);
 
@@ -794,10 +838,9 @@ void FgdGraphStats::SplitGRTrack(std::vector<std::vector<ReconHit*>>& originalTr
         // If there is no change add the track
         // Also '0' indicates that the track hit is too short to calculate the 
         // the change.
-        // Only compare if both the current and previous angle is not zero.
         trackToAdd.push_back(currentHit);
       }
-      else if(  (currentHit->fChangeAngle != 0) && (previousHit->fChangeAngle != 0)  )
+      else
       {
         Double_t differenceInAngle = currentHit->fChangeAngle - previousHit->fChangeAngle;
         Double_t absDiff = std::fabs(differenceInAngle);
@@ -1095,6 +1138,16 @@ Bool_t FgdGraphStats::isParticleNeutral(Int_t pdg)
                       genie::pdg::IsNeutralLepton(pdg);
 
   return isNeutral;
+}
+
+Bool_t FgdGraphStats::isParticleAllowed(Int_t pdg)
+{
+    Bool_t isAllowed =  (pdg ==  genie::kPdgPiP) ||
+                        (pdg ==  genie::kPdgPiM) ||
+                      genie::pdg::IsProton(pdg) ||
+                      genie::pdg::IsChargedLepton(pdg);
+
+    return isAllowed;
 }
 
 Long_t FgdGraphStats::ArrInd(int x, int y, int z)

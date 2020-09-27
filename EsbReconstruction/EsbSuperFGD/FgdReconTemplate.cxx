@@ -98,6 +98,8 @@ Bool_t FgdReconTemplate::GetNextHit(ReconHit* previous, ReconHit* current, Recon
 
     next = current->fAllHits[nearestId];
     nextFound = (min_dist!=std::numeric_limits<Int_t>::max());
+    if(!nextFound)
+        LOG(debug) <<"No next cubes found ";
 
     return nextFound;
 }

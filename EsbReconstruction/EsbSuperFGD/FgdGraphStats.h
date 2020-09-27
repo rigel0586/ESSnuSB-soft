@@ -73,7 +73,6 @@ protected:
     Bool_t CalculateMomentum(const TVector3& p1, const TVector3& p2, const TVector3& p3 , const TVector3& magField, TVector3& momentum);
     Double_t GetRadius(const TVector3& p1, const TVector3& p2, const TVector3& p3);
 
-    Bool_t IsChargedParticle(ReconHit& hit);
     Double_t CmpGrToMCTrack(std::vector<ReconHit>& mc, std::vector<ReconHit*>& gr);
     Bool_t ContainsHit(std::vector<ReconHit>& mctrack, ReconHit& hit);
 
@@ -82,7 +81,9 @@ protected:
 
     Long_t ArrInd(int i, int j, int k);
 
+    Bool_t IsChargedParticle(ReconHit& hit);
     Bool_t isParticleNeutral(Int_t pdg);
+    Bool_t isParticleAllowed(Int_t pdg);
 
     /** Class to hold the Detector parameters read from external file **/
     esbroot::geometry::superfgd::FgdDetectorParameters fParams;//!<!
