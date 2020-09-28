@@ -70,6 +70,7 @@ Bool_t FgdReconTemplate::GetNextHit(ReconHit* previous, ReconHit* current, Recon
 
     if(current->fAllHits.empty())
     {
+        LOG(info) <<"Empty cube ";
         return nextFound;
     }
 
@@ -93,15 +94,50 @@ Bool_t FgdReconTemplate::GetNextHit(ReconHit* previous, ReconHit* current, Recon
                 min_dist = dist;
                 nearestId = nid;
             }
+            
         }
     }
 
     next = current->fAllHits[nearestId];
     nextFound = (min_dist!=std::numeric_limits<Int_t>::max());
     if(!nextFound)
-        LOG(debug) <<"No next cubes found ";
+    {
+        LOG(debug) << "X " << current->fmppcLoc.X() << " Y " << current->fmppcLoc.Y() << " Z " << current->fmppcLoc.Z();
+        LOG(debug) <<"No next cubes found " << current->fAllHits.size();
+    }
+        
 
     return nextFound;
+}
+
+Bool_t FgdReconTemplate::CheckAllVisited(ReconHit* hit)
+{
+    Bool_t allVisited(false);
+
+    if(hit==nullptr)
+    {
+        throw "Invalid hit!";
+    }
+
+    if(hit->fAllHits.empty())
+    {
+        return allVisited;
+    }
+
+    uint visitHits(0);
+
+    for(size_t i = 0; i< hit->fAllHits.size(); ++i)
+    {
+        ReconHit* neighbourHit = hit->fAllHits[i];
+        if(neighbourHit->fIsVisited)
+        {
+            ++visitHits;
+        }
+    }
+
+    allVisited = (visitHits == hit->fAllHits.size());
+
+    return allVisited;
 }
 
 void FgdReconTemplate::LoadTemplates()

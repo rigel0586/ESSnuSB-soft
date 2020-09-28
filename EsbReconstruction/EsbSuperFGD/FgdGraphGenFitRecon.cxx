@@ -547,7 +547,24 @@ Bool_t FgdGraphGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
       hits[i].fIsLeaf = true;
       currentHit = &hits[i];
 
-      while(reconTemplates.GetNextHit(previousHit, currentHit, nextHit)) 
+      // while(reconTemplates.GetNextHit(previousHit, currentHit, nextHit)) 
+      // {
+      //   if(nextHit->fIsLeaf || nextHit->fIsVisited)
+      //   {
+      //     break;
+      //   }
+      //   track.push_back(nextHit);
+      //   currentHit->fIsVisited = true;
+      //   previousHit = currentHit;
+      //   currentHit = nextHit;
+      // }
+
+      // tracks.push_back(track);
+
+      uint returnTries(0);
+      bool hasNext = reconTemplates.GetNextHit(previousHit, currentHit, nextHit);
+
+      while(hasNext) 
       {
         if(nextHit->fIsLeaf || nextHit->fIsVisited)
         {
@@ -557,6 +574,24 @@ Bool_t FgdGraphGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
         currentHit->fIsVisited = true;
         previousHit = currentHit;
         currentHit = nextHit;
+
+
+        hasNext = reconTemplates.GetNextHit(previousHit, currentHit, nextHit);
+        // If we fail, check if all neightbour cubes are visited.
+        // if yes, then we may have gotten inside a loop.
+        // try to return 2 cubes back and check if we can go around
+        // the loop by taking another not visited cube.
+        if( !hasNext   
+              && RETURN_TRY_LIMIT>returnTries
+              && track.size()>=RETURN_PREVIOUS
+              && reconTemplates.CheckAllVisited(currentHit))
+        {
+          ++returnTries;
+          currentHit->fIsVisited = true;
+          currentHit = track[track.size()-2];
+          previousHit = track[track.size()-3];
+          hasNext = reconTemplates.GetNextHit(previousHit, currentHit, nextHit);
+        }
       }
 
       tracks.push_back(track);

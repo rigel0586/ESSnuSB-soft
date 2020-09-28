@@ -14,6 +14,10 @@ namespace esbroot {
 namespace reconstruction {
 namespace superfgd {
 
+#define RETURN_TRY_LIMIT 2
+#define RETURN_CURRENT 2
+#define RETURN_PREVIOUS 3
+
 class FgdReconTemplate : public TObject
 {
 
@@ -27,6 +31,7 @@ public:
     Bool_t IsLeaf(ReconHit* hit);
 
     Bool_t GetNextHit(ReconHit* previous, ReconHit* current, ReconHit*& next);
+    Bool_t CheckAllVisited(ReconHit* hit);
 
 private:
 

@@ -303,9 +303,9 @@ Double_t FgdGraphStats::CmpGrToMCTrack(std::vector<ReconHit>& mc, std::vector<Re
             ++isInMC;
         } 
     }
-    LOG(info) << "Graph cube 1 =>" << (*gr[0]).fmppcLoc.X() << " " << (*gr[0]).fmppcLoc.Y() << " " << (*gr[0]).fmppcLoc.Z();
+    //LOG(info) << "Graph cube 1 =>" << (*gr[0]).fmppcLoc.X() << " " << (*gr[0]).fmppcLoc.Y() << " " << (*gr[0]).fmppcLoc.Z();
     size_t grsize = gr.size();
-    LOG(info) << "Graph cube " << grsize << " => " << (*gr[grsize-1]).fmppcLoc.X() << " " << (*gr[grsize-1]).fmppcLoc.Y() << " " << (*gr[grsize-1]).fmppcLoc.Z();
+    //LOG(info) << "Graph cube " << grsize << " => " << (*gr[grsize-1]).fmppcLoc.X() << " " << (*gr[grsize-1]).fmppcLoc.Y() << " " << (*gr[grsize-1]).fmppcLoc.Z();
     return (1.0 * isInMC) / mc.size();
 }
 
@@ -609,7 +609,7 @@ Bool_t FgdGraphStats::FindUsingGraph(std::vector<ReconHit>& hits
 
     if(reconTemplates.IsLeaf(&hits[i]))
     {
-      LOG(info) << "Leaf X " << hits[i].fmppcLoc.X() << " Y " << hits[i].fmppcLoc.Y()<< " Z " << hits[i].fmppcLoc.Z();
+      //LOG(info) << "Leaf X " << hits[i].fmppcLoc.X() << " Y " << hits[i].fmppcLoc.Y()<< " Z " << hits[i].fmppcLoc.Z();
       std::vector<ReconHit*> track;
       track.push_back(&hits[i]);
 
@@ -617,8 +617,10 @@ Bool_t FgdGraphStats::FindUsingGraph(std::vector<ReconHit>& hits
       currentHit = &hits[i];
 
       int comp = 0;
+      uint returnTries(0);
+      bool hasNext = reconTemplates.GetNextHit(previousHit, currentHit, nextHit);
 
-      while(reconTemplates.GetNextHit(previousHit, currentHit, nextHit)) 
+      while(hasNext) 
       {
         if(nextHit->fIsLeaf || nextHit->fIsVisited)
         {
@@ -629,10 +631,35 @@ Bool_t FgdGraphStats::FindUsingGraph(std::vector<ReconHit>& hits
         previousHit = currentHit;
         currentHit = nextHit;
 
+
+        hasNext = reconTemplates.GetNextHit(previousHit, currentHit, nextHit);
+        // If we fail, check if all neightbour cubes are visited.
+        // if yes, then we may have gotten inside a loop.
+        // try to return 2 cubes back and check if we can go around
+        // the loop by taking another not visited cube.
+        if( RETURN_TRY_LIMIT>returnTries 
+              && !hasNext 
+              && reconTemplates.CheckAllVisited(currentHit)
+              && track.size()>=RETURN_PREVIOUS)
+        {
+          //LOG(info) <<"returnTries " << returnTries;
+          ++returnTries;
+          currentHit->fIsVisited = true;
+          currentHit = track[track.size()-2];
+          previousHit = track[track.size()-3];
+          hasNext = reconTemplates.GetNextHit(previousHit, currentHit, nextHit);
+        }
+
+        if(!hasNext)
+        {
+          //LOG(info) << "Failed " << currentHit->fmppcLoc.X() << " Y " << currentHit->fmppcLoc.Y()<< " Z " << currentHit->fmppcLoc.Z()
+          //  << " CheckAllVisited " << reconTemplates.CheckAllVisited(currentHit); 
+        }
+        
         ++comp;
       }
 
-      LOG(info) <<"Added " << comp << " Nodes";
+      //LOG(info) <<"Added " << comp << " Nodes";
       tracks.push_back(track);
     }
   }
