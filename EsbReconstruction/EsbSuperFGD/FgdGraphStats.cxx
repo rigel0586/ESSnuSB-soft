@@ -146,9 +146,9 @@ InitStatus FgdGraphStats::Init()
   }
 
   fcanvas = new TCanvas();
-  f_track_hist = new TH1F("hist_track","MC_Graph track histogram",STATS_TRACK_NUM,0,STATS_TRACK_NUM);
+  f_track_hist = new TH2F("hist_track","MC_Graph track histogram",STATS_TRACK_NUM,1,STATS_TRACK_NUM, STATS_TRACK_NUM, 1, STATS_TRACK_NUM);
   f_track_hist->GetXaxis()->SetTitle("Number of MC tracks");
-  f_track_hist->GetYaxis()->SetTitle("% [found graph tracks/MC tracks]");
+  f_track_hist->GetYaxis()->SetTitle("Number Found graph tracks");
 
   for(size_t i=0; i<=STATS_TRACK_NUM; ++i)
   {
@@ -162,7 +162,7 @@ void FgdGraphStats::FinishTask()
 {
   if(f_track_hist)
   {
-    for(size_t i=0; i<=STATS_TRACK_NUM; ++i)
+    for(size_t i=1; i<=STATS_TRACK_NUM; ++i)
     {
       std::vector<int>& tr = stats[i];
       if(tr.empty())continue;
@@ -171,16 +171,17 @@ void FgdGraphStats::FinishTask()
       int del = i == 0 ? 1 : i;
       for(size_t j=0; j<tr.size(); ++j)
       {
-          sum+= (1.0 *tr[j])/del;
+          //sum+= (1.0 *tr[j])/del;
           //double val = (1.0 *tr[j])/del;
           //f_track_hist->Fill(i, val);
           //f_track_hist->AddBinContent(i, val);
+          f_track_hist->Fill(i, tr[j]);
       }
       
-      double avgSum = sum/tr.size();
+      //double avgSum = sum/tr.size();
       //if(f_track_hist) f_track_hist->Fill(i, avgSum);
       //f_track_hist->Fill(i, avgSum);
-      f_track_hist->AddBinContent(i, avgSum);
+      //f_track_hist->AddBinContent(i, avgSum);
     }
 
     f_track_hist->Draw("colz");

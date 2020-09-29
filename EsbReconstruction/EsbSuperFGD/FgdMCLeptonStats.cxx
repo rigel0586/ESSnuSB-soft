@@ -387,6 +387,10 @@ Bool_t FgdMCLeptonStats::ProcessStats(std::vector<std::vector<ReconHit>>& foundT
     // 8. Fill in data for particles exiting the detector
     if(foutputFile.is_open())
     {
+        Int_t nuPdg = mcEventRecord.GetNuPdg();
+        Double_t nuE = mcEventRecord.GetNuE();
+        foutputFile << nuPdg << " " << nuE << " ";
+
         bool hasExiting(false);
         for(size_t i = 0; i <  foundTracks.size() ; ++i)
         {
@@ -395,13 +399,17 @@ Bool_t FgdMCLeptonStats::ProcessStats(std::vector<std::vector<ReconHit>>& foundT
             ReconHit& lastHit = hitsOnTrack[hitsOnTrack.size() -1 ];
             if(IsHitExiting(lastHit) && lastHit.fmomExit.Mag()!=0)
             {  
-                foutputFile << lastHit.fpdg << " " << lastHit.fmomExit.X() << " " <<  lastHit.fmomExit.X() << " " << lastHit.fmomExit.X() 
+                foutputFile  << lastHit.fpdg << " " << lastHit.fmomExit.X() << " " <<  lastHit.fmomExit.X() << " " << lastHit.fmomExit.X() 
                                 << " " << lastHit.fMCPos.X() << " " << lastHit.fMCPos.Y() << " " << lastHit.fMCPos.Z() << " ";  
                 hasExiting = true;
             }
         }
 
-        if(hasExiting && !foundTracks.empty()) foutputFile << endl;;
+        if(!hasExiting)
+        {
+            foutputFile << 0 << " " << 0 << " " << 0;
+        }
+        foutputFile << endl;
     }
     
 

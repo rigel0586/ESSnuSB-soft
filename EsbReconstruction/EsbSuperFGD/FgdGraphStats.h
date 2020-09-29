@@ -4,7 +4,7 @@
 // Root headers
 #include "TDatabasePDG.h"
 #include <TCanvas.h>
-#include <TH1F.h>
+#include <TH2F.h>
 
 // FairRoot headers
 #include <FairTask.h>
@@ -128,7 +128,7 @@ protected:
 
     Int_t fMinTrackLenght;
 
-    TH1F* f_track_hist;
+    TH2F* f_track_hist;
     TCanvas* fcanvas;
     std::map<int, std::vector<int>> stats;
     void WriteCanvas(string hist);
