@@ -3,6 +3,8 @@
 
 // Root headers
 #include "TDatabasePDG.h"
+#include <TCanvas.h>
+#include <TH1F.h>
 
 // FairRoot headers
 #include <FairTask.h>
@@ -13,6 +15,8 @@
 #include "EsbGeometry/EsbSuperFGD/EsbSuperFGDDetectorConstruction.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdReconHit.h"
 #include "EsbReconstruction/EsbSuperFGD/PdgFromMomentumLoss.h"
+
+#define STATS_TRACK_NUM 15
 
 namespace esbroot {
 namespace reconstruction {
@@ -124,6 +128,10 @@ protected:
 
     Int_t fMinTrackLenght;
 
+    TH1F* f_track_hist;
+    TCanvas* fcanvas;
+    std::map<int, std::vector<int>> stats;
+    void WriteCanvas(string hist);
 
     /** Are materials already defined **/
     bool isDefinedMaterials;

@@ -60,6 +60,7 @@
 #include <memory>
 #include <math.h>
 #include <bits/stdc++.h>
+#include <cmath>
 
 namespace esbroot {
 namespace reconstruction {
@@ -84,6 +85,7 @@ FgdGraphStats::FgdGraphStats(const char* name
   FairTask(name, verbose) 
   , fgdConstructor(geoConfigFile)
   , fMinTrackLenght(0)
+  , f_track_hist(nullptr)
 { 
     fpdgDB = make_shared<TDatabasePDG>();
     fParams.LoadPartParams(geoConfigFile);
@@ -99,6 +101,8 @@ FgdGraphStats::~FgdGraphStats()
     {
       fHitArray->Delete();
     }
+
+    stats.clear();
     delete fHitArray;
 }
 // -------------------------------------------------------------------------
@@ -141,12 +145,59 @@ InitStatus FgdGraphStats::Init()
       return kFATAL;
   }
 
-    return kSUCCESS;
+  fcanvas = new TCanvas();
+  f_track_hist = new TH1F("hist_track","MC_Graph track histogram",STATS_TRACK_NUM,0,STATS_TRACK_NUM);
+  f_track_hist->GetXaxis()->SetTitle("Number of MC tracks");
+  f_track_hist->GetYaxis()->SetTitle("% [found graph tracks/MC tracks]");
+
+  for(size_t i=0; i<=STATS_TRACK_NUM; ++i)
+  {
+    stats[i]=std::vector<int>();
+  }
+
+  return kSUCCESS;
 }
 
 void FgdGraphStats::FinishTask()
 {
+  if(f_track_hist)
+  {
+    for(size_t i=0; i<=STATS_TRACK_NUM; ++i)
+    {
+      std::vector<int>& tr = stats[i];
+      if(tr.empty())continue;
 
+      double sum(0.0);
+      int del = i == 0 ? 1 : i;
+      for(size_t j=0; j<tr.size(); ++j)
+      {
+          sum+= (1.0 *tr[j])/del;
+          //double val = (1.0 *tr[j])/del;
+          //f_track_hist->Fill(i, val);
+          //f_track_hist->AddBinContent(i, val);
+      }
+      
+      double avgSum = sum/tr.size();
+      //if(f_track_hist) f_track_hist->Fill(i, avgSum);
+      //f_track_hist->Fill(i, avgSum);
+      f_track_hist->AddBinContent(i, avgSum);
+    }
+
+    f_track_hist->Draw("colz");
+    WriteCanvas("Tracks");
+    f_track_hist->Reset();
+  } 
+
+  if(fcanvas)
+  {
+    fcanvas->ResetDrawn();
+  }
+
+  for(size_t i=0; i<=STATS_TRACK_NUM; ++i)
+  {
+    stats[i].clear();
+  }
+  
 }
 
 
@@ -256,10 +307,12 @@ void FgdGraphStats::CompareTracks(std::vector<std::vector<ReconHit>>& mcTracks, 
         }
     }
 
+    double ratio = (1.0 * numOfGRTracksBigThanLimit) / numOfMCTracksBigThanLimit;
+    stats[numOfMCTracksBigThanLimit].push_back(numOfGRTracksBigThanLimit);
     LOG(info) << "+++++++++++++++++++++++++++++++++";
     LOG(info) << " Graph tracks ["<< fMinTrackLenght <<" cubes at least] = " << numOfGRTracksBigThanLimit;
     LOG(info) << " MC tracks ["<< fMinTrackLenght <<" cubes at least/ charge is not zero of the particle] = " << numOfMCTracksBigThanLimit;
-    LOG(info) << " Number of Graph tracks / Number of MC tracks = " << (1.0 * numOfGRTracksBigThanLimit) / numOfMCTracksBigThanLimit;
+    LOG(info) << " Number of Graph tracks / Number of MC tracks = " << ratio;
     LOG(info) << "+++++++++++++++++++++++++++++++++";
 
     // 3. Calculate the best match for GR track to MC track
@@ -1180,6 +1233,17 @@ Bool_t FgdGraphStats::isParticleAllowed(Int_t pdg)
 Long_t FgdGraphStats::ArrInd(int x, int y, int z)
 {
   return (x*f_bin_Y*f_bin_Z + y*f_bin_Z+z);
+}
+
+void FgdGraphStats::WriteCanvas(string hist)
+{
+    fcanvas->Update();
+    fcanvas->Draw();
+    fcanvas->Write();
+    std::ostringstream strb;
+    strb<< "hist_" << hist << ".gif";
+    fcanvas->SaveAs((strb.str()).c_str());
+    fcanvas->ResetDrawn();
 }
 
 }// namespace superfgd

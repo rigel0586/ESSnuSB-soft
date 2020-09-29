@@ -5,9 +5,9 @@ length_Y=1
 length_Z=1
 
 #number of cubes
-number_cubes_X=100
-number_cubes_Y=100
-number_cubes_Z=100
+number_cubes_X=140
+number_cubes_Y=140
+number_cubes_Z=50
 
 #magnetic field [1 kGauss = 0.1 T]
 magField_X=0    #in [kG] 
