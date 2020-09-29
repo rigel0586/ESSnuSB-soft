@@ -14,7 +14,7 @@
 void simulate_3_MC_lepton_stats(TString inFile = "fgd_dig.root", 
 	      TString parFile = "params.root",
 	      TString outFile = "fgd_mc_recon_stats.root",
-              Int_t nStartEvent = 0, Int_t nEvents = 50)
+              Int_t nStartEvent = 0, Int_t nEvents = 1000)
 {
   using namespace esbroot;
 
@@ -46,11 +46,13 @@ void simulate_3_MC_lepton_stats(TString inFile = "fgd_dig.root",
     ,"../../geometry/media.geo"       // Media file with defined materials
     ,"../../EsbMacro/tests/eventsData.dat"       // events data file
     ,"../../EsbMacro/tests/statsRoot.root"       // output root file
+    ,"../../EsbMacro/tests/exitParticles.dat"       // data for particles exiting detector
     , 1                               // Verbose level
     , debugLvl                        // debug level of genfit (0 - little, 1 - debug info, 2 - detailed)
     );                           
 
   ((reconstruction::superfgd::FgdMCLeptonStats*)recon)->SetMinHits(3);
+  ((reconstruction::superfgd::FgdMCLeptonStats*)recon)->SetFitMuonMom(false);
 
   
   fRun->AddTask(recon);   

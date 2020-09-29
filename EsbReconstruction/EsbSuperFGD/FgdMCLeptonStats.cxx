@@ -79,12 +79,16 @@ FgdMCLeptonStats::FgdMCLeptonStats(const char* name
                           , const char* mediaFile
                           , const char* eventData
                           , const char* outputRootFile
+                          , const char* exitParticlesFile
                           , Int_t verbose
                           , double debugLlv) :
   FgdMCGenFitRecon(name, geoConfigFile, mediaFile, eventData, verbose, 
                     debugLlv, false /* no visualization */, "D")
     , feventData(eventData), foutputRootFile(outputRootFile)
-    , feventNum(0)
+    , fexitParticlesFile(exitParticlesFile)
+    , foutputFile(exitParticlesFile, std::ios::trunc)
+    , feventNum(0) 
+    , ffitMuonMom(false)
 { 
     fpdgDB = make_shared<TDatabasePDG>();
 }
@@ -100,6 +104,7 @@ FgdMCLeptonStats::~FgdMCLeptonStats()
         fTracksArray->Delete();
         delete fTracksArray;
     }
+    foutputFile.close();
 }
 // -------------------------------------------------------------------------
 
@@ -315,7 +320,7 @@ Bool_t FgdMCLeptonStats::ProcessStats(std::vector<std::vector<ReconHit>>& foundT
     }
 
     // 5. Fit the muon momentum
-    if(mcEventRecord.IsPrimaryLeptonMuon())
+    if(ffitMuonMom && mcEventRecord.IsPrimaryLeptonMuon())
     {
         for(size_t i = 0; i <  foundTracks.size() ; ++i)
         {
@@ -378,6 +383,27 @@ Bool_t FgdMCLeptonStats::ProcessStats(std::vector<std::vector<ReconHit>>& foundT
             }
         }
     }
+
+    // 8. Fill in data for particles exiting the detector
+    if(foutputFile.is_open())
+    {
+        bool hasExiting(false);
+        for(size_t i = 0; i <  foundTracks.size() ; ++i)
+        {
+            std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
+            if(hitsOnTrack.empty()) continue;
+            ReconHit& lastHit = hitsOnTrack[hitsOnTrack.size() -1 ];
+            if(IsHitExiting(lastHit) && lastHit.fmomExit.Mag()!=0)
+            {  
+                foutputFile << lastHit.fpdg << " " << lastHit.fmomExit.X() << " " <<  lastHit.fmomExit.X() << " " << lastHit.fmomExit.X() 
+                                << " " << lastHit.fMCPos.X() << " " << lastHit.fMCPos.Y() << " " << lastHit.fMCPos.Z() << " ";  
+                hasExiting = true;
+            }
+        }
+
+        if(hasExiting && !foundTracks.empty()) foutputFile << endl;;
+    }
+    
 
     feventRecords[feventNum].SetHasHits(true);
     ++feventNum; // Increment to next event from eventData read from simulation`s genie export
@@ -472,8 +498,8 @@ Bool_t FgdMCLeptonStats::FitTrack(std::vector<ReconHit>& hitsOnTrack, TVector3& 
     genfit::MaterialEffects::getInstance()->setDebugLvl(fDebuglvl_genfit);
 
     // init fitter
-    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
-    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
+    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
+    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
     fitter->setMinIterations(fminGenFitInterations);
     fitter->setMaxIterations(fmaxGenFitIterations);
     fitter->setDebugLvl(fDebuglvl_genfit);

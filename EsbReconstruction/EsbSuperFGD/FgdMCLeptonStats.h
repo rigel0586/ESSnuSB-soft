@@ -4,6 +4,7 @@
 // EsbRoot headers
 #include "EsbReconstruction/EsbSuperFGD/FgdMCGenFitRecon.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdMCEventRecord.h"
+#include <fstream>
 
 namespace esbroot {
 namespace reconstruction {
@@ -23,6 +24,7 @@ class FgdMCLeptonStats : public FgdMCGenFitRecon
    *@param mediaFile  - Configuration file for the used mediums
    *@param eventData  - events data file (generated from fgd generator)
    *@param outputRootFile - full path to the output root file
+   *@param exitParticlesFile - output file with data for exiting particles
    *@param verbose  - Verbosity level
    *@param debugLlv - debug level for genfit
   **/  
@@ -31,6 +33,7 @@ class FgdMCLeptonStats : public FgdMCGenFitRecon
               , const char* mediaFile
               , const char* eventData
               , const char* outputRootFile
+              , const char* exitParticlesFile
               , Int_t verbose = 1
               , double debugLlv = 0);
 
@@ -46,6 +49,8 @@ class FgdMCLeptonStats : public FgdMCGenFitRecon
 
   virtual void FinishTask() override;
 
+  void SetFitMuonMom(bool val){ffitMuonMom=val;}
+
 protected:
 
   Bool_t ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks);
@@ -58,6 +63,9 @@ protected:
   
   std::string feventData;//!<!
   std::string foutputRootFile;//!<!
+  std::string fexitParticlesFile;//!<!
+  std::ofstream foutputFile;//!<!
+  Bool_t ffitMuonMom;//!<!
 
   std::vector<FgdMCEventRecord> feventRecords;//!<!
 
