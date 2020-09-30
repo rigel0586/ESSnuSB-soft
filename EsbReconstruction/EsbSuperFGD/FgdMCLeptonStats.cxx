@@ -91,6 +91,28 @@ FgdMCLeptonStats::FgdMCLeptonStats(const char* name
     , ffitMuonMom(false)
 { 
     fpdgDB = make_shared<TDatabasePDG>();
+
+    if(foutputFile.is_open())
+    {
+        foutputFile << "\tEach row represents an event " << endl;
+        foutputFile << "\tThe event data in the row is in the following order: " << endl;
+        foutputFile << "\t\tevent_number" << endl;
+        foutputFile << "\t\tnu_Pdg" << endl;
+        foutputFile << "\t\tnu_Energy" << endl;
+        foutputFile << "\t\tIsWeakCC (1 - yes, 0 no)" << endl;
+        foutputFile << "\t\tisWeakNC (1 - yes, 0 no)" << endl;
+        foutputFile << "\t\tisQuasiEalsticScattering (1 - yes, 0 no)" << endl;
+        foutputFile << "\tAfter this, the exit particles are listed by having the following    " << endl;
+        foutputFile << "\t\tparticle_pdg" << endl;
+        foutputFile << "\t\tmomentum_X" << endl;
+        foutputFile << "\t\tmomentum_Y" << endl;
+        foutputFile << "\t\tmomentum_Z" << endl;
+        foutputFile << "\t\tposition_X" << endl;
+        foutputFile << "\t\tposition_Y" << endl;
+        foutputFile << "\t\tposition_Z" << endl;
+        foutputFile << "\tPosition is relative to the detector center " << endl;
+        foutputFile << "================================================ " << endl;
+    }
 }
 // -------------------------------------------------------------------------
 
@@ -389,7 +411,10 @@ Bool_t FgdMCLeptonStats::ProcessStats(std::vector<std::vector<ReconHit>>& foundT
     {
         Int_t nuPdg = mcEventRecord.GetNuPdg();
         Double_t nuE = mcEventRecord.GetNuE();
-        foutputFile << nuPdg << " " << nuE << " ";
+        Bool_t isweakcc = mcEventRecord.IsWeakCC(); 
+		Bool_t isweaknc = mcEventRecord.IsWeakNC();
+		Bool_t isqes = mcEventRecord.IsQuasiElastic();
+        foutputFile << feventNum << " " <<nuPdg << " " << nuE << " " << " " << isweakcc << " " << " " << isweaknc << " " << " " << isqes << " ";
 
         bool hasExiting(false);
         for(size_t i = 0; i <  foundTracks.size() ; ++i)
@@ -399,7 +424,7 @@ Bool_t FgdMCLeptonStats::ProcessStats(std::vector<std::vector<ReconHit>>& foundT
             ReconHit& lastHit = hitsOnTrack[hitsOnTrack.size() -1 ];
             if(IsHitExiting(lastHit) && lastHit.fmomExit.Mag()!=0)
             {  
-                foutputFile  << lastHit.fpdg << " " << lastHit.fmomExit.X() << " " <<  lastHit.fmomExit.X() << " " << lastHit.fmomExit.X() 
+                foutputFile  << lastHit.fpdg << " " << lastHit.fmomExit.Y() << " " <<  lastHit.fmomExit.Z() << " " << lastHit.fmomExit.X() 
                                 << " " << lastHit.fMCPos.X() << " " << lastHit.fMCPos.Y() << " " << lastHit.fMCPos.Z() << " ";  
                 hasExiting = true;
             }
