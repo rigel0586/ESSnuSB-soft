@@ -415,6 +415,7 @@ Bool_t FgdMCLeptonStats::ProcessStats(std::vector<std::vector<ReconHit>>& foundT
 		Bool_t isweaknc = mcEventRecord.IsWeakNC();
 		Bool_t isqes = mcEventRecord.IsQuasiElastic();
         foutputFile << feventNum << " " <<nuPdg << " " << nuE << " " << " " << isweakcc << " " << " " << isweaknc << " " << " " << isqes << " ";
+        FgdExitData exitDat(nuPdg, nuE, isweakcc, isweaknc, isqes , {});
 
         bool hasExiting(false);
         for(size_t i = 0; i <  foundTracks.size() ; ++i)
@@ -424,11 +425,15 @@ Bool_t FgdMCLeptonStats::ProcessStats(std::vector<std::vector<ReconHit>>& foundT
             ReconHit& lastHit = hitsOnTrack[hitsOnTrack.size() -1 ];
             if(IsHitExiting(lastHit) && lastHit.fmomExit.Mag()!=0)
             {  
-                foutputFile  << lastHit.fpdg << " " << lastHit.fmomExit.Y() << " " <<  lastHit.fmomExit.Z() << " " << lastHit.fmomExit.X() 
+                foutputFile  << lastHit.fpdg << " " << lastHit.fmomExit.X() << " " <<  lastHit.fmomExit.Y() << " " << lastHit.fmomExit.Z() 
                                 << " " << lastHit.fMCPos.X() << " " << lastHit.fMCPos.Y() << " " << lastHit.fMCPos.Z() << " ";  
                 hasExiting = true;
+
+                exitDat.fVecPars.emplace_back(FgdExitParticle(lastHit.fpdg, lastHit.fmomExit, lastHit.fMCPos));
             }
         }
+
+        fExitData.push_back(exitDat);
 
         if(!hasExiting)
         {
@@ -639,7 +644,6 @@ void FgdMCLeptonStats::FinishTask()
                                 ,esbroot::geometry::superfgd::DP::FGD_MC_LEPTON_RECONSTRUCTION_ROOT_FILE.c_str());
     outTree->Branch(esbroot::geometry::superfgd::DP::FGD_MC_LEPTON_RECONSTRUCTION_BRANCH.c_str(), &data);
 
-
     // TClonesArray& clref = *fEventsArray;
 
     for(size_t ind = 0 ; ind < feventRecords.size(); ind++)
@@ -652,7 +656,19 @@ void FgdMCLeptonStats::FinishTask()
         outTree->Fill();
     }
 
+
+    FgdExitData* exitData = nullptr;
+    TTree * exitParsTree = new TTree(esbroot::geometry::superfgd::DP::FGD_MC_EXIT_PARTICLES_RECONSTRUCTION_TTREE.c_str()
+                                ,esbroot::geometry::superfgd::DP::FGD_MC_EXIT_PARTICLES_RECONSTRUCTION_ROOT_FILE.c_str());
+    exitParsTree->Branch(esbroot::geometry::superfgd::DP::FGD_MC_EXIT_PARTICLES_RECONSTRUCTION_BRANCH.c_str(), &exitData);
+    for(size_t ind = 0 ; ind < fExitData.size(); ind++)
+    {
+        exitData = &fExitData[ind];
+        exitParsTree->Fill();
+    }
+
     outFile->WriteTObject(outTree);
+    outFile->WriteTObject(exitParsTree);
     outFile->Close();
     
     delete outFile;

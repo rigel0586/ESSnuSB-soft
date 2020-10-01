@@ -31,5 +31,7 @@
 #pragma link C++ class esbroot::reconstruction::superfgd::FgdTMVAData+;
 #pragma link C++ class esbroot::reconstruction::superfgd::FgdTMVAData2+;
 #pragma link C++ class esbroot::reconstruction::superfgd::FgdEdepAnalyzer+;
+#pragma link C++ class esbroot::reconstruction::superfgd::FgdExitData+;
+#pragma link C++ class esbroot::reconstruction::superfgd::FgdExitParticle+;
 
 #endif

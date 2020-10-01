@@ -4,6 +4,8 @@
 // EsbRoot headers
 #include "EsbReconstruction/EsbSuperFGD/FgdMCGenFitRecon.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdMCEventRecord.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdExitData.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdExitParticle.h"
 #include <fstream>
 
 namespace esbroot {
@@ -68,6 +70,7 @@ protected:
   Bool_t ffitMuonMom;//!<!
 
   std::vector<FgdMCEventRecord> feventRecords;//!<!
+  std::vector<FgdExitData> fExitData;//!<!
 
   TClonesArray* fEventsArray;     //! 
 
