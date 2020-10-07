@@ -68,6 +68,9 @@ namespace DP
     static const string FGD_GRAD_INTERVAL_DIST = "gradIntervalDist";
     static const string FGD_GRAD_ALLOWABLE_DIFF = "gradDiff";
 
+    static const string FGD_SMOOTH_GRAPH_DEPTH = "smoothdeepth";
+    static const string FGD_SMOOTH_GRAPH_ERR_LIMIT = "smootheErrLimit";
+
     static const string FGD_TRACK_MOMENTUM_SEGMENT = "momTrackSegment";
     static const string FGD_INITIAL_TRACK_POINTS_MOMENTUM = "avgTrackMomentum";
 

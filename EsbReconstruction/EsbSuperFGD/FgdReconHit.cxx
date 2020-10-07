@@ -11,6 +11,7 @@ ReconHit::ReconHit()
         , fIsLeaf(false)
         , fZaxisAngle(0.)
         , fChangeAngle(0.)
+        , fsmoothco(0,0,0)
 {
 }
 
@@ -54,6 +55,7 @@ ReconHit::ReconHit(TVector3 mppcLoc
         , fZaxisAngle(0.)
         , fChangeAngle(0.)
         , fpe(pe)
+        , fsmoothco(mppcLoc) // initially the smooth coordinates are the same as the cube`s location
 {
     
 }
@@ -88,6 +90,7 @@ ReconHit::ReconHit(const ReconHit& c)
         , fZaxisAngle(c.fZaxisAngle)
         , fChangeAngle(c.fChangeAngle)
         , fpe(c.fpe)
+        , fsmoothco(c.fsmoothco)
 {
     
 }
@@ -117,6 +120,7 @@ ReconHit& ReconHit::operator=(const ReconHit& c)
     fYaxisAngle = c.fYaxisAngle;
     fZaxisAngle = c.fZaxisAngle;
     fpe = c.fpe;
+    fsmoothco = fsmoothco;
     return *this;
 }
 

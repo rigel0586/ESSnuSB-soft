@@ -93,7 +93,7 @@ protected:
   Bool_t FindUsingGraph(std::vector<ReconHit>& hits
                   , std::vector<std::vector<ReconHit>>& foundTracks);
   
-  void BuildGraph(std::vector<ReconHit>& hits);
+  //void BuildGraph(std::vector<ReconHit>& hits);
   void CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks);
   void SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks);
   Bool_t CalculateInitialMomentum(const std::vector<ReconHit>& track,const TVector3& magField, TVector3& momentum, TVector3& momentumLoss);
@@ -157,6 +157,9 @@ protected:
 
   /** Path to the used media.geo file - containing definitions of materials **/
   std::string fmediaFile;
+
+  /** Path to the configuration file **/
+  std::string fgeoConfFile;
 
   /** Path to the used data file containing genie events infos **/
   std::string feventData;//!<!

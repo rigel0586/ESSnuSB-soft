@@ -3,6 +3,7 @@
 
 
 #include "EsbReconstruction/EsbSuperFGD/FgdReconHit.h"
+#include "EsbGeometry/EsbSuperFGD/EsbFgdDetectorParameters.h"
 
 #include "TObject.h"
 #include <TVector3.h>
@@ -26,12 +27,18 @@ public:
     /** Default constructor **/  
     FgdReconTemplate();
 
+    /** Constructor with fgdConfig**/
+    FgdReconTemplate(const char* geoConfigFile);
+
     ~FgdReconTemplate();
 
     Bool_t IsLeaf(ReconHit* hit);
 
     Bool_t GetNextHit(ReconHit* previous, ReconHit* current, ReconHit*& next);
     Bool_t CheckAllVisited(ReconHit* hit);
+    void SmoothGraph(std::vector<ReconHit>& hits);
+    void SmoothCoordinate(ReconHit* hit, TVector3& cord, int& numNode, size_t depth = 0);
+    void BuildGraph(std::vector<ReconHit>& hits);
 
 private:
 
@@ -70,8 +77,24 @@ private:
 
     Bool_t AreVectorsEqual(const std::vector<TVector3>& tempVecs, const std::vector<TVector3>& vecs, Int_t& foundPermutation );
     TVector3 GetPermutation(TVector3 vec, Int_t numPermutation);
+    Long_t ArrInd(int i, int j, int k);
 
     std::vector<FgdReconTemplate::HitTemplate> fLeafVectors;//!<!  
+
+    /** Class to hold the Detector parameters read from external file **/
+    esbroot::geometry::superfgd::FgdDetectorParameters fParams;//!<! 
+
+    /** Detector dimentions **/
+    Double_t flunit;
+    double f_step_X;
+    double f_step_Y;
+    double f_step_Z;
+    int f_bin_X;
+    int f_bin_Y;
+    int f_bin_Z;
+
+    int fsmoothDepth;
+    int fsmoothErrLimit;
 
     ClassDef(FgdReconTemplate, 2);
 };

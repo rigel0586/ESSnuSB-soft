@@ -70,6 +70,8 @@ public:
     Int_t ftrackId;
     Bool_t fIsLeaf;
 
+    TVector3 fsmoothco;
+
     Double_t fXaxisAngle;
     Double_t fYaxisAngle;
     Double_t fZaxisAngle;

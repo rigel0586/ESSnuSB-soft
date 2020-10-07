@@ -54,3 +54,9 @@ gradDiff=30             # Allowable difference between grad to consider a differ
 # first'avgTrackMomentum' points
 momTrackSegment=20
 avgTrackMomentum=100
+
+
+
+# Smoothe the graph coordinates by taking the averate of the neightbourts
+smoothdeepth=2
+smootheErrLimit=2

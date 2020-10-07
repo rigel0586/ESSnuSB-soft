@@ -20,6 +20,26 @@ FgdReconTemplate::FgdReconTemplate()
     LoadTemplates();
 }
 
+FgdReconTemplate::FgdReconTemplate(const char* geoConfigFile)
+{
+    LoadTemplates();
+    fParams.LoadPartParams(geoConfigFile);
+
+    // Get dimentions from geometry file
+    flunit = fParams.GetLenghtUnit(); // [cm]
+
+    f_step_X  = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::length_X) * flunit;
+    f_step_Y  = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::length_Y) * flunit;
+    f_step_Z  = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::length_Z) * flunit;
+
+    f_bin_X = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::number_cubes_X);
+    f_bin_Y = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::number_cubes_Y);
+    f_bin_Z = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::number_cubes_Z);
+
+    fsmoothDepth = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_SMOOTH_GRAPH_DEPTH);
+    fsmoothErrLimit = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_SMOOTH_GRAPH_ERR_LIMIT);
+}
+
 FgdReconTemplate::~FgdReconTemplate()
 {
 }
@@ -429,6 +449,133 @@ TVector3 FgdReconTemplate::GetPermutation(TVector3 vec, Int_t numPermutation)
     Double_t&& z = std::round(vec.Z());
 
     return TVector3(x,y,z);
+}
+
+void FgdReconTemplate::SmoothGraph(std::vector<ReconHit>& hits)
+{
+    for(size_t i =0; i< hits.size(); ++i)
+    {
+        ReconHit& hit = hits[i];
+        TVector3 smoth = hit.fsmoothco;
+        int num(1);
+        SmoothCoordinate(&hit,smoth, num);
+
+        hit.fsmoothco.SetX(smoth.X()/num);
+        hit.fsmoothco.SetY(smoth.Y()/num);
+        hit.fsmoothco.SetZ(smoth.Z()/num);
+    }
+}
+
+
+void FgdReconTemplate::SmoothCoordinate(ReconHit* hit, TVector3& cord, int& numNode , size_t depth)
+{
+    if(depth>fsmoothDepth)
+    {
+        return;
+    }
+
+    size_t newDepth = depth+1;
+
+    numNode+= hit->fAllHits.size();
+    for(size_t i =0; i< hit->fAllHits.size(); ++i)
+    {  
+        Double_t&& x = hit->fAllHits[i]->fmppcLoc.X() + cord.X();
+        cord.SetX(x);
+        Double_t&& y = hit->fAllHits[i]->fmppcLoc.X() + cord.Y();
+        cord.SetY(y);
+        Double_t&& z = hit->fAllHits[i]->fmppcLoc.X() + cord.Z();
+        cord.SetZ(z);
+
+        SmoothCoordinate(hit->fAllHits[i], cord, numNode, newDepth);
+    }
+}
+
+
+void FgdReconTemplate::BuildGraph(std::vector<ReconHit>& hits)
+{
+    // Create the position to which index in the vector it is pointing
+    std::map<Long_t, Int_t> positionToId;
+    for(Int_t i=0; i<hits.size(); ++i)
+    {
+      Int_t&& x = hits[i].fmppcLoc.X();
+      Int_t&& y = hits[i].fmppcLoc.Y();
+      Int_t&& z = hits[i].fmppcLoc.Z();
+
+      Int_t&& ind = ArrInd(x,y,z);
+
+      // GUARD agains double or more hits in the same cube
+      if(positionToId.find(ind)==positionToId.end())
+      {
+        positionToId[ind] = i;
+      }
+      
+
+      hits[i].fAllHits.clear(); // Clear previous index positions
+      hits[i].fLocalId = i;
+    }
+
+
+    auto checkNext = [&](Int_t x_pos, Int_t y_pos, Int_t z_pos, Int_t ind){
+                                                                  Long_t&& key = ArrInd(x_pos,y_pos,z_pos);
+                                                                  if(positionToId.find(key)!=positionToId.end())
+                                                                  {
+                                                                    ReconHit* toAdd = &hits[positionToId[key]];
+                                                                    hits[ind].fAllHits.push_back(toAdd);
+                                                                  }
+                                                                };
+
+    for(Int_t i=0; i<hits.size(); ++i)
+    {
+      Int_t&& x = hits[i].fmppcLoc.X();
+      Int_t&& y = hits[i].fmppcLoc.Y();
+      Int_t&& z = hits[i].fmppcLoc.Z();
+
+      // Check in X axis
+      checkNext(x+1,y,z, i);
+      checkNext(x-1,y,z, i);
+
+      // Check in Y axis
+      checkNext(x,y+1,z, i);
+      checkNext(x,y-1,z, i);
+
+      // Check in Z axis
+      checkNext(x,y,z+1, i);
+      checkNext(x,y,z-1, i);
+
+      // Check in X,Y corners
+      checkNext(x+1,y+1,z, i);
+      checkNext(x+1,y-1,z, i);
+      checkNext(x-1,y+1,z, i);
+      checkNext(x-1,y-1,z, i);
+
+      // Check in X,Z corners
+      checkNext(x+1,y,z+1, i);
+      checkNext(x+1,y,z-1, i);
+      checkNext(x-1,y,z+1, i);
+      checkNext(x-1,y,z-1, i);
+
+      // Check in Y,Z corners
+      checkNext(x,y+1,z+1, i);
+      checkNext(x,y+1,z-1, i);
+      checkNext(x,y-1,z+1, i);
+      checkNext(x,y-1,z-1, i);
+
+      // Check in X,Y,Z corners
+      checkNext(x+1,y+1,z+1, i);
+      checkNext(x+1,y+1,z-1, i);
+      checkNext(x+1,y-1,z+1, i);
+      checkNext(x+1,y-1,z-1, i);
+
+      checkNext(x-1,y+1,z+1, i);
+      checkNext(x-1,y+1,z-1, i);
+      checkNext(x-1,y-1,z+1, i);
+      checkNext(x-1,y-1,z-1, i);
+    }
+}
+
+Long_t FgdReconTemplate::ArrInd(int x, int y, int z)
+{
+  return (x*f_bin_Y*f_bin_Z + y*f_bin_Z+z);
 }
 
 } //superfgd

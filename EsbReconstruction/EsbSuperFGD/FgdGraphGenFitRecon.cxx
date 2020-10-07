@@ -103,6 +103,7 @@ FgdGraphGenFitRecon::FgdGraphGenFitRecon(const char* name
   , fHitArray(nullptr)
   , isDefinedMaterials(false)
   , fDebuglvl_genfit(debugLlv)
+  , fgeoConfFile(geoConfigFile)
   , fmediaFile(mediaFile)
   , feventData(eventData)
   , foutputRootFile(outputRootFile)
@@ -506,7 +507,11 @@ Bool_t FgdGraphGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
     return false;
   }
 
-  BuildGraph(hits);
+  FgdReconTemplate reconTemplates(fgeoConfFile.c_str());
+  reconTemplates.BuildGraph(hits);
+
+  reconTemplates.SmoothGraph(hits);
+  //BuildGraph(hits);
 
   // Print out the build graph
   for(Int_t i=0; i<hits.size(); ++i)
@@ -523,9 +528,6 @@ Bool_t FgdGraphGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
     LOG(debug2) << "Photons "<< " X " << hits[i].fphotons.X() << " Y " << hits[i].fphotons.Y()<< " Z " << hits[i].fphotons.Z();
     LOG(debug2) << "=====";
   }
-
-
-  FgdReconTemplate reconTemplates;
 
   std::vector<std::vector<ReconHit*>> tracks;
 
@@ -648,87 +650,87 @@ Bool_t FgdGraphGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
   return !foundTracks.empty();
 }
 
-void FgdGraphGenFitRecon::BuildGraph(std::vector<ReconHit>& hits)
-{
-    // Create the position to which index in the vector it is pointing
-    std::map<Long_t, Int_t> positionToId;
-    for(Int_t i=0; i<hits.size(); ++i)
-    {
-      Int_t&& x = hits[i].fmppcLoc.X();
-      Int_t&& y = hits[i].fmppcLoc.Y();
-      Int_t&& z = hits[i].fmppcLoc.Z();
+// void FgdGraphGenFitRecon::BuildGraph(std::vector<ReconHit>& hits)
+// {
+//     // Create the position to which index in the vector it is pointing
+//     std::map<Long_t, Int_t> positionToId;
+//     for(Int_t i=0; i<hits.size(); ++i)
+//     {
+//       Int_t&& x = hits[i].fmppcLoc.X();
+//       Int_t&& y = hits[i].fmppcLoc.Y();
+//       Int_t&& z = hits[i].fmppcLoc.Z();
 
-      Int_t&& ind = ArrInd(x,y,z);
+//       Int_t&& ind = ArrInd(x,y,z);
 
-      // GUARD agains double or more hits in the same cube
-      if(positionToId.find(ind)==positionToId.end())
-      {
-        positionToId[ind] = i;
-      }
+//       // GUARD agains double or more hits in the same cube
+//       if(positionToId.find(ind)==positionToId.end())
+//       {
+//         positionToId[ind] = i;
+//       }
       
 
-      hits[i].fAllHits.clear(); // Clear previous index positions
-      hits[i].fLocalId = i;
-    }
+//       hits[i].fAllHits.clear(); // Clear previous index positions
+//       hits[i].fLocalId = i;
+//     }
 
 
-    auto checkNext = [&](Int_t x_pos, Int_t y_pos, Int_t z_pos, Int_t ind){
-                                                                  Long_t&& key = ArrInd(x_pos,y_pos,z_pos);
-                                                                  if(positionToId.find(key)!=positionToId.end())
-                                                                  {
-                                                                    ReconHit* toAdd = &hits[positionToId[key]];
-                                                                    hits[ind].fAllHits.push_back(toAdd);
-                                                                  }
-                                                                };
+//     auto checkNext = [&](Int_t x_pos, Int_t y_pos, Int_t z_pos, Int_t ind){
+//                                                                   Long_t&& key = ArrInd(x_pos,y_pos,z_pos);
+//                                                                   if(positionToId.find(key)!=positionToId.end())
+//                                                                   {
+//                                                                     ReconHit* toAdd = &hits[positionToId[key]];
+//                                                                     hits[ind].fAllHits.push_back(toAdd);
+//                                                                   }
+//                                                                 };
 
-    for(Int_t i=0; i<hits.size(); ++i)
-    {
-      Int_t&& x = hits[i].fmppcLoc.X();
-      Int_t&& y = hits[i].fmppcLoc.Y();
-      Int_t&& z = hits[i].fmppcLoc.Z();
+//     for(Int_t i=0; i<hits.size(); ++i)
+//     {
+//       Int_t&& x = hits[i].fmppcLoc.X();
+//       Int_t&& y = hits[i].fmppcLoc.Y();
+//       Int_t&& z = hits[i].fmppcLoc.Z();
 
-      // Check in X axis
-      checkNext(x+1,y,z, i);
-      checkNext(x-1,y,z, i);
+//       // Check in X axis
+//       checkNext(x+1,y,z, i);
+//       checkNext(x-1,y,z, i);
 
-      // Check in Y axis
-      checkNext(x,y+1,z, i);
-      checkNext(x,y-1,z, i);
+//       // Check in Y axis
+//       checkNext(x,y+1,z, i);
+//       checkNext(x,y-1,z, i);
 
-      // Check in Z axis
-      checkNext(x,y,z+1, i);
-      checkNext(x,y,z-1, i);
+//       // Check in Z axis
+//       checkNext(x,y,z+1, i);
+//       checkNext(x,y,z-1, i);
 
-      // Check in X,Y corners
-      checkNext(x+1,y+1,z, i);
-      checkNext(x+1,y-1,z, i);
-      checkNext(x-1,y+1,z, i);
-      checkNext(x-1,y-1,z, i);
+//       // Check in X,Y corners
+//       checkNext(x+1,y+1,z, i);
+//       checkNext(x+1,y-1,z, i);
+//       checkNext(x-1,y+1,z, i);
+//       checkNext(x-1,y-1,z, i);
 
-      // Check in X,Z corners
-      checkNext(x+1,y,z+1, i);
-      checkNext(x+1,y,z-1, i);
-      checkNext(x-1,y,z+1, i);
-      checkNext(x-1,y,z-1, i);
+//       // Check in X,Z corners
+//       checkNext(x+1,y,z+1, i);
+//       checkNext(x+1,y,z-1, i);
+//       checkNext(x-1,y,z+1, i);
+//       checkNext(x-1,y,z-1, i);
 
-      // Check in Y,Z corners
-      checkNext(x,y+1,z+1, i);
-      checkNext(x,y+1,z-1, i);
-      checkNext(x,y-1,z+1, i);
-      checkNext(x,y-1,z-1, i);
+//       // Check in Y,Z corners
+//       checkNext(x,y+1,z+1, i);
+//       checkNext(x,y+1,z-1, i);
+//       checkNext(x,y-1,z+1, i);
+//       checkNext(x,y-1,z-1, i);
 
-      // Check in X,Y,Z corners
-      checkNext(x+1,y+1,z+1, i);
-      checkNext(x+1,y+1,z-1, i);
-      checkNext(x+1,y-1,z+1, i);
-      checkNext(x+1,y-1,z-1, i);
+//       // Check in X,Y,Z corners
+//       checkNext(x+1,y+1,z+1, i);
+//       checkNext(x+1,y+1,z-1, i);
+//       checkNext(x+1,y-1,z+1, i);
+//       checkNext(x+1,y-1,z-1, i);
 
-      checkNext(x-1,y+1,z+1, i);
-      checkNext(x-1,y+1,z-1, i);
-      checkNext(x-1,y-1,z+1, i);
-      checkNext(x-1,y-1,z-1, i);
-    }
-}
+//       checkNext(x-1,y+1,z+1, i);
+//       checkNext(x-1,y+1,z-1, i);
+//       checkNext(x-1,y-1,z+1, i);
+//       checkNext(x-1,y-1,z-1, i);
+//     }
+// }
 
 
 void FgdGraphGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks)
@@ -1297,8 +1299,8 @@ void FgdGraphGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTra
     fTracksArray->Delete();
     
     // init fitter
-    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
-    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
+    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
+    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
     fitter->setMinIterations(fminGenFitInterations);
     fitter->setMaxIterations(fmaxGenFitIterations);
     fitter->setDebugLvl(fDebuglvl_genfit);
