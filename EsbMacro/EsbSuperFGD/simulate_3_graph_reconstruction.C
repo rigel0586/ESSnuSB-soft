@@ -40,7 +40,7 @@ void simulate_3_graph_reconstruction(TString inFile = "fgd_dig.root",
 
   double debugLvl = 0.0; 
 
-  fair::Logger::SetConsoleSeverity(fair::Severity::debug2);
+  fair::Logger::SetConsoleSeverity(fair::Severity::debug);
   fair::Logger::SetConsoleColor(true);
 
   FairTask* recon = new reconstruction::superfgd::FgdGraphGenFitRecon(
@@ -61,6 +61,8 @@ void simulate_3_graph_reconstruction(TString inFile = "fgd_dig.root",
   ((reconstruction::superfgd::FgdGraphGenFitRecon*)recon)->AddPdgMomLoss(13, 21. , 5.);
   ((reconstruction::superfgd::FgdGraphGenFitRecon*)recon)->AddPdgMomLoss(211, 28. , 1.);
   ((reconstruction::superfgd::FgdGraphGenFitRecon*)recon)->AddPdgMomLoss(2212, 148. , 63.);
+
+  ((reconstruction::superfgd::FgdGraphGenFitRecon*)recon)->SetSmoothCoor(true);
   
   fRun->AddTask(recon);   
   fRun->Init(); // initializing

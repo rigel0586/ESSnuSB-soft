@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <set>
 
 namespace esbroot {
 namespace reconstruction {
@@ -37,7 +38,6 @@ public:
     Bool_t GetNextHit(ReconHit* previous, ReconHit* current, ReconHit*& next);
     Bool_t CheckAllVisited(ReconHit* hit);
     void SmoothGraph(std::vector<ReconHit>& hits);
-    void SmoothCoordinate(ReconHit* hit, TVector3& cord, int& numNode, size_t depth = 0);
     void BuildGraph(std::vector<ReconHit>& hits);
 
 private:
@@ -77,6 +77,8 @@ private:
 
     Bool_t AreVectorsEqual(const std::vector<TVector3>& tempVecs, const std::vector<TVector3>& vecs, Int_t& foundPermutation );
     TVector3 GetPermutation(TVector3 vec, Int_t numPermutation);
+    void SmoothCoordinate(ReconHit* hit, TVector3& cord, std::set<Long_t>& visited, size_t depth = 1);
+    Long_t hitId(ReconHit& hit);
     Long_t ArrInd(int i, int j, int k);
 
     std::vector<FgdReconTemplate::HitTemplate> fLeafVectors;//!<!  
@@ -94,7 +96,7 @@ private:
     int f_bin_Z;
 
     int fsmoothDepth;
-    int fsmoothErrLimit;
+    Double_t fsmoothErrLimit;
 
     ClassDef(FgdReconTemplate, 2);
 };

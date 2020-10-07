@@ -83,6 +83,7 @@ FgdGraphGenFitRecon::FgdGraphGenFitRecon() :
   , fmaxGenFitIterations(4)
   , fminHits(25)
   , feventNum(0)
+  , fuseSmoothPos(false)
 { 
 }
 // -------------------------------------------------------------------------
@@ -115,6 +116,7 @@ FgdGraphGenFitRecon::FgdGraphGenFitRecon(const char* name
   , fmaxGenFitIterations(4)
   , fminHits(25)
   , feventNum(0)
+  , fuseSmoothPos(false)
 { 
   fParams.LoadPartParams(geoConfigFile);
 }
@@ -397,6 +399,17 @@ void FgdGraphGenFitRecon::Exec(Option_t* opt)
     if(rc)
     {
       LOG(debug) <<" Tracks found " << foundTracks.size();
+      std::vector<ReconHit>& longestTrack = foundTracks[0];
+      size_t ltId(0);
+      for(size_t i = 0; i <  foundTracks.size() ; ++i)
+      {
+        std::vector<ReconHit>& track = foundTracks[i];
+        std::sort(track.begin(), track.end(), [](ReconHit& bh1, ReconHit& bh2){return bh1.fmppcLoc.Z()<bh2.fmppcLoc.Z();});
+        LOG(debug) << "size " << track.size();
+        LOG(debug) << "start \tX " << track[0].fmppcLoc.X() << " Y " << track[0].fmppcLoc.Y()<< " Z " << track[0].fmppcLoc.Z();
+        LOG(debug) << "end \tX " << track[track.size()-1].fmppcLoc.X() << " Y " << track[track.size()-1].fmppcLoc.Y()<< " Z " << track[track.size()-1].fmppcLoc.Z();
+        LOG(debug) << "=====";
+      }
       FitTracks(foundTracks);
     }
     else
@@ -510,7 +523,7 @@ Bool_t FgdGraphGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
   FgdReconTemplate reconTemplates(fgeoConfFile.c_str());
   reconTemplates.BuildGraph(hits);
 
-  reconTemplates.SmoothGraph(hits);
+  if(fuseSmoothPos) reconTemplates.SmoothGraph(hits);
   //BuildGraph(hits);
 
   // Print out the build graph
@@ -759,7 +772,9 @@ void FgdGraphGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tra
       if(j>=1)
       {
         ReconHit* previous = track[j-1];
-        diffVec = currentHit->fmppcLoc - previous->fmppcLoc;
+        diffVec = fuseSmoothPos ? 
+                  currentHit->fsmoothco - previous->fsmoothco:
+                  currentHit->fmppcLoc - previous->fmppcLoc;
       }
 
       // 2.Calculate cosine change beween 2 consecutive vectors - gradient
@@ -783,7 +798,10 @@ void FgdGraphGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tra
       {
         ReconHit* one = track[indOne];
         ReconHit* two = track[indTwo]; 
-        diffVec1 = two->fmppcLoc - one->fmppcLoc;
+
+        diffVec1 = fuseSmoothPos ? 
+                  two->fsmoothco - one->fsmoothco:
+                  two->fmppcLoc - one->fmppcLoc;
         
         xAxisAngle = radToDeg * xAxisVec.Angle(diffVec1);
         yAxisAngle = radToDeg * yAxisVec.Angle(diffVec1);
@@ -801,7 +819,9 @@ void FgdGraphGenFitRecon::CalculateGrad(std::vector<std::vector<ReconHit*>>& tra
         Int_t indTwoP = indTwo - intervalToCal;
         ReconHit* oneP = track[indOneP];
         ReconHit* twoP = track[indTwoP];
-        diffVec2 = twoP->fmppcLoc - oneP->fmppcLoc;
+        diffVec2 = fuseSmoothPos ? 
+                  twoP->fsmoothco - oneP->fsmoothco:
+                  twoP->fmppcLoc - oneP->fmppcLoc;
 
         diffAngle = radToDeg * diffVec1.Angle(diffVec2);
 
@@ -1429,9 +1449,9 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
     //for(Int_t bh = 0; bh < bhlimit; bh+=2)
     {
       TVectorD hitPos(3);
-      hitPos(0) = hitsOnTrack[bh].fHitPos.X();
-      hitPos(1) = hitsOnTrack[bh].fHitPos.Y();
-      hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
+      hitPos(0) = fuseSmoothPos? hitsOnTrack[bh].fsmoothco.X() : hitsOnTrack[bh].fHitPos.X();
+      hitPos(1) = fuseSmoothPos? hitsOnTrack[bh].fsmoothco.Y() : hitsOnTrack[bh].fHitPos.Y();
+      hitPos(2) = fuseSmoothPos? hitsOnTrack[bh].fsmoothco.Z() : hitsOnTrack[bh].fHitPos.Z();
 
       genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, 0, nullptr);
       std::vector<genfit::AbsMeasurement*> measurements{measurement};

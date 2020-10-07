@@ -52,6 +52,14 @@ public:
     } 
 
 
+    TVector3 getSmoothErr()
+    {
+        Double_t&& x = fmppcLoc.X() - fsmoothco.X();
+        Double_t&& y = fmppcLoc.Y() - fsmoothco.Y();
+        Double_t&& z = fmppcLoc.Z() - fsmoothco.Z();
+        return TVector3(x,y,z);
+    }
+
     TVector3 fmppcLoc; // from 0 to N (mppcLoc)
     TVector3 fHitPos;  // -f_total_X/2 + f_step_X*mppcLoc.X()  +f_step_X/2;
     TVector3 fMCPos;  // MC real position of the hit;

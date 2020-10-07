@@ -67,6 +67,7 @@ class FgdGraphGenFitRecon : public FairTask
   void SetMaxInterations(Int_t maxIterations) {fmaxGenFitIterations = maxIterations;}
   void SetMinHits(Int_t minHits) {fminHits = minHits;}
   void AddPdgMomLoss(Int_t pdg, Double_t momLoss, Double_t allowDiff){ fpdgFromMomLoss.emplace_back(pdg, momLoss, allowDiff);}
+  void SetSmoothCoor(bool val){fuseSmoothPos = val;}
 
   /** Virtual method Init **/
   virtual InitStatus Init() override;
@@ -173,6 +174,7 @@ protected:
 
   /** Are materials already defined **/
   bool isDefinedMaterials;
+  bool fuseSmoothPos;
 
   /** local Members for genfit visualization  **/
   genfit::EventDisplay* fdisplay;//!<!

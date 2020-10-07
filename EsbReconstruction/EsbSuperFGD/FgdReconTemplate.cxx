@@ -37,7 +37,7 @@ FgdReconTemplate::FgdReconTemplate(const char* geoConfigFile)
     f_bin_Z = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::number_cubes_Z);
 
     fsmoothDepth = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_SMOOTH_GRAPH_DEPTH);
-    fsmoothErrLimit = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_SMOOTH_GRAPH_ERR_LIMIT);
+    fsmoothErrLimit = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::FGD_SMOOTH_GRAPH_ERR_LIMIT);
 }
 
 FgdReconTemplate::~FgdReconTemplate()
@@ -457,36 +457,62 @@ void FgdReconTemplate::SmoothGraph(std::vector<ReconHit>& hits)
     {
         ReconHit& hit = hits[i];
         TVector3 smoth = hit.fsmoothco;
-        int num(1);
-        SmoothCoordinate(&hit,smoth, num);
+        std::set<Long_t> visited;
+        visited.insert(hitId(hit));
 
-        hit.fsmoothco.SetX(smoth.X()/num);
-        hit.fsmoothco.SetY(smoth.Y()/num);
-        hit.fsmoothco.SetZ(smoth.Z()/num);
+        SmoothCoordinate(&hit,smoth, visited);
+        hit.fsmoothco.SetX(smoth.X()/visited.size());
+        hit.fsmoothco.SetY(smoth.Y()/visited.size());
+        hit.fsmoothco.SetZ(smoth.Z()/visited.size());
+
+
+        // if(hit.getSmoothErr().Mag() > fsmoothErrLimit)
+        // {
+        //     LOG(info) << "before "<< " X " << hit.fmppcLoc.X() << " Y " << hit.fmppcLoc.Y()<< " Z " << hit.fmppcLoc.Z();
+        //     LOG(info) << "after "<< " X " << hit.fsmoothco.X() << " Y " << hit.fsmoothco.Y()<< " Z " << hit.fsmoothco.Z();
+        //     LOG(info) << "visited "<< visited.size() << " => " << hit.getSmoothErr().Mag() << " > " << fsmoothErrLimit;
+        //     LOG(info) << "===================================================";
+        // }
+        // LOG(info) << "before "<< " X " << hit.fmppcLoc.X() << " Y " << hit.fmppcLoc.Y()<< " Z " << hit.fmppcLoc.Z();
+        // LOG(info) << "after "<< " X " << hit.fsmoothco.X() << " Y " << hit.fsmoothco.Y()<< " Z " << hit.fsmoothco.Z();
+
+        // if(hit.getSmoothErr().Mag() < fsmoothErrLimit) LOG(info) << "Err "<< hit.getSmoothErr().Mag();
+        // if(hit.getSmoothErr().Mag() > fsmoothErrLimit) LOG(warning) << "Err "<< hit.getSmoothErr().Mag();
+        
+        // LOG(info) << "visited "<< visited.size() << " " << fsmoothErrLimit;
+        // LOG(info) << "===================================================";
     }
 }
 
 
-void FgdReconTemplate::SmoothCoordinate(ReconHit* hit, TVector3& cord, int& numNode , size_t depth)
+void FgdReconTemplate::SmoothCoordinate(ReconHit* hit, TVector3& cord, std::set<Long_t>& visited , size_t depth)
 {
     if(depth>fsmoothDepth)
     {
         return;
     }
 
-    size_t newDepth = depth+1;
-
-    numNode+= hit->fAllHits.size();
+    
     for(size_t i =0; i< hit->fAllHits.size(); ++i)
     {  
-        Double_t&& x = hit->fAllHits[i]->fmppcLoc.X() + cord.X();
-        cord.SetX(x);
-        Double_t&& y = hit->fAllHits[i]->fmppcLoc.X() + cord.Y();
-        cord.SetY(y);
-        Double_t&& z = hit->fAllHits[i]->fmppcLoc.X() + cord.Z();
-        cord.SetZ(z);
+        ReconHit& child = *hit->fAllHits[i];
+        const bool isVisited = visited.find(hitId(child)) != visited.end();
+        if(isVisited) 
+        {
+            //LOG(info) << "Continue "<< " X " << child.fmppcLoc.X() << " Y " << child.fmppcLoc.Y()<< " Z " << child.fmppcLoc.Z();
+            continue;
+        }
 
-        SmoothCoordinate(hit->fAllHits[i], cord, numNode, newDepth);
+        visited.insert(hitId(child));
+        Double_t&& x = child.fmppcLoc.X() + cord.X();
+        cord.SetX(x);
+        Double_t&& y = child.fmppcLoc.Y() + cord.Y();
+        cord.SetY(y);
+        Double_t&& z = child.fmppcLoc.Z() + cord.Z();
+        cord.SetZ(z);
+        //LOG(info) << "Visited "<< " X " << child.fmppcLoc.X() << " Y " << child.fmppcLoc.Y()<< " Z " << child.fmppcLoc.Z()
+        //            << " => depth "<< depth << " size " << hit->fAllHits.size();
+        SmoothCoordinate(&child, cord, visited, depth + 1);
     }
 }
 
@@ -571,6 +597,11 @@ void FgdReconTemplate::BuildGraph(std::vector<ReconHit>& hits)
       checkNext(x-1,y-1,z+1, i);
       checkNext(x-1,y-1,z-1, i);
     }
+}
+
+Long_t FgdReconTemplate::hitId(ReconHit& hit)
+{
+    return ArrInd(hit.fmppcLoc.X(), hit.fmppcLoc.Y(), hit.fmppcLoc.Z());
 }
 
 Long_t FgdReconTemplate::ArrInd(int x, int y, int z)
