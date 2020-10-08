@@ -33,7 +33,8 @@ class FgdGenFitRecon : public FairTask
     HOUGH_PATHFINDER_HELIX,
     HOUGH_PATHFINDER_CURL,
     GRAPH,
-    GRAPH_HOUGH_PATHFINDER
+    GRAPH_HOUGH_PATHFINDER,
+    HOUGH_GRAPH_LEAVES
   };
 
   enum PDG_FIT_TRACK
@@ -95,24 +96,27 @@ protected:
   Bool_t GetHits(std::vector<ReconHit>& allHits);
 
   /** Extrack tracks from the hit using Hough Transform **/
-  Bool_t FindUsingHough(std::vector<TVector3>& points
-                  , std::vector<ReconHit>& hits
+  Bool_t FindUsingHough(std::vector<ReconHit>& hits
                   , std::vector<std::vector<TVector3>>& foundTracks
-                  , FindTrackType trackType);
+                  , FgdReconTemplate::HoughType houghType);
 
   /** Extrack tracks using graph traversal and track gradient  **/
   Bool_t FindUsingGraph(std::vector<ReconHit>& hits
-                  , std::vector<std::vector<TVector3>>& foundTracks);
+                  , std::vector<std::vector<TVector3>>& foundTracks
+                  , std::vector<std::vector<ReconHit*>>& reconTracks);
 
   /** Extrack tracks using graph traversal and track gradient and then apply Hough transform for each track **/
   Bool_t FindUsingGraphHough(std::vector<ReconHit>& hits
+                  , std::vector<std::vector<TVector3>>& foundTracks);
+
+  /** Extrack tracks using graph leaves as vertexes for each track **/
+  Bool_t FindUsingHoughGraphLeaves(std::vector<ReconHit>& hits
                   , std::vector<std::vector<TVector3>>& foundTracks);
   
   Bool_t CalculateInitialMomentum(const std::vector<TVector3>& track,const TVector3& magField, TVector3& momentum, TVector3& momentumLoss);
   Bool_t CalculateMomentum(const TVector3& p1, const TVector3& p2, const TVector3& p3 , const TVector3& magField, TVector3& momentum);
   Double_t GetRadius(const TVector3& p1, const TVector3& p2, const TVector3& p3);
-  Int_t GetPdgCode(const TVector3& momentum, const TVector3& momentumLoss, Int_t tryFit, Int_t& momCoeff);
-  void ConvertHitToVec(std::vector<TVector3>& points, std::vector<ReconHit>& hits);
+  Int_t GetPdgCode(const TVector3& momentum, const TVector3& momentumLoss, Int_t tryFit, Int_t& momCoeff);;
 
   /** Fit the found tracks using genfit **/
   void FitTracks(std::vector<std::vector<TVector3>>& foundTracks);

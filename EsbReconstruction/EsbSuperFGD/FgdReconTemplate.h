@@ -1,12 +1,18 @@
 #ifndef ESBROOT_ESBDRECONSTRUCTION_FGD_RECON_TEMPLATE_H
 #define ESBROOT_ESBDRECONSTRUCTION_FGD_RECON_TEMPLATE_H
 
-
+// Essnusb
 #include "EsbReconstruction/EsbSuperFGD/FgdReconHit.h"
 #include "EsbGeometry/EsbSuperFGD/EsbFgdDetectorParameters.h"
 
+// Root
 #include "TObject.h"
 #include <TVector3.h>
+
+// PathFinder headers
+#include "FinderParameter.h"
+#include "HoughTrafoTrackFinder.h"
+#include "TrackParameterFull.h"
 
 #include <algorithm>
 #include <vector>
@@ -24,6 +30,13 @@ class FgdReconTemplate : public TObject
 {
 
 public:
+
+    enum HoughType : size_t
+    {
+        STRAIGHT_LINE,
+        HELIX,
+        CURL
+    };
 
     /** Default constructor **/  
     FgdReconTemplate();
@@ -45,6 +58,14 @@ public:
     void FindTracks(std::vector<ReconHit>& hits, std::vector<std::vector<ReconHit*>>& tracks);
     void CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks, bool useSmoothCoor = false);
     void SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks);
+
+
+    Bool_t FindUsingHough(std::vector<ReconHit>& hits
+                                , std::vector<std::vector<ReconHit*>>& foundTracks
+                                , std::vector<std::vector<TVector3>>& foundTracksPoints
+                                , HoughType houghType
+                                , TVector3 trackVertex
+                                , bool useVertex);
 
 private:
 
@@ -100,6 +121,9 @@ private:
     int f_bin_X;
     int f_bin_Y;
     int f_bin_Z;
+    double f_total_X;
+    double f_total_Y;
+    double f_total_Z;
 
     int fsmoothDepth;
     Double_t fsmoothErrLimit;

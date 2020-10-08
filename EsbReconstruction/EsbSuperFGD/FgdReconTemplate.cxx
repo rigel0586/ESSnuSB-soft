@@ -1,11 +1,13 @@
 #include "EsbReconstruction/EsbSuperFGD/FgdReconTemplate.h"
 
+// FairRoot
 #include "FairLogger.h"
 
 #include <fstream>
 #include <iostream>
 #include <limits>
 #include <map>
+#include <algorithm>
 
 namespace esbroot {
 namespace reconstruction {
@@ -35,6 +37,10 @@ FgdReconTemplate::FgdReconTemplate(const char* geoConfigFile)
     f_bin_X = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::number_cubes_X);
     f_bin_Y = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::number_cubes_Y);
     f_bin_Z = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::number_cubes_Z);
+
+    f_total_X = f_step_X * f_bin_X;
+    f_total_Y = f_step_Y * f_bin_Y;
+    f_total_Z = f_step_Z * f_bin_Z;
 
     fsmoothDepth = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_SMOOTH_GRAPH_DEPTH);
     fsmoothErrLimit = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::FGD_SMOOTH_GRAPH_ERR_LIMIT);
@@ -819,6 +825,132 @@ void FgdReconTemplate::SplitTrack(std::vector<std::vector<ReconHit*>>& originalT
   }
 
   LOG(debug) << "Split tracks size " << splitTracks.size();
+}
+
+
+Bool_t FgdReconTemplate::FindUsingHough(std::vector<ReconHit>& hits
+                                , std::vector<std::vector<ReconHit*>>& foundTracks
+                                , std::vector<std::vector<TVector3>>& foundTracksPoints
+                                , HoughType houghType
+                                , TVector3 trackVertex
+                                , bool useVertex)
+{
+    double maxdistxy = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MAXDISTXY);
+    double maxdistsz = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MAXDISTSZ);
+    double maxdistxyfit = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MAXDISTXYFIT);
+    double maxdistszfit = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MAXDISTSZFIT);
+    unsigned int minhitnumber = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MINHITNUMBER);
+    unsigned int xythetabins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_XYTHETABINS);
+    unsigned int xyd0bins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_XYD0BINS);
+    unsigned int xyomegabins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_XYOMEGABINS);
+    unsigned int szthetabins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_SZTHETABINS);
+    unsigned int szd0bins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_SZD0BINS);
+    double maxdxy = f_total_X + f_total_Y;
+    double maxdsz = f_total_Z;
+    unsigned int searchneighborhood = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_SEACHINTHENEIGHBORHOOD);
+
+    pathfinder::FinderParameter* newFinderParameter = nullptr;
+    switch(houghType)
+    {
+        case HoughType::HELIX:
+            newFinderParameter= new pathfinder::FinderParameter(false, true); 
+            newFinderParameter -> setFindCurler(false);
+            break;
+        case HoughType::CURL:
+            newFinderParameter= new pathfinder::FinderParameter(false, true); 
+            newFinderParameter -> setFindCurler(true);
+            break;
+        case HoughType::STRAIGHT_LINE:
+        default:
+            newFinderParameter= new pathfinder::FinderParameter(true, false); 
+            newFinderParameter -> setFindCurler(false);
+            break;
+    }
+
+
+    if(useVertex)
+    {
+        std::pair<double, double> vertex(trackVertex.X(), trackVertex.Y());
+        newFinderParameter -> setVertex(vertex);
+    }
+
+    newFinderParameter -> setMaxXYDistance(maxdistxy);
+    newFinderParameter -> setMaxSZDistance(maxdistsz);
+    newFinderParameter -> setMaxXYDistanceFit(maxdistxyfit);
+    newFinderParameter -> setMaxSZDistanceFit(maxdistszfit);
+    newFinderParameter -> setMinimumHitNumber(minhitnumber);
+    newFinderParameter -> setNumberXYThetaBins(xythetabins);
+    newFinderParameter -> setNumberXYDzeroBins(xyd0bins);
+    newFinderParameter -> setNumberXYOmegaBins(xyomegabins);
+    newFinderParameter -> setNumberSZThetaBins(szthetabins);
+    newFinderParameter -> setNumberSZDzeroBins(szd0bins);
+    newFinderParameter -> setMaxDxy(maxdxy);
+    newFinderParameter -> setMaxDsz(maxdsz);
+    
+    if(searchneighborhood == 0)
+    {
+        newFinderParameter -> setSearchNeighborhood(false);
+    }
+    else
+    {
+        newFinderParameter -> setSearchNeighborhood(true);
+    }
+    newFinderParameter -> setSaveRootFile(false);
+
+    std::vector<pathfinder::basicHit> allHits;
+    for(size_t i=0; i< hits.size(); ++i)
+    {
+        TVector3 pointLoc = hits[i].fHitPos;
+        allHits.emplace_back(pathfinder::basicHit(  pointLoc.X()
+                                                    , pointLoc.Y()
+                                                    , pointLoc.Z()
+                                                    )
+                                );
+    }
+    
+    pathfinder::HoughTrafoTrackFinder newTrackFinder;
+
+    //setting steering parameter
+    newTrackFinder.setFinderParameter(*newFinderParameter);
+
+    // If there is not time interval include all hits
+    newTrackFinder.setInitialHits(allHits);
+
+    //do the actual track finding
+    Bool_t found = newTrackFinder.find();
+    if(found)
+    {
+        ReconHit tempCopyHit;
+        std::vector<pathfinder::TrackFinderTrack> pfTracks = newTrackFinder.getTracks();
+        for(Int_t i =0; i <  pfTracks.size() ; i++)
+        {
+        LOG(debug2) << "Track " << i;
+        pathfinder::TrackFinderTrack& trFinder = pfTracks[i];
+        const std::vector<pathfinder::basicHit>& hitsOnTrack = trFinder.getHitsOnTrack();
+        std::vector<ReconHit*> track;
+        std::vector<TVector3> trackPoints;
+        for(size_t j =0; j< hitsOnTrack.size(); ++j)
+        {
+            trackPoints.emplace_back(hitsOnTrack[j].getX(),hitsOnTrack[j].getY(),hitsOnTrack[j].getZ());
+
+            tempCopyHit.fHitPos.SetXYZ(hitsOnTrack[j].getX(),hitsOnTrack[j].getY(),hitsOnTrack[j].getZ());
+            auto it = std::find(hits.begin(), hits.end(), tempCopyHit);
+            if(it != hits.end())
+            {
+                track.push_back(&(*it));
+                ReconHit& argHit = (*it);
+                LOG(debug2) << "X " << argHit.fmppcLoc.X() << " Y " << argHit.fmppcLoc.Y()  << " Z " << argHit.fmppcLoc.Z();
+            }
+
+            LOG(debug2) << "X " << hitsOnTrack[j].getX() << " Y " << hitsOnTrack[j].getY() << " Z " << hitsOnTrack[j].getZ();
+        }
+        foundTracks.push_back(track);
+        foundTracksPoints.push_back(trackPoints);
+        LOG(debug2) << "============================ ";
+        }
+    }
+
+    return found;
 }
 
 Long_t FgdReconTemplate::hitId(ReconHit& hit)

@@ -219,7 +219,7 @@ void FgdGenFitRecon::Exec(Option_t* opt)
   {
     std::vector<ReconHit> allhits;
     std::vector<std::vector<TVector3>> foundTracks;
-    std::vector<TVector3> points;
+    std::vector<std::vector<ReconHit*>> reconTracks;
 
     bool rc = GetHits(allhits);
     if(rc)
@@ -228,24 +228,23 @@ void FgdGenFitRecon::Exec(Option_t* opt)
       switch(ffinder)
       {
         case TrackFinder::HOUGH_PATHFINDER_LINE:
-                                          ConvertHitToVec(points, allhits);
-                                          rc = FindUsingHough(points, allhits, foundTracks, FindTrackType::STRAIGHT_LINE);
+                                          rc = FindUsingHough(allhits, foundTracks, FgdReconTemplate::HoughType::STRAIGHT_LINE);
                                           break;
         case TrackFinder::HOUGH_PATHFINDER_HELIX:
-                                          ConvertHitToVec(points, allhits);
-                                          rc = FindUsingHough(points, allhits, foundTracks, FindTrackType::HELIX);
+                                          rc = FindUsingHough(allhits, foundTracks, FgdReconTemplate::HoughType::HELIX);
                                           break;
         case TrackFinder::HOUGH_PATHFINDER_CURL:
-                                          ConvertHitToVec(points, allhits);
-                                          rc = FindUsingHough(points, allhits, foundTracks, FindTrackType::CURL);
+                                          rc = FindUsingHough(allhits, foundTracks, FgdReconTemplate::HoughType::CURL);
                                           break;
         case TrackFinder::GRAPH:
-                                          rc = FindUsingGraph(allhits, foundTracks);
+                                          rc = FindUsingGraph(allhits, foundTracks, reconTracks);
                                           break;
-
         case TrackFinder::GRAPH_HOUGH_PATHFINDER:
                                           rc = FindUsingGraphHough(allhits, foundTracks);
                                           break;
+        case TrackFinder::HOUGH_GRAPH_LEAVES:
+                                          rc = FindUsingHoughGraphLeaves(allhits, foundTracks);
+                                          break;   
         default: 
                 rc = false;
                 break;
@@ -346,125 +345,32 @@ Bool_t FgdGenFitRecon::GetHits(std::vector<ReconHit>& allHits)
   return (allHits.size() > 0);
 }
 
-Bool_t FgdGenFitRecon::FindUsingHough(std::vector<TVector3>& points
-                                , std::vector<ReconHit>& hits
+Bool_t FgdGenFitRecon::FindUsingHough(std::vector<ReconHit>& hits
                                 , std::vector<std::vector<TVector3>>& foundTracks
-                                , FindTrackType trackType)
+                                , FgdReconTemplate::HoughType houghType)
 {
   LOG(debug) << "hits " << hits.size();
 
   unsigned int use_vertex = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_USE_VERTEX);
+  bool useVerex= (use_vertex == 1);
   double vertexX = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_VERTEXX);
   double vertexY = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_VERTEXY);
-  double maxdistxy = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MAXDISTXY);
-  double maxdistsz = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MAXDISTSZ);
-  double maxdistxyfit = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MAXDISTXYFIT);
-  double maxdistszfit = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MAXDISTSZFIT);
-  unsigned int minhitnumber = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_MINHITNUMBER);
-  unsigned int xythetabins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_XYTHETABINS);
-  unsigned int xyd0bins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_XYD0BINS);
-  unsigned int xyomegabins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_XYOMEGABINS);
-  unsigned int szthetabins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_SZTHETABINS);
-  unsigned int szd0bins = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_SZD0BINS);
-  double maxdxy = f_total_X + f_total_Y;
-  double maxdsz = f_total_Z;
-  unsigned int searchneighborhood = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::PF_SEACHINTHENEIGHBORHOOD);
+  TVector3 vertex(vertexX, vertexY, 0);
+  std::vector<std::vector<ReconHit*>> reconHitTracks;
 
-  pathfinder::FinderParameter* newFinderParameter = nullptr;
-  switch(trackType)
-  {
-    case FindTrackType::HELIX:
-        newFinderParameter= new pathfinder::FinderParameter(false, true); 
-        newFinderParameter -> setFindCurler(false);
-        break;
-    case FindTrackType::CURL:
-        newFinderParameter= new pathfinder::FinderParameter(false, true); 
-        newFinderParameter -> setFindCurler(true);
-        break;
-    case FindTrackType::STRAIGHT_LINE:
-    default:
-        newFinderParameter= new pathfinder::FinderParameter(true, false); 
-        newFinderParameter -> setFindCurler(false);
-        break;
-  }
-
-
-  //  if(use_vertex == 0) newFinderParameter -> setUseVertex(false);
-  //  if(use_vertex == 1) newFinderParameter->setUseVertex(true);
-
-  if(use_vertex == 1) 
-  {  
-    std::pair<double, double> vertex(vertexX, vertexY);
-    newFinderParameter -> setVertex(vertex);
-  }
-
-  newFinderParameter -> setMaxXYDistance(maxdistxy);
-  newFinderParameter -> setMaxSZDistance(maxdistsz);
-  newFinderParameter -> setMaxXYDistanceFit(maxdistxyfit);
-  newFinderParameter -> setMaxSZDistanceFit(maxdistszfit);
-  newFinderParameter -> setMinimumHitNumber(minhitnumber);
-  newFinderParameter -> setNumberXYThetaBins(xythetabins);
-  newFinderParameter -> setNumberXYDzeroBins(xyd0bins);
-  newFinderParameter -> setNumberXYOmegaBins(xyomegabins);
-  newFinderParameter -> setNumberSZThetaBins(szthetabins);
-  newFinderParameter -> setNumberSZDzeroBins(szd0bins);
-  newFinderParameter -> setMaxDxy(maxdxy);
-  newFinderParameter -> setMaxDsz(maxdsz);
-  
-  if(searchneighborhood == 0)
-  {
-    newFinderParameter -> setSearchNeighborhood(false);
-  }
-  else
-  {
-    newFinderParameter -> setSearchNeighborhood(true);
-  }
-  newFinderParameter -> setSaveRootFile(false);
-
-  std::vector<pathfinder::basicHit> allHits;
-  for(size_t i=0; i< points.size(); ++i)
-  {
-    allHits.emplace_back(pathfinder::basicHit(  points[i].X()
-                                                  , points[i].Y()
-                                                  , points[i].Z()
-                                                  )
-                            );
-  }
-  
-  pathfinder::HoughTrafoTrackFinder newTrackFinder;
-
-  //setting steering parameter
-  newTrackFinder.setFinderParameter(*newFinderParameter);
-
-  // If there is not time interval include all hits
-  newTrackFinder.setInitialHits(allHits);
-
-  //do the actual track finding
-  Bool_t found = newTrackFinder.find();
-  if(found)
-  {
-    std::vector<pathfinder::TrackFinderTrack> pfTracks = newTrackFinder.getTracks();
-    for(Int_t i =0; i <  pfTracks.size() ; i++)
-    {
-      LOG(debug) << "Track " << i;
-      pathfinder::TrackFinderTrack& trFinder = pfTracks[i];
-      const std::vector<pathfinder::basicHit>& hitsOnTrack = trFinder.getHitsOnTrack();
-      std::vector<TVector3> track;
-      for(size_t j =0; j< hitsOnTrack.size(); ++j)
-      {
-          track.emplace_back(hitsOnTrack[j].getX(),hitsOnTrack[j].getY(),hitsOnTrack[j].getZ());
-           LOG(debug) << "X " << hitsOnTrack[j].getX() << " Y " << hitsOnTrack[j].getY() << " Z " << hitsOnTrack[j].getZ();
-      }
-      foundTracks.push_back(track);
-      LOG(debug) << "============================ ";
-    }
-  }
+  bool found = freconTemplate.FindUsingHough(hits
+                                , reconHitTracks
+                                , foundTracks
+                                , houghType
+                                , vertex
+                                , useVerex);
 
   return found;
 }
 
 Bool_t FgdGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
-                  , std::vector<std::vector<TVector3>>& foundTracks)
+                  , std::vector<std::vector<TVector3>>& foundTracks
+                  , std::vector<std::vector<ReconHit*>>& reconTracks)
 {
   if(hits.empty())
   {
@@ -497,14 +403,12 @@ Bool_t FgdGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
   LOG(debug) <<"Leaves found " << tracks.size(); // Initially leaves are equal to the number of tracks
 
   freconTemplate.CalculateGrad(tracks);
-
-  std::vector<std::vector<ReconHit*>> splitTracks;
-  freconTemplate.SplitTrack(tracks, splitTracks);
+  freconTemplate.SplitTrack(tracks, reconTracks);
 
   Int_t totalHitsInTracks(0);
-  for(size_t i = 0; i<splitTracks.size(); ++i)
+  for(size_t i = 0; i<reconTracks.size(); ++i)
   {
-    std::vector<ReconHit*>& track = splitTracks[i];
+    std::vector<ReconHit*>& track = reconTracks[i];
     std::vector<TVector3> currentTrack;
     LOG(debug2) << "=============================== ";
     LOG(debug2) << "Track " << i;
@@ -552,7 +456,20 @@ Bool_t FgdGenFitRecon::FindUsingGraphHough(std::vector<ReconHit>& hits
   Bool_t rc(false);
 
   std::vector<std::vector<TVector3>> graphTracks;
-  rc = FindUsingGraph(hits, graphTracks);
+  std::vector<std::vector<ReconHit*>> reconTracks;
+  rc = FindUsingGraph(hits, graphTracks,reconTracks);
+
+  std::vector<ReconHit> graphFoundHits;
+  ReconHit hit;
+  for(size_t i = 0; i < graphTracks.size(); ++i)
+  {
+    std::vector<TVector3>& grtr = graphTracks[i];
+    for(size_t j = 0; j < grtr.size(); ++j)
+    {
+      hit.fHitPos = grtr[j];
+      graphFoundHits.push_back(hit);
+    }
+  }
 
   if(rc)
   {
@@ -565,7 +482,7 @@ Bool_t FgdGenFitRecon::FindUsingGraphHough(std::vector<ReconHit>& hits
 
       // 1. Line hough ========================
       std::vector<std::vector<TVector3>> hough_Line;
-      if(FindUsingHough(graphTracks[i], hits, hough_Line, FindTrackType::STRAIGHT_LINE)
+      if(FindUsingHough(graphFoundHits, hough_Line, FgdReconTemplate::HoughType::STRAIGHT_LINE)
           && !hough_Line.empty())
       {
         size_t localBiggest(0);
@@ -592,8 +509,8 @@ Bool_t FgdGenFitRecon::FindUsingGraphHough(std::vector<ReconHit>& hits
 
       // 2. Helix hough ========================
       std::vector<std::vector<TVector3>> hough_Helix;
-      if(FindUsingHough(graphTracks[i], hits, hough_Helix, FindTrackType::HELIX)
-        && !hough_Line.empty()) 
+      if(FindUsingHough(graphFoundHits, hough_Helix, FgdReconTemplate::HoughType::HELIX)
+        && !hough_Helix.empty()) 
       {
         size_t localBiggest(0);
         size_t ind(0);
@@ -619,8 +536,8 @@ Bool_t FgdGenFitRecon::FindUsingGraphHough(std::vector<ReconHit>& hits
 
       // 3. Curl hough ========================
       std::vector<std::vector<TVector3>> hough_Curl;
-      if(FindUsingHough(graphTracks[i], hits, hough_Curl, FindTrackType::CURL)
-        && !hough_Line.empty()) 
+      if(FindUsingHough(graphFoundHits, hough_Curl, FgdReconTemplate::HoughType::CURL)
+        && !hough_Curl.empty()) 
       {
         size_t localBiggest(0);
         size_t ind(0);
@@ -658,6 +575,129 @@ Bool_t FgdGenFitRecon::FindUsingGraphHough(std::vector<ReconHit>& hits
   }
 
   return rc;
+}
+
+
+Bool_t FgdGenFitRecon::FindUsingHoughGraphLeaves(std::vector<ReconHit>& hits
+                  , std::vector<std::vector<TVector3>>& foundTracks)
+{
+  freconTemplate.BuildGraph(hits);
+  freconTemplate.FindLeaves(hits);
+
+  std::vector<std::vector<ReconHit*>> reconHitTracks;
+
+  for(size_t i = 0; i < hits.size(); ++i)
+  {
+    if(!hits[i].fIsLeaf || hits[i].IsAlone()) continue;
+
+    ReconHit& hit = hits[i];
+
+    size_t biggestSize(0);
+    std::vector<TVector3>* trackToAdd = nullptr;
+
+    // 1. Line hough ========================
+    std::vector<std::vector<TVector3>> hough_Line;
+    if(freconTemplate.FindUsingHough(hits
+                                , reconHitTracks
+                                , hough_Line
+                                , FgdReconTemplate::HoughType::STRAIGHT_LINE
+                                , hit.fHitPos
+                                , true)
+        && !hough_Line.empty())
+    {
+      size_t localBiggest(0);
+      size_t ind(0);
+      for(size_t j = 0; j < hough_Line.size(); ++j)
+      {
+        if(localBiggest < hough_Line[j].size())
+        {
+          localBiggest = hough_Line[j].size();
+          ind = j;
+        }
+      }
+
+      if(localBiggest > biggestSize)
+      {
+        biggestSize = hough_Line[ind].size();
+        trackToAdd = &hough_Line[ind];
+        LOG(debug) << "Hough transform from graph [line] size of track is: " << hough_Line[ind].size();
+      }
+    }
+    LOG(debug)<< "Hough transform [line] " << hough_Line.size();
+
+    // ======================================
+
+    // 2. Helix hough ========================
+    std::vector<std::vector<TVector3>> hough_Helix;
+    if(freconTemplate.FindUsingHough(hits
+                                , reconHitTracks
+                                , hough_Helix
+                                , FgdReconTemplate::HoughType::HELIX
+                                , hit.fHitPos
+                                , true)
+      && !hough_Helix.empty()) 
+    {
+      size_t localBiggest(0);
+      size_t ind(0);
+      for(size_t j = 0; j < hough_Helix.size(); ++j)
+      {
+        if(localBiggest < hough_Helix[j].size())
+        {
+          localBiggest = hough_Helix[j].size();
+          ind = j;
+        }
+      }
+
+      if(localBiggest > biggestSize)
+      {
+        biggestSize = hough_Helix[ind].size();
+        trackToAdd = &hough_Helix[ind];
+        LOG(debug) << "Hough transform from graph [helix] size of track is: " << hough_Helix[ind].size();
+      }
+    }
+    LOG(debug)<< "Hough transform [helix] " << hough_Helix.size();
+
+    // ======================================
+
+    // 3. Curl hough ========================
+    std::vector<std::vector<TVector3>> hough_Curl;
+    if(freconTemplate.FindUsingHough(hits
+                                , reconHitTracks
+                                , hough_Curl
+                                , FgdReconTemplate::HoughType::CURL
+                                , hit.fHitPos
+                                , true)
+      && !hough_Curl.empty()) 
+    {
+      size_t localBiggest(0);
+      size_t ind(0);
+      for(size_t j = 0; j < hough_Curl.size(); ++j)
+      {
+        if(localBiggest < hough_Curl[j].size())
+        {
+          localBiggest = hough_Curl[j].size();
+          ind = j;
+        }
+      }
+
+      if(localBiggest > biggestSize)
+      {
+        biggestSize = hough_Curl[ind].size();
+        trackToAdd = &hough_Curl[ind];
+        LOG(debug) << "Hough transform from graph [helix] size of track is: " << hough_Curl[ind].size();
+      }
+    }
+    LOG(debug)<< "Hough transform [curl] " << hough_Curl.size();
+
+    // ======================================
+
+    if(trackToAdd!=nullptr)
+    {
+      foundTracks.emplace_back(*trackToAdd);
+    }
+  }
+
+  return true;
 }
 
 Bool_t FgdGenFitRecon::CalculateInitialMomentum(const std::vector<TVector3>& track,const TVector3& magField, TVector3& momentum , TVector3& momentumLoss)
@@ -994,16 +1034,6 @@ Int_t FgdGenFitRecon::GetPdgCode(const TVector3& momentum, const TVector3& momen
   return pdgCode;
 }
 
-void FgdGenFitRecon::ConvertHitToVec(std::vector<TVector3>& points, std::vector<ReconHit>& hits)
-{
-  for(size_t i=0; i< hits.size(); ++i)
-  {
-    points.emplace_back(hits[i].fHitPos.X()
-                      , hits[i].fHitPos.Y() 
-                      , hits[i].fHitPos.Z());
-  }
-}
-
 void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
 {
     fTracksArray->Delete();
@@ -1015,8 +1045,8 @@ void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
     genfit::MaterialEffects::getInstance()->setDebugLvl(fDebuglvl_genfit);
 
     // init fitter
-    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
-    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
+    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
+    // std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
     fitter->setMinIterations(fminGenFitInterations);
     fitter->setMaxIterations(fmaxGenFitIterations);
     fitter->setDebugLvl(fDebuglvl_genfit);
@@ -1035,7 +1065,7 @@ void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
 
     Bool_t tryFit(false);
     Int_t tryCounter(1);
-    Int_t limitTryFit = 12; // 3 times increse momentum by 2, 4 pdg codes to try
+    Int_t limitTryFit = 1; // 12 = 3 times increse momentum by 2, 4 pdg codes to try
 
 
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
@@ -1062,6 +1092,12 @@ void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
       }
 
       std::vector<TVector3>& hitsOnTrack = foundTracks[i];
+      LOG(debug) << "Track " << i;
+      for(size_t j =0; j< hitsOnTrack.size(); ++j)
+      {
+          TVector3& vec = hitsOnTrack[j];
+          LOG(debug) << "X " << vec.X() + f_total_X/2 << " Y " << vec.Y() + f_total_Y/2 << " Z " << vec.Z() + f_total_Z/2;
+      }
 
       // Set lower limit on track size
       if(hitsOnTrack.size()<fminHits)
