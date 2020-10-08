@@ -37,8 +37,14 @@ public:
 
     Bool_t GetNextHit(ReconHit* previous, ReconHit* current, ReconHit*& next);
     Bool_t CheckAllVisited(ReconHit* hit);
-    void SmoothGraph(std::vector<ReconHit>& hits);
+
     void BuildGraph(std::vector<ReconHit>& hits);
+    void FindLeaves(std::vector<ReconHit>& hits);
+    void SmoothGraph(std::vector<ReconHit>& hits);
+    
+    void FindTracks(std::vector<ReconHit>& hits, std::vector<std::vector<ReconHit*>>& tracks);
+    void CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks, bool useSmoothCoor = false);
+    void SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks);
 
 private:
 

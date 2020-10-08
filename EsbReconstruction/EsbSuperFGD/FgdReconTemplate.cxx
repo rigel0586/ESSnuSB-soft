@@ -599,6 +599,228 @@ void FgdReconTemplate::BuildGraph(std::vector<ReconHit>& hits)
     }
 }
 
+void FgdReconTemplate::FindLeaves(std::vector<ReconHit>& hits)
+{
+    for(Int_t i=0; i<hits.size(); ++i)
+    {
+        ReconHit& hit = hits[i];
+        hit.fIsLeaf = IsLeaf(&hit);
+    }
+}
+
+
+void FgdReconTemplate::FindTracks(std::vector<ReconHit>& hits, std::vector<std::vector<ReconHit*>>& tracks)
+{
+  ReconHit* currentHit = nullptr;
+  ReconHit* nextHit = nullptr;
+  ReconHit* previousHit = nullptr;
+  for(size_t i=0; i<hits.size(); ++i)
+  {
+    if(hits[i].fIsVisited)
+    {
+      continue;
+    }
+
+    if(hits[i].fIsLeaf)
+    {
+      std::vector<ReconHit*> track;
+      track.push_back(&hits[i]);
+
+      hits[i].fIsLeaf = true;
+      currentHit = &hits[i];
+
+      uint returnTries(0);
+      bool hasNext = GetNextHit(previousHit, currentHit, nextHit);
+
+      while(hasNext) 
+      {
+        if(nextHit->fIsLeaf || nextHit->fIsVisited)
+        {
+          break;
+        }
+        track.push_back(nextHit);
+        currentHit->fIsVisited = true;
+        previousHit = currentHit;
+        currentHit = nextHit;
+
+
+        hasNext = GetNextHit(previousHit, currentHit, nextHit);
+        // If we fail, check if all neightbour cubes are visited.
+        // if yes, then we may have gotten inside a loop.
+        // try to return 2 cubes back and check if we can go around
+        // the loop by taking another not visited cube.
+        if( !hasNext   
+              && RETURN_TRY_LIMIT>returnTries
+              && track.size()>=RETURN_PREVIOUS
+              && CheckAllVisited(currentHit))
+        {
+          ++returnTries;
+          currentHit->fIsVisited = true;
+          currentHit = track[track.size()-2];
+          previousHit = track[track.size()-3];
+          hasNext = GetNextHit(previousHit, currentHit, nextHit);
+        }
+      }
+
+      tracks.push_back(track);
+    }
+  }
+}
+
+void FgdReconTemplate::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks, bool useSmoothCoor)
+{
+  const Int_t distToCalc = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_DIST);
+  const Int_t intervalToCal = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_INTERVAL_DIST);
+
+  static const Double_t radToDeg = 180/TMath::Pi();
+  static const TVector3 xAxisVec(1,0,0);
+  static const TVector3 yAxisVec(0,1,0);
+  static const TVector3 zAxisVec(0,0,1);
+
+  for(Int_t i=0; i<tracks.size(); ++i)
+  {
+    std::vector<ReconHit*>& track = tracks[i];
+    LOG(debug2) << "=================================== ";
+    LOG(debug2) << "Track " << i;
+
+    for(Int_t j=0; j<track.size(); ++j)
+    {
+
+      ReconHit* currentHit = track[j];
+
+      // 1. Calculate direction from the previous hit
+      TVector3 diffVec(0,0,0);
+      if(j>=1)
+      {
+        ReconHit* previous = track[j-1];
+        diffVec = useSmoothCoor ? 
+                  currentHit->fsmoothco - previous->fsmoothco:
+                  currentHit->fmppcLoc - previous->fmppcLoc;
+      }
+
+      // 2.Calculate cosine change beween 2 consecutive vectors - gradient
+      Double_t diffAngle(0);    // Difference angle between two vectors - the vectors are the difference in position (grad (position))
+                                // between two hits distToCalc cubes apart. The angles measures the angle change of the track
+                                // from hit to hit. distToCalc distance is selected to smooth out the change in angle.
+
+      Double_t xAxisAngle(0);
+      Double_t yAxisAngle(0);
+      Double_t zAxisAngle(0);   // Vector angle between the z axis and the vector difference between the current hit and the hit distToCalc 
+                                // poisitions back.
+      
+
+      TVector3 diffVec1(0,0,0);
+      TVector3 diffVec2(0,0,0);
+
+      Int_t indOne = j - distToCalc + 1;
+      Int_t indTwo = j; // current hit
+
+      if(j>= (distToCalc -1) )
+      {
+        ReconHit* one = track[indOne];
+        ReconHit* two = track[indTwo]; 
+
+        diffVec1 = useSmoothCoor ? 
+                  two->fsmoothco - one->fsmoothco:
+                  two->fmppcLoc - one->fmppcLoc;
+        
+        xAxisAngle = radToDeg * xAxisVec.Angle(diffVec1);
+        yAxisAngle = radToDeg * yAxisVec.Angle(diffVec1);
+        zAxisAngle = radToDeg * zAxisVec.Angle(diffVec1);
+
+        // The z angle is calculated for the current hit
+        currentHit->fXaxisAngle = xAxisAngle;
+        currentHit->fYaxisAngle = yAxisAngle;
+        currentHit->fZaxisAngle = zAxisAngle;
+      }
+      
+      if(j>= (distToCalc + intervalToCal -1) )
+      {
+        Int_t indOneP = indOne - intervalToCal;
+        Int_t indTwoP = indTwo - intervalToCal;
+        ReconHit* oneP = track[indOneP];
+        ReconHit* twoP = track[indTwoP];
+        diffVec2 = useSmoothCoor ? 
+                  twoP->fsmoothco - oneP->fsmoothco:
+                  twoP->fmppcLoc - oneP->fmppcLoc;
+
+        diffAngle = radToDeg * diffVec1.Angle(diffVec2);
+
+        // The angle is calculated for the current hit
+        currentHit->fChangeAngle = diffAngle;
+      }
+
+      LOG(debug2) << "Id " << currentHit->fLocalId
+                  << " \tX " << currentHit->fmppcLoc.X()
+                  << " \tY " << currentHit->fmppcLoc.Y()
+                  << " \tZ " << currentHit->fmppcLoc.Z() 
+                  << " \tPhotons  " << "(" << currentHit->fphotons.X() << "," << currentHit->fphotons.Y() << "," << currentHit->fphotons.Z() << ")"
+                  << " \tChange  " << "(" << diffVec.X() << "," << diffVec.Y() << "," << diffVec.Z() << ")"
+                  // << " \t(" << diffVec1.X() << "," << diffVec1.Y() << "," << diffVec1.Z() << ") "
+                  // << " \t(" << diffVec2.X() << "," << diffVec2.Y() << "," << diffVec2.Z() << ") "
+                  << " \tAngle  " << diffAngle
+                  << " \tX axis Angle  " << xAxisAngle
+                  << " \tY axis Angle  " << yAxisAngle
+                  << " \tZ axis Angle  " << zAxisAngle;
+    }
+
+    LOG(debug2) << "=================================== ";
+  }
+}
+
+void FgdReconTemplate::SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks)
+{
+  const double gradAllowedDiff = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::FGD_GRAD_ALLOWABLE_DIFF);
+  const int previousHitToCompare = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_INTERVAL_DIST);
+  
+  LOG(debug) << "Initial tracks size " << originalTracks.size();
+
+  for(Int_t i=0; i<originalTracks.size(); ++i)
+  {
+    std::vector<ReconHit*>& track = originalTracks[i];
+
+    if(track.empty())
+    {
+      continue;
+    }
+
+    std::vector<ReconHit*> trackToAdd;
+    trackToAdd.push_back(track[0]); // Add the first hit to start the track
+
+    for(size_t j=previousHitToCompare; j<track.size(); ++j)
+    {
+      ReconHit* currentHit = track[j];
+      ReconHit* previousHit = track[j-previousHitToCompare];
+
+      if(currentHit->fChangeAngle == 0)
+      {
+        // If there is no change add the track
+        // Also '0' indicates that the track hit is too short to calculate the 
+        // the change.
+        // Only compare if both the current and previous angle is not zero.
+        trackToAdd.push_back(currentHit);
+      }
+      else 
+      {
+        Double_t differenceInAngle = currentHit->fZaxisAngle - previousHit->fZaxisAngle;
+        Double_t absDiff = std::fabs(differenceInAngle);
+        if(absDiff >= gradAllowedDiff)
+        {
+          // If the difference is not allowed add the current track hit points
+          // and reset it to start a new track.
+          splitTracks.emplace_back(trackToAdd);
+          trackToAdd.clear();
+        }
+        trackToAdd.push_back(currentHit);
+      }
+    }
+
+    splitTracks.emplace_back(trackToAdd);
+  }
+
+  LOG(debug) << "Split tracks size " << splitTracks.size();
+}
+
 Long_t FgdReconTemplate::hitId(ReconHit& hit)
 {
     return ArrInd(hit.fmppcLoc.X(), hit.fmppcLoc.Y(), hit.fmppcLoc.Z());

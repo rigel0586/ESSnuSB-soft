@@ -86,6 +86,7 @@ FgdGraphStats::FgdGraphStats(const char* name
   , fgdConstructor(geoConfigFile)
   , fMinTrackLenght(0)
   , f_track_hist(nullptr)
+  , freconTemplate(geoConfigFile)
 { 
     fpdgDB = make_shared<TDatabasePDG>();
     fParams.LoadPartParams(geoConfigFile);
@@ -625,7 +626,8 @@ Bool_t FgdGraphStats::FindUsingGraph(std::vector<ReconHit>& hits
     return false;
   }
 
-  BuildGraph(hits);
+  freconTemplate.BuildGraph(hits);
+  freconTemplate.FindLeaves(hits);
 
   // Print out the build graph
   for(Int_t i=0; i<hits.size(); ++i)
@@ -643,253 +645,17 @@ Bool_t FgdGraphStats::FindUsingGraph(std::vector<ReconHit>& hits
     LOG(debug) << "=====";
   }
 
-
-  FgdReconTemplate reconTemplates;
-
   std::vector<std::vector<ReconHit*>> tracks;
-
-  ReconHit* currentHit = nullptr;
-  ReconHit* nextHit = nullptr;
-  ReconHit* previousHit = nullptr;
-  for(size_t i=0; i<hits.size(); ++i)
-  {
-    previousHit = nullptr;
-    nextHit = nullptr;
-    currentHit = nullptr;
-    if(hits[i].fIsVisited)
-    {
-      continue;
-    }
-
-    if(reconTemplates.IsLeaf(&hits[i]))
-    {
-      //LOG(info) << "Leaf X " << hits[i].fmppcLoc.X() << " Y " << hits[i].fmppcLoc.Y()<< " Z " << hits[i].fmppcLoc.Z();
-      std::vector<ReconHit*> track;
-      track.push_back(&hits[i]);
-
-      hits[i].fIsLeaf = true;
-      currentHit = &hits[i];
-
-      int comp = 0;
-      uint returnTries(0);
-      bool hasNext = reconTemplates.GetNextHit(previousHit, currentHit, nextHit);
-
-      while(hasNext) 
-      {
-        if(nextHit->fIsLeaf || nextHit->fIsVisited)
-        {
-          break;
-        }
-        track.push_back(nextHit);
-        currentHit->fIsVisited = true;
-        previousHit = currentHit;
-        currentHit = nextHit;
-
-
-        hasNext = reconTemplates.GetNextHit(previousHit, currentHit, nextHit);
-        // If we fail, check if all neightbour cubes are visited.
-        // if yes, then we may have gotten inside a loop.
-        // try to return 2 cubes back and check if we can go around
-        // the loop by taking another not visited cube.
-        if( RETURN_TRY_LIMIT>returnTries 
-              && !hasNext 
-              && reconTemplates.CheckAllVisited(currentHit)
-              && track.size()>=RETURN_PREVIOUS)
-        {
-          //LOG(info) <<"returnTries " << returnTries;
-          ++returnTries;
-          currentHit->fIsVisited = true;
-          currentHit = track[track.size()-2];
-          previousHit = track[track.size()-3];
-          hasNext = reconTemplates.GetNextHit(previousHit, currentHit, nextHit);
-        }
-
-        if(!hasNext)
-        {
-          //LOG(info) << "Failed " << currentHit->fmppcLoc.X() << " Y " << currentHit->fmppcLoc.Y()<< " Z " << currentHit->fmppcLoc.Z()
-          //  << " CheckAllVisited " << reconTemplates.CheckAllVisited(currentHit); 
-        }
-        
-        ++comp;
-      }
-
-      //LOG(info) <<"Added " << comp << " Nodes";
-      tracks.push_back(track);
-    }
-  }
+  freconTemplate.FindTracks(hits,tracks);
 
   LOG(info) <<"Leaves found " << tracks.size(); // Initially leaves are equal to the number of tracks
   LOG(debug) << "All hits -> " << hits.size(); 
 
-  CalculateGrad(tracks);
+  freconTemplate.CalculateGrad(tracks);
 
   SplitGRTrack(tracks, foundTracks);
 
   return !foundTracks.empty();
-}
-
-
-void FgdGraphStats::BuildGraph(std::vector<ReconHit>& hits)
-{
-    // Create the position to which index in the vector it is pointing
-    std::map<Long_t, Int_t> positionToId;
-    for(Int_t i=0; i<hits.size(); ++i)
-    {
-      Int_t&& x = hits[i].fmppcLoc.X();
-      Int_t&& y = hits[i].fmppcLoc.Y();
-      Int_t&& z = hits[i].fmppcLoc.Z();
-
-      Int_t&& ind = ArrInd(x,y,z);
-
-      // GUARD agains double or more hits in the same cube
-      if(positionToId.find(ind)==positionToId.end())
-      {
-        positionToId[ind] = i;
-      }
-      
-
-      hits[i].fAllHits.clear(); // Clear previous index positions
-      hits[i].fLocalId = i;
-    }
-
-
-    auto checkNext = [&](Int_t x_pos, Int_t y_pos, Int_t z_pos, Int_t ind){
-                                                                  Long_t&& key = ArrInd(x_pos,y_pos,z_pos);
-                                                                  if(positionToId.find(key)!=positionToId.end())
-                                                                  {
-                                                                    ReconHit* toAdd = &hits[positionToId[key]];
-                                                                    hits[ind].fAllHits.push_back(toAdd);
-                                                                  }
-                                                                };
-
-    for(Int_t i=0; i<hits.size(); ++i)
-    {
-      Int_t&& x = hits[i].fmppcLoc.X();
-      Int_t&& y = hits[i].fmppcLoc.Y();
-      Int_t&& z = hits[i].fmppcLoc.Z();
-
-      // Check in X axis
-      checkNext(x+1,y,z, i);
-      checkNext(x-1,y,z, i);
-
-      // Check in Y axis
-      checkNext(x,y+1,z, i);
-      checkNext(x,y-1,z, i);
-
-      // Check in Z axis
-      checkNext(x,y,z+1, i);
-      checkNext(x,y,z-1, i);
-
-      // Check in X,Y corners
-      checkNext(x+1,y+1,z, i);
-      checkNext(x+1,y-1,z, i);
-      checkNext(x-1,y+1,z, i);
-      checkNext(x-1,y-1,z, i);
-
-      // Check in X,Z corners
-      checkNext(x+1,y,z+1, i);
-      checkNext(x+1,y,z-1, i);
-      checkNext(x-1,y,z+1, i);
-      checkNext(x-1,y,z-1, i);
-
-      // Check in Y,Z corners
-      checkNext(x,y+1,z+1, i);
-      checkNext(x,y+1,z-1, i);
-      checkNext(x,y-1,z+1, i);
-      checkNext(x,y-1,z-1, i);
-
-      // Check in X,Y,Z corners
-      checkNext(x+1,y+1,z+1, i);
-      checkNext(x+1,y+1,z-1, i);
-      checkNext(x+1,y-1,z+1, i);
-      checkNext(x+1,y-1,z-1, i);
-
-      checkNext(x-1,y+1,z+1, i);
-      checkNext(x-1,y+1,z-1, i);
-      checkNext(x-1,y-1,z+1, i);
-      checkNext(x-1,y-1,z-1, i);
-    }
-}
-
-void FgdGraphStats::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks)
-{
-  const Int_t distToCalc = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_DIST);
-  const Int_t intervalToCal = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_GRAD_INTERVAL_DIST);
-  const Double_t radToDeg = 180/TMath::Pi();
-  TVector3 zAxisVec(0,0,1);
-
-  for(Int_t i=0; i<tracks.size(); ++i)
-  {
-    std::vector<ReconHit*>& track = tracks[i];
-    LOG(debug2) << "=================================== ";
-    LOG(debug2) << "Track " << i;
-
-    for(Int_t j=0; j<track.size(); ++j)
-    {
-
-      ReconHit* currentHit = track[j];
-
-      // 1. Calculate direction from the previous hit
-      TVector3 diffVec(0,0,0);
-      if(j>=1)
-      {
-        ReconHit* previous = track[j-1];
-        diffVec = currentHit->fmppcLoc - previous->fmppcLoc;
-      }
-
-      // 2.Calculate cosine change beween 2 consecutive vectors - gradient
-      Double_t diffAngle(0);    // Difference angle between two vectors - the vectors are the difference in position (grad (position))
-                                // between two hits distToCalc cubes apart. The angles measures the angle change of the track
-                                // from hit to hit. distToCalc distance is selected to smooth out the change in angle.
-
-      Double_t zAxisAngle(0);   // Vector angle between the z axis and the vector difference between the current hit and the hit distToCalc 
-                                // poisitions back.
-
-      TVector3 diffVec1(0,0,0);
-      TVector3 diffVec2(0,0,0);
-
-      Int_t indOne = j - distToCalc + 1;
-      Int_t indTwo = j; // current hit
-
-      if(j>= (distToCalc -1) )
-      {
-        ReconHit* one = track[indOne];
-        ReconHit* two = track[indTwo]; 
-        diffVec1 = two->fmppcLoc - one->fmppcLoc;
-        zAxisAngle = radToDeg * zAxisVec.Angle(diffVec1);
-
-        // The z angle is calculated for the current hit
-        currentHit->fZaxisAngle = zAxisAngle;
-      }
-
-      Int_t indOneP = indOne - intervalToCal;
-      Int_t indTwoP = indTwo - intervalToCal;
-      if(j>= (distToCalc + intervalToCal -1) )
-      {
-        ReconHit* oneP = track[indOneP];
-        ReconHit* twoP = track[indTwoP];
-        diffVec2 = twoP->fmppcLoc - oneP->fmppcLoc;
-
-        diffAngle = radToDeg * diffVec1.Angle(diffVec2);
-
-        // The angle is calculated for the current hit
-        currentHit->fChangeAngle = diffAngle;
-      }
-
-      LOG(debug2) << "Id " << currentHit->fLocalId
-                  << " \tX " << currentHit->fmppcLoc.X()
-                  << " \tY " << currentHit->fmppcLoc.Y()
-                  << " \tZ " << currentHit->fmppcLoc.Z() 
-                  << " \tPhotons  " << "(" << currentHit->fphotons.X() << "," << currentHit->fphotons.Y() << "," << currentHit->fphotons.Z() << ")"
-                  << " \tChange  " << "(" << diffVec.X() << "," << diffVec.Y() << "," << diffVec.Z() << ")"
-                  // << " \t(" << diffVec1.X() << "," << diffVec1.Y() << "," << diffVec1.Z() << ") "
-                  // << " \t(" << diffVec2.X() << "," << diffVec2.Y() << "," << diffVec2.Z() << ") "
-                  << " \tAngle (dist = " << distToCalc << ", interval =" << intervalToCal << ") " << diffAngle
-                  << " \tZ axis Angle (dist = " << distToCalc << ", interval =" << intervalToCal << ") " << zAxisAngle;
-    }
-
-    LOG(debug2) << "=================================== ";
-  }
 }
 
 void FgdGraphStats::SplitGRTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks)

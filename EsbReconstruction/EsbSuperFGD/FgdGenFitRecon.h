@@ -7,6 +7,7 @@
 #include "EsbGeometry/EsbSuperFGD/EsbSuperFGDDetectorConstruction.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdReconHit.h"
 #include "EsbReconstruction/EsbSuperFGD/PdgFromMomentumLoss.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdReconTemplate.h"
 
 // FairRoot headers
 #include <FairTask.h>
@@ -107,9 +108,6 @@ protected:
   Bool_t FindUsingGraphHough(std::vector<ReconHit>& hits
                   , std::vector<std::vector<TVector3>>& foundTracks);
   
-  void BuildGraph(std::vector<ReconHit>& hits);
-  void CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks);
-  void SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks);
   Bool_t CalculateInitialMomentum(const std::vector<TVector3>& track,const TVector3& magField, TVector3& momentum, TVector3& momentumLoss);
   Bool_t CalculateMomentum(const TVector3& p1, const TVector3& p2, const TVector3& p3 , const TVector3& magField, TVector3& momentum);
   Double_t GetRadius(const TVector3& p1, const TVector3& p2, const TVector3& p3);
@@ -162,6 +160,8 @@ protected:
 
   FgdGenFitRecon::TrackFinder ffinder;
 
+  FgdReconTemplate freconTemplate;//!<!
+ 
   /** Path to the used media.geo file - containing definitions of materials **/
   std::string fmediaFile;
 

@@ -15,6 +15,7 @@
 #include "EsbGeometry/EsbSuperFGD/EsbSuperFGDDetectorConstruction.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdReconHit.h"
 #include "EsbReconstruction/EsbSuperFGD/PdgFromMomentumLoss.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdReconTemplate.h"
 
 #define STATS_TRACK_NUM 15
 
@@ -70,8 +71,6 @@ protected:
     Bool_t FindUsingGraph(std::vector<ReconHit>& hits
                   , std::vector<std::vector<ReconHit*>>& foundTracks);
 
-    void BuildGraph(std::vector<ReconHit>& hits);
-    void CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks);
     void SplitGRTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks);
     Bool_t CalculateInitialMomentum(const std::vector<TVector3>& track,const TVector3& magField, TVector3& momentum, TVector3& momentumLoss);
     Bool_t CalculateMomentum(const TVector3& p1, const TVector3& p2, const TVector3& p3 , const TVector3& magField, TVector3& momentum);
@@ -122,6 +121,7 @@ protected:
     //  2- detail info
     double fDebuglvl_genfit;//!<!
     std::shared_ptr<TDatabasePDG> fpdgDB;//!<!
+    FgdReconTemplate freconTemplate;//!<!
 
     /** Path to the used media.geo file - containing definitions of materials **/
     std::string fmediaFile;//!<!
