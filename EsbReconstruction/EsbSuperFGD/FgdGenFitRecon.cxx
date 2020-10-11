@@ -87,6 +87,7 @@ FgdGenFitRecon::FgdGenFitRecon() :
 // -----   Constructor   -------------------------------------------
 FgdGenFitRecon::FgdGenFitRecon(const char* name
                           , const char* geoConfigFile
+                          , const char* graphConfig
                           , const char* mediaFile
                           , Int_t verbose
                           , double debugLlv
@@ -107,7 +108,7 @@ FgdGenFitRecon::FgdGenFitRecon(const char* name
   , fmaxGenFitIterations(4)
   , fminHits(25)
   , ffinder(TrackFinder::HOUGH_PATHFINDER_CURL)
-  , freconTemplate(geoConfigFile)
+  , freconTemplate(geoConfigFile, graphConfig)
 { 
   fParams.LoadPartParams(geoConfigFile);
 }

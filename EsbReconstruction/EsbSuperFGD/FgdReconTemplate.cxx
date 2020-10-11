@@ -22,7 +22,8 @@ FgdReconTemplate::FgdReconTemplate()
     LoadTemplates();
 }
 
-FgdReconTemplate::FgdReconTemplate(const char* geoConfigFile)
+FgdReconTemplate::FgdReconTemplate(const char* geoConfigFile, const char* graphTrackConfig, bool validateTrackGrad)
+    : fvalidateTrackGrad(validateTrackGrad)
 {
     LoadTemplates();
     fParams.LoadPartParams(geoConfigFile);
@@ -44,6 +45,8 @@ FgdReconTemplate::FgdReconTemplate(const char* geoConfigFile)
 
     fsmoothDepth = fParams.ParamAsInt(esbroot::geometry::superfgd::DP::FGD_SMOOTH_GRAPH_DEPTH);
     fsmoothErrLimit = fParams.ParamAsDouble(esbroot::geometry::superfgd::DP::FGD_SMOOTH_GRAPH_ERR_LIMIT);
+
+    initGraphRecord(graphTrackConfig);
 }
 
 FgdReconTemplate::~FgdReconTemplate()
@@ -632,7 +635,7 @@ void FgdReconTemplate::FindTracks(std::vector<ReconHit>& hits, std::vector<std::
       std::vector<ReconHit*> track;
       track.push_back(&hits[i]);
 
-      hits[i].fIsLeaf = true;
+      hits[i].fIsVisited = true;
       currentHit = &hits[i];
 
       uint returnTries(0);
@@ -645,6 +648,14 @@ void FgdReconTemplate::FindTracks(std::vector<ReconHit>& hits, std::vector<std::
           break;
         }
         track.push_back(nextHit);
+        if(fvalidateTrackGrad && !ValidateGradTrack(track))
+        {
+            nextHit->fIsVisited=false;
+            nextHit->fIsLeaf = true;
+            i = 0; // reset the counter
+            break;
+        }
+
         currentHit->fIsVisited = true;
         previousHit = currentHit;
         currentHit = nextHit;
@@ -772,6 +783,38 @@ void FgdReconTemplate::CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks
 
     LOG(debug2) << "=================================== ";
   }
+}
+
+Bool_t FgdReconTemplate::ValidateGradTrack(std::vector<ReconHit*>& track)
+{
+    static const Double_t radToDeg = 180/TMath::Pi();
+
+    Bool_t rc(true);
+    for(size_t i = 0; rc && i < fgraphRecords.size(); ++i)
+    {
+        FgdGraphRecord& graphRec = fgraphRecords[i];
+        Int_t minLength = graphRec.fvecDist + graphRec.fdisDiff;
+
+        if(minLength < track.size())
+        {
+            int lastHitInd = track.size() - 1;
+            ReconHit* oneCurrent = track[lastHitInd];
+            ReconHit* onePrevious = track[lastHitInd - graphRec.fvecDist];
+
+            TVector3 one = oneCurrent->fmppcLoc - onePrevious->fmppcLoc;
+
+            ReconHit* twoCurrentHit = track[lastHitInd - graphRec.fdisDiff];
+            ReconHit* twoPrevious = track[lastHitInd - graphRec.fdisDiff - graphRec.fvecDist];
+
+            TVector3 two = twoCurrentHit->fmppcLoc - twoPrevious->fmppcLoc;
+
+            Double_t diffAngle = radToDeg * one.Angle(two);
+
+            rc = (diffAngle <= graphRec.fgradDiffAlowed);
+        }
+    }
+
+    return rc;
 }
 
 void FgdReconTemplate::SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks)
@@ -961,6 +1004,46 @@ Long_t FgdReconTemplate::hitId(ReconHit& hit)
 Long_t FgdReconTemplate::ArrInd(int x, int y, int z)
 {
   return (x*f_bin_Y*f_bin_Z + y*f_bin_Z+z);
+}
+
+void FgdReconTemplate::initGraphRecord(const char* graphTrackConfig)
+{
+    std::ifstream graphFileStream;
+    const char spaceChar(' ');
+    std::vector<std::string> values;
+    try
+    {        
+        graphFileStream.open(graphTrackConfig, std::ios::in);
+
+        if(graphFileStream.is_open())
+        {
+            values.clear();
+            std::string line;
+            while(std::getline(graphFileStream,line))
+            {
+                if(line.empty() || line[0]=='#') continue;
+
+                std::istringstream ss(line);
+                std::string token;
+                while(std::getline(ss, token, spaceChar))
+                {
+                    if(!token.empty())
+                    {
+                        values.push_back(token);
+                    }
+                }
+                Int_t segLenght = std::stoi(values[Data::SEGMENT_LENGTH]);
+                Int_t distToSegment = std::stoi(values[Data::DISTANCE_TO_SEGMENT]);
+                Double_t gradAllowed = std::stod(values[Data::GRAD_ALLOWED_DEGREES]);
+                fgraphRecords.push_back(FgdGraphRecord(segLenght,distToSegment,gradAllowed));
+                values.clear();
+            }
+        }
+    }
+    catch(const std::exception& e)
+    {
+        LOG(fatal) << e.what();
+    }
 }
 
 } //superfgd

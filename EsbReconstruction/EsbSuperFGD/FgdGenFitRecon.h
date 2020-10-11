@@ -51,6 +51,7 @@ class FgdGenFitRecon : public FairTask
   /** Constructor with argument
    *@param name       Name of task
    *@param geoConfigFile  - Configuration file detector
+   *@param graphConfig  - Configuration file for graph algorithm
    *@param mediaFile  - Configuration file for the used mediums
    *@param verbose  - Verbosity level
    *@param debugLlv - debug level for genfit
@@ -59,6 +60,7 @@ class FgdGenFitRecon : public FairTask
   **/  
   FgdGenFitRecon(const char* name
               , const char* geoConfigFile
+              , const char* graphConfig
               , const char* mediaFile
               , Int_t verbose = 1
               , double debugLlv = 0

@@ -58,6 +58,7 @@ set(SRCS
 	EsbSuperFGD/FgdCalorimetric.cxx
 	EsbSuperFGD/FgdExitData.cxx
 	EsbSuperFGD/FgdExitParticle.cxx
+	EsbSuperFGD/FgdGraphRecord.cxx
 )
 
 Set(HEADERS 
@@ -78,6 +79,7 @@ Set(HEADERS
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdCalorimetric.h
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdExitData.h
 	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdExitParticle.h
+	${CMAKE_SOURCE_DIR}/EsbReconstruction/EsbSuperFGD/FgdGraphRecord.h
 )
 
 Set(LINKDEF ${CMAKE_SOURCE_DIR}/EsbReconstruction/ReconLinkDef.h)

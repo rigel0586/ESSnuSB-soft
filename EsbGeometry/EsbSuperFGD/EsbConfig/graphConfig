@@ -1,0 +1,6 @@
+# Each row is a graph record. Format is: 
+# 1st column - track segment lenght
+# 2nd column - distance to second segment
+# 3rd column - allowed grad difference
+6 4 35
+#8 5 30

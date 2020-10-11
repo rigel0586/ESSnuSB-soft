@@ -77,6 +77,7 @@ FgdGraphStats::FgdGraphStats() :
 // -----   Constructor   -------------------------------------------
 FgdGraphStats::FgdGraphStats(const char* name
                           , const char* geoConfigFile
+                          , const char* graphConfig
                           , const char* mediaFile
                           , const char* eventData
                           , const char* outputRootFile
@@ -86,7 +87,7 @@ FgdGraphStats::FgdGraphStats(const char* name
   , fgdConstructor(geoConfigFile)
   , fMinTrackLenght(0)
   , f_track_hist(nullptr)
-  , freconTemplate(geoConfigFile)
+  , freconTemplate(geoConfigFile,graphConfig)
 { 
     fpdgDB = make_shared<TDatabasePDG>();
     fParams.LoadPartParams(geoConfigFile);

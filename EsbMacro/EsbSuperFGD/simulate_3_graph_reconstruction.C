@@ -14,8 +14,8 @@
 void simulate_3_graph_reconstruction(TString inFile = "fgd_dig.root", 
 	      TString parFile = "params.root",
 	      TString outFile = "fgd_recon.root",
-        Int_t nStartEvent = 0,
-        Int_t nEvents = 15,
+        Int_t nStartEvent = 2,
+        Int_t nEvents = 1,
         TString eventDat = "../../EsbMacro/tests/eventsData.dat",
         TString outputRootdata = "../../EsbMacro/tests/tmva_graph_data.root")
 {
@@ -46,6 +46,7 @@ void simulate_3_graph_reconstruction(TString inFile = "fgd_dig.root",
   FairTask* recon = new reconstruction::superfgd::FgdGraphGenFitRecon(
     "Reconstruction Task"             // name of the task
     ,"../../EsbGeometry/EsbSuperFGD/EsbConfig/fgdconfig"  //File with detector configuration
+    ,"../../EsbGeometry/EsbSuperFGD/EsbConfig/graphConfig" // File containing graph algorithm info
     ,"../../geometry/media.geo"       // Media file with defined materials
     , eventDat                        // events data file
     , outputRootdata                  // output root file
@@ -62,7 +63,7 @@ void simulate_3_graph_reconstruction(TString inFile = "fgd_dig.root",
   ((reconstruction::superfgd::FgdGraphGenFitRecon*)recon)->AddPdgMomLoss(211, 28. , 1.);
   ((reconstruction::superfgd::FgdGraphGenFitRecon*)recon)->AddPdgMomLoss(2212, 148. , 63.);
 
-  ((reconstruction::superfgd::FgdGraphGenFitRecon*)recon)->SetSmoothCoor(true);
+  ((reconstruction::superfgd::FgdGraphGenFitRecon*)recon)->SetSmoothCoor(false);
   
   fRun->AddTask(recon);   
   fRun->Init(); // initializing

@@ -34,6 +34,7 @@ class FgdGraphStats : public FairTask
   /** Constructor with argument
    *@param name       Name of task
    *@param geoConfigFile  - Configuration file detector
+   *@param graphConfig  - Configuration file for graph algorithm
    *@param mediaFile  - Configuration file for the used mediums
    *@param eventData  - events data file (generated from fgd generator)
    *@param outputRootFile - full path to the output root file
@@ -42,6 +43,7 @@ class FgdGraphStats : public FairTask
   **/  
   FgdGraphStats(const char* name
               , const char* geoConfigFile
+              , const char* graphConfig
               , const char* mediaFile
               , const char* eventData
               , const char* outputRootFile

@@ -4,6 +4,7 @@
 // Essnusb
 #include "EsbReconstruction/EsbSuperFGD/FgdReconHit.h"
 #include "EsbGeometry/EsbSuperFGD/EsbFgdDetectorParameters.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdGraphRecord.h"
 
 // Root
 #include "TObject.h"
@@ -41,8 +42,12 @@ public:
     /** Default constructor **/  
     FgdReconTemplate();
 
-    /** Constructor with fgdConfig**/
-    FgdReconTemplate(const char* geoConfigFile);
+    /** Constructor with argument
+        *@param geoConfigFile  - Configuration file detector
+        *@param graphTrackConfig -  Configuration for the graph traversal algorithm
+        *@param validateTrackGrad -  validate the track using the grahConfig file
+    **/  
+    FgdReconTemplate(const char* geoConfigFile, const char* graphTrackConfig, bool validateTrackGrad = false);
 
     ~FgdReconTemplate();
 
@@ -57,6 +62,7 @@ public:
     
     void FindTracks(std::vector<ReconHit>& hits, std::vector<std::vector<ReconHit*>>& tracks);
     void CalculateGrad(std::vector<std::vector<ReconHit*>>& tracks, bool useSmoothCoor = false);
+    Bool_t ValidateGradTrack(std::vector<ReconHit*>& track);
     void SplitTrack(std::vector<std::vector<ReconHit*>>& originalTracks, std::vector<std::vector<ReconHit*>>& splitTracks);
 
 
@@ -99,6 +105,13 @@ private:
         std::vector<TVector3> hitVectors;
     };
 
+    enum Data : int   // Position in the tokens which value represents which data 
+    {
+        SEGMENT_LENGTH = 0,
+        DISTANCE_TO_SEGMENT = 1,
+        GRAD_ALLOWED_DEGREES = 2
+    };
+
     void LoadTemplates();
     void GetHitVectors(ReconHit* hit, std::vector<TVector3>& vecs);
 
@@ -107,8 +120,10 @@ private:
     void SmoothCoordinate(ReconHit* hit, TVector3& cord, std::set<Long_t>& visited, size_t depth = 1);
     Long_t hitId(ReconHit& hit);
     Long_t ArrInd(int i, int j, int k);
+    void initGraphRecord(const char* graphTrackConfig);
 
     std::vector<FgdReconTemplate::HitTemplate> fLeafVectors;//!<!  
+    std::vector<FgdGraphRecord> fgraphRecords;//!<! 
 
     /** Class to hold the Detector parameters read from external file **/
     esbroot::geometry::superfgd::FgdDetectorParameters fParams;//!<! 
@@ -127,6 +142,7 @@ private:
 
     int fsmoothDepth;
     Double_t fsmoothErrLimit;
+    bool fvalidateTrackGrad;
 
     ClassDef(FgdReconTemplate, 2);
 };

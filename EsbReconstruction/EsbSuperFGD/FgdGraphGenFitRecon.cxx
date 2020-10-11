@@ -90,6 +90,7 @@ FgdGraphGenFitRecon::FgdGraphGenFitRecon() :
 // -----   Constructor   -------------------------------------------
 FgdGraphGenFitRecon::FgdGraphGenFitRecon(const char* name
                           , const char* geoConfigFile
+                          , const char* graphConfig
                           , const char* mediaFile
                           , const char* eventData
                           , const char* outputRootFile
@@ -104,6 +105,7 @@ FgdGraphGenFitRecon::FgdGraphGenFitRecon(const char* name
   , isDefinedMaterials(false)
   , fDebuglvl_genfit(debugLlv)
   , fgeoConfFile(geoConfigFile)
+  , fgraphConfig(graphConfig)
   , fmediaFile(mediaFile)
   , feventData(eventData)
   , foutputRootFile(outputRootFile)
@@ -116,7 +118,7 @@ FgdGraphGenFitRecon::FgdGraphGenFitRecon(const char* name
   , fminHits(25)
   , feventNum(0)
   , fuseSmoothPos(false)
-  , freconTemplate(geoConfigFile)
+  , freconTemplate(geoConfigFile, graphConfig)
 { 
   fParams.LoadPartParams(geoConfigFile);
 }
@@ -550,6 +552,7 @@ Bool_t FgdGraphGenFitRecon::FindUsingGraph(std::vector<ReconHit>& hits
   freconTemplate.CalculateGrad(tracks, fuseSmoothPos);
   std::vector<std::vector<ReconHit*>> splitTracks;
   freconTemplate.SplitTrack(tracks, splitTracks);
+  //std::vector<std::vector<ReconHit*>>& splitTracks = tracks;
 
   Int_t totalHitsInTracks(0);
   for(size_t i = 0; i<splitTracks.size(); ++i)

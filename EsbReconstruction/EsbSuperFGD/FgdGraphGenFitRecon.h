@@ -43,6 +43,7 @@ class FgdGraphGenFitRecon : public FairTask
   /** Constructor with argument
    *@param name       Name of task
    *@param geoConfigFile  - Configuration file detector
+   *@param graphConfig  - Configuration file for graph algorithm
    *@param mediaFile  - Configuration file for the used mediums
    *@param eventData  - events data file (generated from fgd generator)
    *@param outputRootFile - full path to the output root file
@@ -53,6 +54,7 @@ class FgdGraphGenFitRecon : public FairTask
   **/  
   FgdGraphGenFitRecon(const char* name
               , const char* geoConfigFile
+              , const char* graphConfig
               , const char* mediaFile
               , const char* eventData
               , const char* outputRootFile
@@ -159,6 +161,9 @@ protected:
 
   /** Path to the configuration file **/
   std::string fgeoConfFile;
+
+  /** Path to the graph configuration file **/
+  std::string fgraphConfig;
 
   /** Path to the used data file containing genie events infos **/
   std::string feventData;//!<!

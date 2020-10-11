@@ -43,6 +43,7 @@ void simulate_3_reconstruction(TString inFile = "fgd_dig.root",
   FairTask* recon = new reconstruction::superfgd::FgdGenFitRecon(
     "Reconstruction Task"             // name of the task
     ,"../../EsbGeometry/EsbSuperFGD/EsbConfig/fgdconfig"  //File with detector configuration
+    ,"../../EsbGeometry/EsbSuperFGD/EsbConfig/graphConfig" // File containing graph algorithm info
     ,"../../geometry/media.geo"       // Media file with defined materials
     , 1                               // Verbose level
     , debugLvl                        // debug level of genfit (0 - little, 1 - debug info, 2 - detailed)

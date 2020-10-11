@@ -33,5 +33,6 @@
 #pragma link C++ class esbroot::reconstruction::superfgd::FgdEdepAnalyzer+;
 #pragma link C++ class esbroot::reconstruction::superfgd::FgdExitData+;
 #pragma link C++ class esbroot::reconstruction::superfgd::FgdExitParticle+;
+#pragma link C++ class esbroot::reconstruction::superfgd::FgdGraphRecord+;
 
 #endif
