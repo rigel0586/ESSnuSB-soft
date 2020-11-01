@@ -5,6 +5,8 @@
 #include "EsbReconstruction/EsbSuperFGD/FgdMCGenFitRecon.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdTMVAEventRecord.h"
 
+#define PHOTON_SPECTRUM_SIZE 30
+
 namespace esbroot {
 namespace reconstruction {
 namespace superfgd {
@@ -48,10 +50,12 @@ class FgdTMVAData : public FgdMCGenFitRecon
 
 protected:
 
-  Bool_t ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks);
+  Bool_t ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks, std::vector<ReconHit>& allhits);
   Double_t CalculatePhotoEdep(ReconHit& hit);
   
   Bool_t isParticleAllowed(Int_t pdg);
+  void clearSpectrum();
+  void copySpectrum(size_t ind);
 
   std::string feventData;//!<!
   std::string foutputRootFile;//!<!
@@ -64,6 +68,7 @@ protected:
 
   std::vector<std::vector<Float_t>> ftrackLenghts;//!<!
   std::vector<std::vector<Float_t>> ftrackPhotos;//!<!
+  std::vector<std::vector<Float_t>> fphotonSpectrum;//!<!
 
   int feventNum;//!<!
   Float_t fmagField_X;
@@ -79,6 +84,8 @@ protected:
   Float_t fMaxTotPe;
   Float_t fMaxnuE;
   Float_t fMaxTrueEdep;
+
+  Float_t fPhSpecter[PHOTON_SPECTRUM_SIZE];
   	   
   ClassDef(FgdTMVAData, 2);
 

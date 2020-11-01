@@ -90,6 +90,8 @@ FgdTMVAData::FgdTMVAData(const char* name
     , fMaxTotPe(1)
 { 
     fpdgDB = make_shared<TDatabasePDG>();
+
+    clearSpectrum();
 }
 // -------------------------------------------------------------------------
 
@@ -177,7 +179,7 @@ void FgdTMVAData::Exec(Option_t* opt)
     if(rc)
     {
       LOG(debug) <<" Found tracks to process " << foundTracks.size();
-      ProcessStats(foundTracks);
+      ProcessStats(foundTracks, allhits);
     }
     else
     {
@@ -192,7 +194,7 @@ void FgdTMVAData::Exec(Option_t* opt)
   }
 }
 
-Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks)
+Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks, std::vector<ReconHit>& allhits)
 {
     if(feventNum >= feventRecords.size())
     {
@@ -241,6 +243,16 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
         }   
     }
 
+    // 1a. Extract cube spectrum
+    std::vector<Float_t> photoSpectrum;
+    for(size_t j = 0; j < allhits.size(); ++j)
+    {   
+        ReconHit& hit = allhits[j];
+        Float_t sumCubePh = hit.fphotons.X() + hit.fphotons.Y() + hit.fphotons.Z();
+        photoSpectrum.emplace_back(sumCubePh);;    
+    }
+    fphotonSpectrum.emplace_back(std::move(photoSpectrum));
+
     tvmaEventRecord.SetTotalPhotons(sumTotalPhoto);
     tvmaEventRecord.SetTotalCubes(sumTotalCubes); 
     tvmaEventRecord.SetTotalEdep(sumEdep);
@@ -278,7 +290,7 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
 
     size_t limit = foundTracks.size() > MAX_LENGTH_TRACKS_TO_RECORD? MAX_LENGTH_TRACKS_TO_RECORD: foundTracks.size();
     std::vector<Float_t> track = {0.,0.,0.};
-    std::vector<Float_t> phototrack= {0.,0.,0.};
+    std::vector<Float_t> phototrack = {0.,0.,0.};
     for(size_t i = 0; i <  limit ; ++i)
     {
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
@@ -560,13 +572,47 @@ void FgdTMVAData::FinishTask()
     longestTrackPrjTree->Branch("nuEnergy", &lnuEnergy);
     longestTrackPrjTree->Branch("nuPdg", &lnuPdg);
 
+
+    // Photon spectrum
+    longestTrackPrjTree->Branch("fPhSpecter0", &fPhSpecter[0]);
+    longestTrackPrjTree->Branch("fPhSpecter1", &fPhSpecter[1]);
+    longestTrackPrjTree->Branch("fPhSpecter2", &fPhSpecter[2]);
+    longestTrackPrjTree->Branch("fPhSpecter3", &fPhSpecter[3]);
+    longestTrackPrjTree->Branch("fPhSpecter4", &fPhSpecter[4]);
+    longestTrackPrjTree->Branch("fPhSpecter5", &fPhSpecter[5]);
+    longestTrackPrjTree->Branch("fPhSpecter6", &fPhSpecter[6]);
+    longestTrackPrjTree->Branch("fPhSpecter7", &fPhSpecter[7]);
+    longestTrackPrjTree->Branch("fPhSpecter8", &fPhSpecter[8]);
+    longestTrackPrjTree->Branch("fPhSpecter9", &fPhSpecter[9]);
+    longestTrackPrjTree->Branch("fPhSpecter10", &fPhSpecter[10]);
+    longestTrackPrjTree->Branch("fPhSpecter11", &fPhSpecter[11]);
+    longestTrackPrjTree->Branch("fPhSpecter12", &fPhSpecter[12]);
+    longestTrackPrjTree->Branch("fPhSpecter13", &fPhSpecter[13]);
+    longestTrackPrjTree->Branch("fPhSpecter14", &fPhSpecter[14]);
+    longestTrackPrjTree->Branch("fPhSpecter15", &fPhSpecter[15]);
+    longestTrackPrjTree->Branch("fPhSpecter16", &fPhSpecter[16]);
+    longestTrackPrjTree->Branch("fPhSpecter17", &fPhSpecter[17]);
+    longestTrackPrjTree->Branch("fPhSpecter18", &fPhSpecter[18]);
+    longestTrackPrjTree->Branch("fPhSpecter19", &fPhSpecter[19]);
+    longestTrackPrjTree->Branch("fPhSpecter20", &fPhSpecter[20]);
+    longestTrackPrjTree->Branch("fPhSpecter21", &fPhSpecter[21]);
+    longestTrackPrjTree->Branch("fPhSpecter22", &fPhSpecter[22]);
+    longestTrackPrjTree->Branch("fPhSpecter23", &fPhSpecter[23]);
+    longestTrackPrjTree->Branch("fPhSpecter24", &fPhSpecter[24]);
+    longestTrackPrjTree->Branch("fPhSpecter25", &fPhSpecter[25]);
+    longestTrackPrjTree->Branch("fPhSpecter26", &fPhSpecter[26]);
+    longestTrackPrjTree->Branch("fPhSpecter27", &fPhSpecter[27]);
+    longestTrackPrjTree->Branch("fPhSpecter28", &fPhSpecter[28]);
+    longestTrackPrjTree->Branch("fPhSpecter29", &fPhSpecter[29]);
+
+
     const Int_t evInd = feventRecords.size();
     FgdTMVAEventRecord* dataEvent = nullptr;
     for(size_t ind = 0 ; ind < evInd && ind < feventNum; ind++)
     {
         dataEvent = &feventRecords[ind];
-
-        bool isQuasiCC = dataEvent->IsWeakCC() && dataEvent->IsQuasiElastic();
+        
+        bool isQuasiCC = dataEvent->IsWeakCC();// && dataEvent->IsQuasiElastic();
         if(!isQuasiCC)
         {
             continue;
@@ -622,7 +668,9 @@ void FgdTMVAData::FinishTask()
 
         // totalPe /= fMaxTotPe;
 
+        copySpectrum(ind);
         longestTrackPrjTree->Fill();
+        clearSpectrum();
 
         // Clear data for next write
         tr1 = 0;
@@ -651,6 +699,27 @@ Bool_t FgdTMVAData::isParticleAllowed(Int_t pdg)
                       genie::pdg::IsChargedLepton(pdg);
 
     return isAllowed;
+}
+
+void FgdTMVAData::clearSpectrum()
+{
+    for(size_t i =0 ; i < PHOTON_SPECTRUM_SIZE; ++i)
+    {
+        fPhSpecter[i] = 0;
+    }
+}
+
+void FgdTMVAData::copySpectrum(size_t ind)
+{
+    if(ind >= fphotonSpectrum.size()) return;
+
+    const std::vector<Float_t>& vec = fphotonSpectrum[ind];
+    for(size_t i = 0; i < vec.size(); ++i)
+    {
+        size_t copyInd = vec[i]/PHOTON_SPECTRUM_SIZE;
+        copyInd = copyInd>= PHOTON_SPECTRUM_SIZE ? (PHOTON_SPECTRUM_SIZE - 1) : copyInd;
+        ++fPhSpecter[copyInd];
+    }
 }
 
 // -------------------------------------------------------------------------

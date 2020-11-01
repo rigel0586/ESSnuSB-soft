@@ -5,6 +5,7 @@
 #include <TSpline.h>
 #include <TRandom.h>
 #include <TH2F.h>
+#include <TH1F.h>
 
 #include <FairRootManager.h>
 #include "FairLogger.h"
@@ -94,6 +95,9 @@ InitStatus FgdMppcDisplay::Init()
   f_yz_hist = new TH2F("hist_yz","YZ histogram",f_bin_Y,0,f_bin_Y,f_bin_Z,0,f_bin_Z);
   f_xz_hist = new TH2F("hist_zx","XZ histogram",f_bin_X,0,f_bin_X,f_bin_Z,0,f_bin_Z);
 
+  f_ph_hist = new TH1F("hist_ph","Photons per cube histogram",30,0,300);
+  f_ph_hist_total = new TH1F("hist_ph_total","Total Photons histogram",100,0,30000);
+
   return kSUCCESS;
 }
 
@@ -126,6 +130,13 @@ void FgdMppcDisplay::FinishEvent()
     f_xz_hist->Reset();
   } 
 
+  if(f_ph_hist)
+  {
+    f_ph_hist->Draw("colz");
+    WriteCanvas("Photons");
+    f_ph_hist->Reset();
+  } 
+
   if(fcanvas)
   {
     fcanvas->ResetDrawn();
@@ -135,13 +146,20 @@ void FgdMppcDisplay::FinishEvent()
 
 void FgdMppcDisplay::FinishTask()
 {
-  fevNum = 0;
+  if(f_ph_hist_total)
+  {
+    f_ph_hist_total->Draw("colz");
+    WriteCanvas("Total_ph");
+    f_ph_hist_total->Reset();
+  }
 }
 
 
 void FgdMppcDisplay::Exec(Option_t* opt) 
 {
   const Int_t hits = fHitArray->GetEntries();
+  float max(0);
+  float sum(0);
   for(Int_t i =0; i < hits; i++)
   {
       data::superfgd::FgdHit* hit = (data::superfgd::FgdHit*)fHitArray->At(i);
@@ -151,8 +169,16 @@ void FgdMppcDisplay::Exec(Option_t* opt)
       if(f_xy_hist) f_xy_hist->Fill(mppcLoc.X(), mppcLoc.Y(), photoE.Z());
       if(f_yz_hist) f_yz_hist->Fill(mppcLoc.Y(), mppcLoc.Z(), photoE.X());
       if(f_xz_hist) f_xz_hist->Fill(mppcLoc.X(), mppcLoc.Z(), photoE.Y());
-      
+
+      float temp = mppcLoc.X() + mppcLoc.Y() + mppcLoc.Z();
+      max = max < temp? temp : max;
+      sum += temp;
+
+      f_ph_hist->Fill(temp);
   }
+  f_ph_hist_total->Fill(sum);
+  cout  << "Max photons per cube are " << max << endl;
+  cout  << "sum photons are " << sum << endl;
   cout  << endl;
   cout  << endl;
 }

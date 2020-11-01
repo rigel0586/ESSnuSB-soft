@@ -50,12 +50,12 @@ using namespace TMVA;
 void tmva_train( Int_t numToTrain = 300
                   , Int_t numToTest = 75
                   ,TString myMethodList = "" 
-                  //,TString inFileName = "tmva_data.root"              // simulate_3_TMVA_data2.C and simulate_3_TMVA_data.C
-                  ,TString inFileName = "tmva_graph_data.root"          // simulate_3_graph_reconstruction.C
+                  ,TString inFileName = "tmva_data.root"              // simulate_3_TMVA_data2.C and simulate_3_TMVA_data.C
+                  //,TString inFileName = "tmva_graph_data.root"          // simulate_3_graph_reconstruction.C
                   //,TString inFileName = "tmva_mc_recon_data.root"     // simulate_3_MC_reconstruction.C
 
-                  //,std::string treeName = "FgdLongestProjectionTree"      // simulate_3_TMVA_data2.C and simulate_3_TMVA_data.C 
-                  ,std::string treeName = "trainTree"                     // MC muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C
+                  ,std::string treeName = "FgdLongestProjectionTree"      // simulate_3_TMVA_data2.C and simulate_3_TMVA_data.C 
+                  //,std::string treeName = "trainTree"                     // MC muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C
                   //,std::string treeName = "fittedMomTree"                 // Genfit muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C
                   //,std::string treeName = "CalMomTree"                    // Calorimetric muon momentum from simulate_3_graph_reconstruction.C, simulate_3_MC_reconstruction.C    
    
@@ -155,12 +155,51 @@ void tmva_train( Int_t numToTrain = 300
    //dataloader->AddVariable( "totalCubes", "Total cubes", "units", 'F' );
    //dataloader->AddVariable( "totalEdep", "Total deposited energy", "units", 'F' );
 
-   dataloader->AddVariable( "totalPhotons", "Total photons", "units", 'F' );
+   //dataloader->AddVariable( "totalPhotons", "Total photons", "units", 'F' );
    //dataloader->AddVariable( "tr1", "1st track", "units", 'F' );
-   dataloader->AddVariable( "totalCubes", "Total cubes", "units", 'F' );
+   //dataloader->AddVariable( "totalCubes", "Total cubes", "units", 'F' );
+
    if(treeName.compare("FgdLongestProjectionTree") !=0 )
    {
+      dataloader->AddVariable( "totalPhotons", "Total photons", "units", 'F' );
+      dataloader->AddVariable( "totalCubes", "Total cubes", "units", 'F' );
       dataloader->AddVariable( "muon_mom", "Muon momentum", "units", 'F' );
+   }
+
+   if(treeName.compare("FgdLongestProjectionTree") ==0 )
+   {
+      //dataloader->AddVariable( "muon_mom", "Muon momentum", "units", 'F' );
+
+      dataloader->AddVariable( "fPhSpecter0", "Cube photons_0", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter1", "Cube photons_1", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter2", "Cube photons_2", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter3", "Cube photons_3", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter4", "Cube photons_4", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter5", "Cube photons_5", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter6", "Cube photons_6", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter7", "Cube photons_7", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter8", "Cube photons_8", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter9", "Cube photons_9", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter10", "Cube photons_10", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter11", "Cube photons_11", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter12", "Cube photons_12", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter13", "Cube photons_13", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter14", "Cube photons_14", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter15", "Cube photons_15", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter16", "Cube photons_16", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter17", "Cube photons_17", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter18", "Cube photons_18", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter19", "Cube photons_19", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter20", "Cube photons_20", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter21", "Cube photons_21", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter22", "Cube photons_22", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter23", "Cube photons_23", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter24", "Cube photons_24", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter25", "Cube photons_25", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter26", "Cube photons_26", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter27", "Cube photons_27", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter28", "Cube photons_28", "units", 'F' );
+      dataloader->AddVariable( "fPhSpecter29", "Cube photons_29", "units", 'F' );
    }
 
    // Add the variable carrying the regression target
@@ -168,6 +207,7 @@ void tmva_train( Int_t numToTrain = 300
    //dataloader->AddTarget( "trueEdep" );
    //dataloader->AddTarget( "nuPdg" );
    //dataloader->AddTarget( "isCC" );
+   //dataloader->AddTarget( "muon_mom" );
 
    // It is also possible to declare additional targets for multi-dimensional regression, ie:
    //     factory->AddTarget( "fvalue2" );
