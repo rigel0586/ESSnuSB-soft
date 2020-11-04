@@ -95,7 +95,7 @@ InitStatus FgdMppcDisplay::Init()
   f_yz_hist = new TH2F("hist_yz","YZ histogram",f_bin_Y,0,f_bin_Y,f_bin_Z,0,f_bin_Z);
   f_xz_hist = new TH2F("hist_zx","XZ histogram",f_bin_X,0,f_bin_X,f_bin_Z,0,f_bin_Z);
 
-  f_ph_hist = new TH1F("hist_ph","Photons per cube histogram",30,0,300);
+  f_ph_hist = new TH1F("hist_ph","Photons per cube histogram",300,0,300);
   f_ph_hist_total = new TH1F("hist_ph_total","Total Photons histogram",100,0,30000);
 
   return kSUCCESS;
@@ -132,6 +132,15 @@ void FgdMppcDisplay::FinishEvent()
 
   if(f_ph_hist)
   {
+    Double_t mean = f_ph_hist->GetMean();
+    Double_t meanErr = f_ph_hist->GetMeanError();
+    Double_t stdDev = f_ph_hist->GetStdDev();
+    Double_t stdDevErr = f_ph_hist->GetStdDevError();
+
+    Double_t entries = f_ph_hist->GetEntries();
+    std::cout << "Mean " << mean << " StdDev " << stdDev << std::endl;
+    std::cout << "Mean Err " << meanErr << " StdDev Err " << stdDevErr << std::endl;
+    std::cout << "Emtries " << entries << std::endl;
     f_ph_hist->Draw("colz");
     WriteCanvas("Photons");
     f_ph_hist->Reset();

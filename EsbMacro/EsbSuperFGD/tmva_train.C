@@ -170,6 +170,14 @@ void tmva_train( Int_t numToTrain = 300
    {
       //dataloader->AddVariable( "muon_mom", "Muon momentum", "units", 'F' );
 
+      dataloader->AddVariable( "totalPhotons", "Total photons", "units", 'F' );
+      dataloader->AddVariable( "lMean", "mean_Spectrum", "units", 'F' );
+      dataloader->AddVariable( "lMeanErr", "mean_Spectrum_err", "units", 'F' );
+      dataloader->AddVariable( "lStdDev", "std_dev", "units", 'F' );
+      dataloader->AddVariable( "lStdDevErr", "std_dev_err", "units", 'F' );
+      dataloader->AddVariable( "lEntries", "entries", "units", 'F' );
+
+      /* 
       dataloader->AddVariable( "fPhSpecter0", "Cube photons_0", "units", 'F' );
       dataloader->AddVariable( "fPhSpecter1", "Cube photons_1", "units", 'F' );
       dataloader->AddVariable( "fPhSpecter2", "Cube photons_2", "units", 'F' );
@@ -200,6 +208,7 @@ void tmva_train( Int_t numToTrain = 300
       dataloader->AddVariable( "fPhSpecter27", "Cube photons_27", "units", 'F' );
       dataloader->AddVariable( "fPhSpecter28", "Cube photons_28", "units", 'F' );
       dataloader->AddVariable( "fPhSpecter29", "Cube photons_29", "units", 'F' );
+      */
    }
 
    // Add the variable carrying the regression target

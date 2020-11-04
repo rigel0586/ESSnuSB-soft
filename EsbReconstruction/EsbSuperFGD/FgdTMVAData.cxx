@@ -88,6 +88,7 @@ FgdTMVAData::FgdTMVAData(const char* name
     , feventNum(0), fmagField_X(0.), fmagField_Y(0.), fmagField_Z(0.)
     , fMaxtrack(1),fMaxTotph(1),fMaxCubes(1), fMaxTrph(1), fMaxTotEdep(1)
     , fMaxTotPe(1)
+    , f_hist_spectrum{nullptr}
 { 
     fpdgDB = make_shared<TDatabasePDG>();
 
@@ -146,6 +147,8 @@ InitStatus FgdTMVAData::Init()
     {
         eventFileStream.close();
     } 
+
+    f_hist_spectrum = new TH1F("hist_ph","Photons cube spectrum",300,0,300);
 
     return kSUCCESS;
 }
@@ -574,6 +577,7 @@ void FgdTMVAData::FinishTask()
 
 
     // Photon spectrum
+    /* 
     longestTrackPrjTree->Branch("fPhSpecter0", &fPhSpecter[0]);
     longestTrackPrjTree->Branch("fPhSpecter1", &fPhSpecter[1]);
     longestTrackPrjTree->Branch("fPhSpecter2", &fPhSpecter[2]);
@@ -604,6 +608,20 @@ void FgdTMVAData::FinishTask()
     longestTrackPrjTree->Branch("fPhSpecter27", &fPhSpecter[27]);
     longestTrackPrjTree->Branch("fPhSpecter28", &fPhSpecter[28]);
     longestTrackPrjTree->Branch("fPhSpecter29", &fPhSpecter[29]);
+    */
+
+
+    Float_t lMean = 0.;
+    Float_t lMeanErr = 0;
+    Float_t lStdDev = 0;
+    Float_t lStdDevErr = 0.;
+    Float_t lEntries = 0.;
+
+    longestTrackPrjTree->Branch("lMean", &lMean);
+    longestTrackPrjTree->Branch("lMeanErr", &lMeanErr);
+    longestTrackPrjTree->Branch("lStdDev", &lStdDev);
+    longestTrackPrjTree->Branch("lStdDevErr", &lStdDevErr);
+    longestTrackPrjTree->Branch("lEntries", &lEntries);
 
 
     const Int_t evInd = feventRecords.size();
@@ -669,6 +687,11 @@ void FgdTMVAData::FinishTask()
         // totalPe /= fMaxTotPe;
 
         copySpectrum(ind);
+        lMean = f_hist_spectrum->GetMean();
+        lMeanErr = f_hist_spectrum->GetMeanError();
+        lStdDev = f_hist_spectrum->GetStdDev();
+        lStdDevErr = f_hist_spectrum->GetStdDevError();
+        lEntries = f_hist_spectrum->GetEntries();
         longestTrackPrjTree->Fill();
         clearSpectrum();
 
@@ -707,6 +730,10 @@ void FgdTMVAData::clearSpectrum()
     {
         fPhSpecter[i] = 0;
     }
+    if(f_hist_spectrum!=nullptr)
+    {
+        f_hist_spectrum->Reset();
+    }
 }
 
 void FgdTMVAData::copySpectrum(size_t ind)
@@ -719,6 +746,7 @@ void FgdTMVAData::copySpectrum(size_t ind)
         size_t copyInd = vec[i]/PHOTON_SPECTRUM_SIZE;
         copyInd = copyInd>= PHOTON_SPECTRUM_SIZE ? (PHOTON_SPECTRUM_SIZE - 1) : copyInd;
         ++fPhSpecter[copyInd];
+        f_hist_spectrum->Fill(vec[i]);
     }
 }
 

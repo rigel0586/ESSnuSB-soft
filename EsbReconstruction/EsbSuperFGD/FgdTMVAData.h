@@ -4,6 +4,7 @@
 // EsbRoot headers
 #include "EsbReconstruction/EsbSuperFGD/FgdMCGenFitRecon.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdTMVAEventRecord.h"
+#include <TH1F.h>
 
 #define PHOTON_SPECTRUM_SIZE 30
 
@@ -86,6 +87,7 @@ protected:
   Float_t fMaxTrueEdep;
 
   Float_t fPhSpecter[PHOTON_SPECTRUM_SIZE];
+  TH1F* f_hist_spectrum;
   	   
   ClassDef(FgdTMVAData, 2);
 

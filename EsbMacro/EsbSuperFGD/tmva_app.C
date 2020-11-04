@@ -124,6 +124,8 @@ void tmva_app( TString myMethodList = ""
             , ph_sp_10, ph_sp_11, ph_sp_12, ph_sp_13, ph_sp_14, ph_sp_15, ph_sp_16, ph_sp_17, ph_sp_18, ph_sp_19
             , ph_sp_20, ph_sp_21, ph_sp_22, ph_sp_23, ph_sp_24, ph_sp_25, ph_sp_26, ph_sp_27, ph_sp_28, ph_sp_29;
 
+   Float_t lMean, lMeanErr, lStdDev, lStdDevErr, lEntries;
+
     //reader->AddVariable( "totalPhotons", &totalPhotons );
     //reader->AddVariable( "tr1", &tr1 );
     //reader->AddVariable( "totalCubes", &totalCubes );
@@ -136,40 +138,49 @@ void tmva_app( TString myMethodList = ""
 
     if(treeName.compare("FgdLongestProjectionTree") ==0 )
     {
-       //reader->AddVariable( "muon_mom", &muon_mom );
+         //reader->AddVariable( "muon_mom", &muon_mom );
 
-       reader->AddVariable( "fPhSpecter0", &ph_sp_0 );
-       reader->AddVariable( "fPhSpecter1", &ph_sp_1 );
-       reader->AddVariable( "fPhSpecter2", &ph_sp_2 );
-       reader->AddVariable( "fPhSpecter3", &ph_sp_3 );
-       reader->AddVariable( "fPhSpecter4", &ph_sp_4 );
-       reader->AddVariable( "fPhSpecter5", &ph_sp_5 );
-       reader->AddVariable( "fPhSpecter6", &ph_sp_6 );
-       reader->AddVariable( "fPhSpecter7", &ph_sp_7 );
-       reader->AddVariable( "fPhSpecter8", &ph_sp_8 );
-       reader->AddVariable( "fPhSpecter9", &ph_sp_9 );
+         reader->AddVariable( "totalPhotons", &totalPhotons );
+         reader->AddVariable( "lMean", &lMean );
+         reader->AddVariable( "lMeanErr", &lMeanErr );
+         reader->AddVariable( "lStdDev", &lStdDev );
+         reader->AddVariable( "lStdDevErr", &lStdDevErr );
+         reader->AddVariable( "lEntries", &lEntries );
 
-       reader->AddVariable( "fPhSpecter10", &ph_sp_10 );
-       reader->AddVariable( "fPhSpecter11", &ph_sp_11 );
-       reader->AddVariable( "fPhSpecter12", &ph_sp_12 );
-       reader->AddVariable( "fPhSpecter13", &ph_sp_13 );
-       reader->AddVariable( "fPhSpecter14", &ph_sp_14 );
-       reader->AddVariable( "fPhSpecter15", &ph_sp_15 );
-       reader->AddVariable( "fPhSpecter16", &ph_sp_16 );
-       reader->AddVariable( "fPhSpecter17", &ph_sp_17 );
-       reader->AddVariable( "fPhSpecter18", &ph_sp_18 );
-       reader->AddVariable( "fPhSpecter19", &ph_sp_19 );
+         /* 
+         reader->AddVariable( "fPhSpecter0", &ph_sp_0 );
+         reader->AddVariable( "fPhSpecter1", &ph_sp_1 );
+         reader->AddVariable( "fPhSpecter2", &ph_sp_2 );
+         reader->AddVariable( "fPhSpecter3", &ph_sp_3 );
+         reader->AddVariable( "fPhSpecter4", &ph_sp_4 );
+         reader->AddVariable( "fPhSpecter5", &ph_sp_5 );
+         reader->AddVariable( "fPhSpecter6", &ph_sp_6 );
+         reader->AddVariable( "fPhSpecter7", &ph_sp_7 );
+         reader->AddVariable( "fPhSpecter8", &ph_sp_8 );
+         reader->AddVariable( "fPhSpecter9", &ph_sp_9 );
 
-       reader->AddVariable( "fPhSpecter20", &ph_sp_20 );
-       reader->AddVariable( "fPhSpecter21", &ph_sp_21 );
-       reader->AddVariable( "fPhSpecter22", &ph_sp_22 );
-       reader->AddVariable( "fPhSpecter23", &ph_sp_23 );
-       reader->AddVariable( "fPhSpecter24", &ph_sp_24 );
-       reader->AddVariable( "fPhSpecter25", &ph_sp_25 );
-       reader->AddVariable( "fPhSpecter26", &ph_sp_26 );
-       reader->AddVariable( "fPhSpecter27", &ph_sp_27 );
-       reader->AddVariable( "fPhSpecter28", &ph_sp_28 );
-       reader->AddVariable( "fPhSpecter29", &ph_sp_29 );
+         reader->AddVariable( "fPhSpecter10", &ph_sp_10 );
+         reader->AddVariable( "fPhSpecter11", &ph_sp_11 );
+         reader->AddVariable( "fPhSpecter12", &ph_sp_12 );
+         reader->AddVariable( "fPhSpecter13", &ph_sp_13 );
+         reader->AddVariable( "fPhSpecter14", &ph_sp_14 );
+         reader->AddVariable( "fPhSpecter15", &ph_sp_15 );
+         reader->AddVariable( "fPhSpecter16", &ph_sp_16 );
+         reader->AddVariable( "fPhSpecter17", &ph_sp_17 );
+         reader->AddVariable( "fPhSpecter18", &ph_sp_18 );
+         reader->AddVariable( "fPhSpecter19", &ph_sp_19 );
+
+         reader->AddVariable( "fPhSpecter20", &ph_sp_20 );
+         reader->AddVariable( "fPhSpecter21", &ph_sp_21 );
+         reader->AddVariable( "fPhSpecter22", &ph_sp_22 );
+         reader->AddVariable( "fPhSpecter23", &ph_sp_23 );
+         reader->AddVariable( "fPhSpecter24", &ph_sp_24 );
+         reader->AddVariable( "fPhSpecter25", &ph_sp_25 );
+         reader->AddVariable( "fPhSpecter26", &ph_sp_26 );
+         reader->AddVariable( "fPhSpecter27", &ph_sp_27 );
+         reader->AddVariable( "fPhSpecter28", &ph_sp_28 );
+         reader->AddVariable( "fPhSpecter29", &ph_sp_29 );
+         */
        
     }
 
@@ -243,6 +254,14 @@ void tmva_app( TString myMethodList = ""
    {
       //theTree->SetBranchAddress( "muon_mom", &muon_mom );
 
+      theTree->SetBranchAddress( "totalPhotons", &totalPhotons );
+      theTree->SetBranchAddress( "lMean", &lMean );
+      theTree->SetBranchAddress( "lMeanErr", &lMeanErr );
+      theTree->SetBranchAddress( "lStdDev", &lStdDev );
+      theTree->SetBranchAddress( "lStdDevErr", &lStdDevErr );
+      theTree->SetBranchAddress( "lEntries", &lEntries );
+
+      /* 
       theTree->SetBranchAddress( "fPhSpecter0", &ph_sp_0 );
       theTree->SetBranchAddress( "fPhSpecter1", &ph_sp_1 );
       theTree->SetBranchAddress( "fPhSpecter2", &ph_sp_2 );
@@ -275,6 +294,7 @@ void tmva_app( TString myMethodList = ""
       theTree->SetBranchAddress( "fPhSpecter27", &ph_sp_27 );
       theTree->SetBranchAddress( "fPhSpecter28", &ph_sp_28 );
       theTree->SetBranchAddress( "fPhSpecter29", &ph_sp_29 );
+      */
    }
 
    std::cout << "--- Processing: " << theTree->GetEntries() << " events" << std::endl;
