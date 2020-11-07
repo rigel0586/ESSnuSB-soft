@@ -112,6 +112,7 @@ public:
     void  SetPdgOfExitingPars(const std::vector<Int_t> pars){fElectronExitingPdg = pars;}
 
     std::string GetEventData(){return feventData; }
+    EventType GetEventType() {return fEventType; }
 
     void PrintData(std::ostream & stream);
     void ReadEventData();

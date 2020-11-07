@@ -92,6 +92,12 @@ FgdTMVAData::FgdTMVAData(const char* name
 { 
     fpdgDB = make_shared<TDatabasePDG>();
 
+    for(size_t i = 0; i< PHOTON_SPECTRUM_SIZE; ++i)
+    {
+        fPhSpecter[i]=0;
+        fSpecConst[i]=false;
+    }
+
     clearSpectrum();
 }
 // -------------------------------------------------------------------------
@@ -148,7 +154,7 @@ InitStatus FgdTMVAData::Init()
         eventFileStream.close();
     } 
 
-    f_hist_spectrum = new TH1F("hist_ph","Photons cube spectrum",300,0,300);
+    f_hist_spectrum = new TH1F("hist_ph","Photons cube spectrum",PHOTON_SPECTRUM_SIZE, 0, PHOTON_SPECTRUM_MAX);
 
     return kSUCCESS;
 }
@@ -577,38 +583,57 @@ void FgdTMVAData::FinishTask()
 
 
     // Photon spectrum
-    /* 
-    longestTrackPrjTree->Branch("fPhSpecter0", &fPhSpecter[0]);
-    longestTrackPrjTree->Branch("fPhSpecter1", &fPhSpecter[1]);
-    longestTrackPrjTree->Branch("fPhSpecter2", &fPhSpecter[2]);
-    longestTrackPrjTree->Branch("fPhSpecter3", &fPhSpecter[3]);
-    longestTrackPrjTree->Branch("fPhSpecter4", &fPhSpecter[4]);
-    longestTrackPrjTree->Branch("fPhSpecter5", &fPhSpecter[5]);
-    longestTrackPrjTree->Branch("fPhSpecter6", &fPhSpecter[6]);
-    longestTrackPrjTree->Branch("fPhSpecter7", &fPhSpecter[7]);
-    longestTrackPrjTree->Branch("fPhSpecter8", &fPhSpecter[8]);
-    longestTrackPrjTree->Branch("fPhSpecter9", &fPhSpecter[9]);
-    longestTrackPrjTree->Branch("fPhSpecter10", &fPhSpecter[10]);
-    longestTrackPrjTree->Branch("fPhSpecter11", &fPhSpecter[11]);
-    longestTrackPrjTree->Branch("fPhSpecter12", &fPhSpecter[12]);
-    longestTrackPrjTree->Branch("fPhSpecter13", &fPhSpecter[13]);
-    longestTrackPrjTree->Branch("fPhSpecter14", &fPhSpecter[14]);
-    longestTrackPrjTree->Branch("fPhSpecter15", &fPhSpecter[15]);
-    longestTrackPrjTree->Branch("fPhSpecter16", &fPhSpecter[16]);
-    longestTrackPrjTree->Branch("fPhSpecter17", &fPhSpecter[17]);
-    longestTrackPrjTree->Branch("fPhSpecter18", &fPhSpecter[18]);
-    longestTrackPrjTree->Branch("fPhSpecter19", &fPhSpecter[19]);
-    longestTrackPrjTree->Branch("fPhSpecter20", &fPhSpecter[20]);
-    longestTrackPrjTree->Branch("fPhSpecter21", &fPhSpecter[21]);
-    longestTrackPrjTree->Branch("fPhSpecter22", &fPhSpecter[22]);
-    longestTrackPrjTree->Branch("fPhSpecter23", &fPhSpecter[23]);
-    longestTrackPrjTree->Branch("fPhSpecter24", &fPhSpecter[24]);
-    longestTrackPrjTree->Branch("fPhSpecter25", &fPhSpecter[25]);
-    longestTrackPrjTree->Branch("fPhSpecter26", &fPhSpecter[26]);
-    longestTrackPrjTree->Branch("fPhSpecter27", &fPhSpecter[27]);
-    longestTrackPrjTree->Branch("fPhSpecter28", &fPhSpecter[28]);
-    longestTrackPrjTree->Branch("fPhSpecter29", &fPhSpecter[29]);
-    */
+    /* */
+    longestTrackPrjTree->Branch("fPhSpecter0", &fPhSpecter[0]); 
+    longestTrackPrjTree->Branch("fPhSpecter1", &fPhSpecter[1]); 
+    longestTrackPrjTree->Branch("fPhSpecter2", &fPhSpecter[2]); 
+    longestTrackPrjTree->Branch("fPhSpecter3", &fPhSpecter[3]); 
+    longestTrackPrjTree->Branch("fPhSpecter4", &fPhSpecter[4]); 
+    longestTrackPrjTree->Branch("fPhSpecter5", &fPhSpecter[5]); 
+    longestTrackPrjTree->Branch("fPhSpecter6", &fPhSpecter[6]); 
+    longestTrackPrjTree->Branch("fPhSpecter7", &fPhSpecter[7]); 
+    longestTrackPrjTree->Branch("fPhSpecter8", &fPhSpecter[8]); 
+    longestTrackPrjTree->Branch("fPhSpecter9", &fPhSpecter[9]); 
+    longestTrackPrjTree->Branch("fPhSpecter10", &fPhSpecter[10]); 
+    longestTrackPrjTree->Branch("fPhSpecter11", &fPhSpecter[11]); 
+    longestTrackPrjTree->Branch("fPhSpecter12", &fPhSpecter[12]); 
+    longestTrackPrjTree->Branch("fPhSpecter13", &fPhSpecter[13]); 
+    longestTrackPrjTree->Branch("fPhSpecter14", &fPhSpecter[14]); 
+    longestTrackPrjTree->Branch("fPhSpecter15", &fPhSpecter[15]); 
+    longestTrackPrjTree->Branch("fPhSpecter16", &fPhSpecter[16]); 
+    longestTrackPrjTree->Branch("fPhSpecter17", &fPhSpecter[17]); 
+    longestTrackPrjTree->Branch("fPhSpecter18", &fPhSpecter[18]); 
+    longestTrackPrjTree->Branch("fPhSpecter19", &fPhSpecter[19]); 
+    longestTrackPrjTree->Branch("fPhSpecter20", &fPhSpecter[20]); 
+    longestTrackPrjTree->Branch("fPhSpecter21", &fPhSpecter[21]); 
+    longestTrackPrjTree->Branch("fPhSpecter22", &fPhSpecter[22]); 
+    longestTrackPrjTree->Branch("fPhSpecter23", &fPhSpecter[23]); 
+    longestTrackPrjTree->Branch("fPhSpecter24", &fPhSpecter[24]); 
+    longestTrackPrjTree->Branch("fPhSpecter25", &fPhSpecter[25]); 
+    longestTrackPrjTree->Branch("fPhSpecter26", &fPhSpecter[26]); 
+    longestTrackPrjTree->Branch("fPhSpecter27", &fPhSpecter[27]); 
+    longestTrackPrjTree->Branch("fPhSpecter28", &fPhSpecter[28]); 
+    longestTrackPrjTree->Branch("fPhSpecter29", &fPhSpecter[29]); 
+    longestTrackPrjTree->Branch("fPhSpecter30", &fPhSpecter[30]); 
+    longestTrackPrjTree->Branch("fPhSpecter31", &fPhSpecter[31]); 
+    longestTrackPrjTree->Branch("fPhSpecter32", &fPhSpecter[32]); 
+    longestTrackPrjTree->Branch("fPhSpecter33", &fPhSpecter[33]); 
+    longestTrackPrjTree->Branch("fPhSpecter34", &fPhSpecter[34]); 
+    longestTrackPrjTree->Branch("fPhSpecter35", &fPhSpecter[35]); 
+    longestTrackPrjTree->Branch("fPhSpecter36", &fPhSpecter[36]); 
+    longestTrackPrjTree->Branch("fPhSpecter37", &fPhSpecter[37]); 
+    longestTrackPrjTree->Branch("fPhSpecter38", &fPhSpecter[38]); 
+    longestTrackPrjTree->Branch("fPhSpecter39", &fPhSpecter[39]); 
+    longestTrackPrjTree->Branch("fPhSpecter40", &fPhSpecter[40]); 
+    longestTrackPrjTree->Branch("fPhSpecter41", &fPhSpecter[41]); 
+    longestTrackPrjTree->Branch("fPhSpecter42", &fPhSpecter[42]); 
+    longestTrackPrjTree->Branch("fPhSpecter43", &fPhSpecter[43]); 
+    longestTrackPrjTree->Branch("fPhSpecter44", &fPhSpecter[44]); 
+    longestTrackPrjTree->Branch("fPhSpecter45", &fPhSpecter[45]); 
+    longestTrackPrjTree->Branch("fPhSpecter46", &fPhSpecter[46]); 
+    longestTrackPrjTree->Branch("fPhSpecter47", &fPhSpecter[47]); 
+    longestTrackPrjTree->Branch("fPhSpecter48", &fPhSpecter[48]); 
+    longestTrackPrjTree->Branch("fPhSpecter49", &fPhSpecter[49]); 
 
 
     Float_t lMean = 0.;
@@ -630,8 +655,15 @@ void FgdTMVAData::FinishTask()
     {
         dataEvent = &feventRecords[ind];
         
+        /* 
         bool isQuasiCC = dataEvent->IsWeakCC();// && dataEvent->IsQuasiElastic();
         if(!isQuasiCC)
+        {
+            continue;
+        }
+        */
+        FgdTMVAEventRecord::EventType eventType = dataEvent->GetEventType();// && dataEvent->IsQuasiElastic();
+        if(eventType != FgdTMVAEventRecord::EventType::MUON_AND_PROTON_ONLY)
         {
             continue;
         }
@@ -711,6 +743,7 @@ void FgdTMVAData::FinishTask()
     
     delete outFile;
 
+    printNotUsed();
     FgdMCGenFitRecon::FinishTask();
 }
 
@@ -743,10 +776,31 @@ void FgdTMVAData::copySpectrum(size_t ind)
     const std::vector<Float_t>& vec = fphotonSpectrum[ind];
     for(size_t i = 0; i < vec.size(); ++i)
     {
-        size_t copyInd = vec[i]/PHOTON_SPECTRUM_SIZE;
-        copyInd = copyInd>= PHOTON_SPECTRUM_SIZE ? (PHOTON_SPECTRUM_SIZE - 1) : copyInd;
-        ++fPhSpecter[copyInd];
         f_hist_spectrum->Fill(vec[i]);
+        // size_t copyInd = vec[i]/PHOTON_SPECTRUM_SIZE;
+        // copyInd = copyInd>= PHOTON_SPECTRUM_SIZE ? (PHOTON_SPECTRUM_SIZE - 1) : copyInd;
+        // ++fPhSpecter[copyInd];
+    }
+
+    for(size_t i = 0; i < PHOTON_SPECTRUM_SIZE; ++i)
+    {
+        fPhSpecter[i] = f_hist_spectrum->GetBinContent(i);
+        if(fPhSpecter[i]!=0)
+        {
+            fSpecConst[i] = true;
+        }
+    }
+}
+
+void FgdTMVAData::printNotUsed()
+{
+    LOG(info) << "Not used in spectrum ";
+    for(size_t i = 0; i < PHOTON_SPECTRUM_SIZE; ++i)
+    {
+        if(!fSpecConst[i])
+        {
+            LOG(info) << i;
+        }
     }
 }
 

@@ -169,46 +169,67 @@ void tmva_train( Int_t numToTrain = 300
    if(treeName.compare("FgdLongestProjectionTree") ==0 )
    {
       //dataloader->AddVariable( "muon_mom", "Muon momentum", "units", 'F' );
-
+      /*
       dataloader->AddVariable( "totalPhotons", "Total photons", "units", 'F' );
       dataloader->AddVariable( "lMean", "mean_Spectrum", "units", 'F' );
       dataloader->AddVariable( "lMeanErr", "mean_Spectrum_err", "units", 'F' );
       dataloader->AddVariable( "lStdDev", "std_dev", "units", 'F' );
       dataloader->AddVariable( "lStdDevErr", "std_dev_err", "units", 'F' );
       dataloader->AddVariable( "lEntries", "entries", "units", 'F' );
-
-      /* 
-      dataloader->AddVariable( "fPhSpecter0", "Cube photons_0", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter1", "Cube photons_1", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter2", "Cube photons_2", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter3", "Cube photons_3", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter4", "Cube photons_4", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter5", "Cube photons_5", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter6", "Cube photons_6", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter7", "Cube photons_7", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter8", "Cube photons_8", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter9", "Cube photons_9", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter10", "Cube photons_10", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter11", "Cube photons_11", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter12", "Cube photons_12", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter13", "Cube photons_13", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter14", "Cube photons_14", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter15", "Cube photons_15", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter16", "Cube photons_16", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter17", "Cube photons_17", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter18", "Cube photons_18", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter19", "Cube photons_19", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter20", "Cube photons_20", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter21", "Cube photons_21", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter22", "Cube photons_22", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter23", "Cube photons_23", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter24", "Cube photons_24", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter25", "Cube photons_25", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter26", "Cube photons_26", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter27", "Cube photons_27", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter28", "Cube photons_28", "units", 'F' );
-      dataloader->AddVariable( "fPhSpecter29", "Cube photons_29", "units", 'F' );
       */
+      /* */
+      //dataloader->AddVariable( "fPhSpecter0", "Cube photons_0", "units", 'F' ); 
+      //dataloader->AddVariable( "fPhSpecter0", "Cube photons_0", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter1", "Cube photons_1", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter2", "Cube photons_2", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter3", "Cube photons_3", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter4", "Cube photons_4", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter5", "Cube photons_5", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter6", "Cube photons_6", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter7", "Cube photons_7", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter8", "Cube photons_8", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter9", "Cube photons_9", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter10", "Cube photons_10", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter11", "Cube photons_11", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter12", "Cube photons_12", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter13", "Cube photons_13", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter14", "Cube photons_14", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter15", "Cube photons_15", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter16", "Cube photons_16", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter17", "Cube photons_17", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter18", "Cube photons_18", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter19", "Cube photons_19", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter20", "Cube photons_20", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter21", "Cube photons_21", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter22", "Cube photons_22", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter23", "Cube photons_23", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter24", "Cube photons_24", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter25", "Cube photons_25", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter26", "Cube photons_26", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter27", "Cube photons_27", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter28", "Cube photons_28", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter29", "Cube photons_29", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter30", "Cube photons_30", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter31", "Cube photons_31", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter32", "Cube photons_32", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter33", "Cube photons_33", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter34", "Cube photons_34", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter35", "Cube photons_35", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter36", "Cube photons_36", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter37", "Cube photons_37", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter38", "Cube photons_38", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter39", "Cube photons_39", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter40", "Cube photons_40", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter41", "Cube photons_41", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter42", "Cube photons_42", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter43", "Cube photons_43", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter44", "Cube photons_44", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter45", "Cube photons_45", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter46", "Cube photons_46", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter47", "Cube photons_47", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter48", "Cube photons_48", "units", 'F' ); 
+      dataloader->AddVariable( "fPhSpecter49", "Cube photons_49", "units", 'F' ); 
+      
    }
 
    // Add the variable carrying the regression target

@@ -103,6 +103,7 @@ public:
     Double_t GetEdepDeDx() {return fEdepDeDx;}
 
     std::string GetEventData(){return feventData; }
+    EventType GetEventType() {return fEventType; }
 
     void PrintData(std::ostream & stream);
     void ReadEventData();

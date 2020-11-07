@@ -6,7 +6,8 @@
 #include "EsbReconstruction/EsbSuperFGD/FgdTMVAEventRecord.h"
 #include <TH1F.h>
 
-#define PHOTON_SPECTRUM_SIZE 30
+#define PHOTON_SPECTRUM_SIZE 50
+#define PHOTON_SPECTRUM_MAX 300
 
 namespace esbroot {
 namespace reconstruction {
@@ -57,6 +58,7 @@ protected:
   Bool_t isParticleAllowed(Int_t pdg);
   void clearSpectrum();
   void copySpectrum(size_t ind);
+  void printNotUsed();
 
   std::string feventData;//!<!
   std::string foutputRootFile;//!<!
@@ -87,6 +89,7 @@ protected:
   Float_t fMaxTrueEdep;
 
   Float_t fPhSpecter[PHOTON_SPECTRUM_SIZE];
+  Bool_t fSpecConst[PHOTON_SPECTRUM_SIZE];
   TH1F* f_hist_spectrum;
   	   
   ClassDef(FgdTMVAData, 2);

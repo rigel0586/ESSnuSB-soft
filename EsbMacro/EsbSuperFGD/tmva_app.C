@@ -120,9 +120,11 @@ void tmva_app( TString myMethodList = ""
     //reader->AddVariable( "totalCubes", &totalCubes );
     //reader->AddVariable( "totalEdep", &totalEdep );
 
-    Float_t ph_sp_0, ph_sp_1, ph_sp_2, ph_sp_3, ph_sp_4, ph_sp_5, ph_sp_6, ph_sp_7, ph_sp_8, ph_sp_9
-            , ph_sp_10, ph_sp_11, ph_sp_12, ph_sp_13, ph_sp_14, ph_sp_15, ph_sp_16, ph_sp_17, ph_sp_18, ph_sp_19
-            , ph_sp_20, ph_sp_21, ph_sp_22, ph_sp_23, ph_sp_24, ph_sp_25, ph_sp_26, ph_sp_27, ph_sp_28, ph_sp_29;
+    Float_t ph_sp_0, ph_sp_1, ph_sp_2, ph_sp_3, ph_sp_4, ph_sp_5, ph_sp_6, ph_sp_7, ph_sp_8, ph_sp_9, 
+            ph_sp_10, ph_sp_11, ph_sp_12, ph_sp_13, ph_sp_14, ph_sp_15, ph_sp_16, ph_sp_17, ph_sp_18, ph_sp_19, 
+            ph_sp_20, ph_sp_21, ph_sp_22, ph_sp_23, ph_sp_24, ph_sp_25, ph_sp_26, ph_sp_27, ph_sp_28, ph_sp_29, 
+            ph_sp_30, ph_sp_31, ph_sp_32, ph_sp_33, ph_sp_34, ph_sp_35, ph_sp_36, ph_sp_37, ph_sp_38, ph_sp_39, 
+            ph_sp_40, ph_sp_41, ph_sp_42, ph_sp_43, ph_sp_44, ph_sp_45, ph_sp_46, ph_sp_47, ph_sp_48, ph_sp_49;
 
    Float_t lMean, lMeanErr, lStdDev, lStdDevErr, lEntries;
 
@@ -139,48 +141,65 @@ void tmva_app( TString myMethodList = ""
     if(treeName.compare("FgdLongestProjectionTree") ==0 )
     {
          //reader->AddVariable( "muon_mom", &muon_mom );
-
+         /* 
          reader->AddVariable( "totalPhotons", &totalPhotons );
          reader->AddVariable( "lMean", &lMean );
          reader->AddVariable( "lMeanErr", &lMeanErr );
          reader->AddVariable( "lStdDev", &lStdDev );
          reader->AddVariable( "lStdDevErr", &lStdDevErr );
          reader->AddVariable( "lEntries", &lEntries );
-
-         /* 
-         reader->AddVariable( "fPhSpecter0", &ph_sp_0 );
-         reader->AddVariable( "fPhSpecter1", &ph_sp_1 );
-         reader->AddVariable( "fPhSpecter2", &ph_sp_2 );
-         reader->AddVariable( "fPhSpecter3", &ph_sp_3 );
-         reader->AddVariable( "fPhSpecter4", &ph_sp_4 );
-         reader->AddVariable( "fPhSpecter5", &ph_sp_5 );
-         reader->AddVariable( "fPhSpecter6", &ph_sp_6 );
-         reader->AddVariable( "fPhSpecter7", &ph_sp_7 );
-         reader->AddVariable( "fPhSpecter8", &ph_sp_8 );
-         reader->AddVariable( "fPhSpecter9", &ph_sp_9 );
-
-         reader->AddVariable( "fPhSpecter10", &ph_sp_10 );
-         reader->AddVariable( "fPhSpecter11", &ph_sp_11 );
-         reader->AddVariable( "fPhSpecter12", &ph_sp_12 );
-         reader->AddVariable( "fPhSpecter13", &ph_sp_13 );
-         reader->AddVariable( "fPhSpecter14", &ph_sp_14 );
-         reader->AddVariable( "fPhSpecter15", &ph_sp_15 );
-         reader->AddVariable( "fPhSpecter16", &ph_sp_16 );
-         reader->AddVariable( "fPhSpecter17", &ph_sp_17 );
-         reader->AddVariable( "fPhSpecter18", &ph_sp_18 );
-         reader->AddVariable( "fPhSpecter19", &ph_sp_19 );
-
-         reader->AddVariable( "fPhSpecter20", &ph_sp_20 );
-         reader->AddVariable( "fPhSpecter21", &ph_sp_21 );
-         reader->AddVariable( "fPhSpecter22", &ph_sp_22 );
-         reader->AddVariable( "fPhSpecter23", &ph_sp_23 );
-         reader->AddVariable( "fPhSpecter24", &ph_sp_24 );
-         reader->AddVariable( "fPhSpecter25", &ph_sp_25 );
-         reader->AddVariable( "fPhSpecter26", &ph_sp_26 );
-         reader->AddVariable( "fPhSpecter27", &ph_sp_27 );
-         reader->AddVariable( "fPhSpecter28", &ph_sp_28 );
-         reader->AddVariable( "fPhSpecter29", &ph_sp_29 );
          */
+
+         //reader->AddVariable( "fPhSpecter0", &ph_sp_0 ); 
+         reader->AddVariable( "fPhSpecter1", &ph_sp_1 ); 
+         reader->AddVariable( "fPhSpecter2", &ph_sp_2 ); 
+         reader->AddVariable( "fPhSpecter3", &ph_sp_3 ); 
+         reader->AddVariable( "fPhSpecter4", &ph_sp_4 ); 
+         reader->AddVariable( "fPhSpecter5", &ph_sp_5 ); 
+         reader->AddVariable( "fPhSpecter6", &ph_sp_6 ); 
+         reader->AddVariable( "fPhSpecter7", &ph_sp_7 ); 
+         reader->AddVariable( "fPhSpecter8", &ph_sp_8 ); 
+         reader->AddVariable( "fPhSpecter9", &ph_sp_9 ); 
+         reader->AddVariable( "fPhSpecter10", &ph_sp_10 ); 
+         reader->AddVariable( "fPhSpecter11", &ph_sp_11 ); 
+         reader->AddVariable( "fPhSpecter12", &ph_sp_12 ); 
+         reader->AddVariable( "fPhSpecter13", &ph_sp_13 ); 
+         reader->AddVariable( "fPhSpecter14", &ph_sp_14 ); 
+         reader->AddVariable( "fPhSpecter15", &ph_sp_15 ); 
+         reader->AddVariable( "fPhSpecter16", &ph_sp_16 ); 
+         reader->AddVariable( "fPhSpecter17", &ph_sp_17 ); 
+         reader->AddVariable( "fPhSpecter18", &ph_sp_18 ); 
+         reader->AddVariable( "fPhSpecter19", &ph_sp_19 ); 
+         reader->AddVariable( "fPhSpecter20", &ph_sp_20 ); 
+         reader->AddVariable( "fPhSpecter21", &ph_sp_21 ); 
+         reader->AddVariable( "fPhSpecter22", &ph_sp_22 ); 
+         reader->AddVariable( "fPhSpecter23", &ph_sp_23 ); 
+         reader->AddVariable( "fPhSpecter24", &ph_sp_24 ); 
+         reader->AddVariable( "fPhSpecter25", &ph_sp_25 ); 
+         reader->AddVariable( "fPhSpecter26", &ph_sp_26 ); 
+         reader->AddVariable( "fPhSpecter27", &ph_sp_27 ); 
+         reader->AddVariable( "fPhSpecter28", &ph_sp_28 ); 
+         reader->AddVariable( "fPhSpecter29", &ph_sp_29 ); 
+         reader->AddVariable( "fPhSpecter30", &ph_sp_30 ); 
+         reader->AddVariable( "fPhSpecter31", &ph_sp_31 ); 
+         reader->AddVariable( "fPhSpecter32", &ph_sp_32 ); 
+         reader->AddVariable( "fPhSpecter33", &ph_sp_33 ); 
+         reader->AddVariable( "fPhSpecter34", &ph_sp_34 ); 
+         reader->AddVariable( "fPhSpecter35", &ph_sp_35 ); 
+         reader->AddVariable( "fPhSpecter36", &ph_sp_36 ); 
+         reader->AddVariable( "fPhSpecter37", &ph_sp_37 ); 
+         reader->AddVariable( "fPhSpecter38", &ph_sp_38 ); 
+         reader->AddVariable( "fPhSpecter39", &ph_sp_39 ); 
+         reader->AddVariable( "fPhSpecter40", &ph_sp_40 ); 
+         reader->AddVariable( "fPhSpecter41", &ph_sp_41 ); 
+         reader->AddVariable( "fPhSpecter42", &ph_sp_42 ); 
+         reader->AddVariable( "fPhSpecter43", &ph_sp_43 ); 
+         reader->AddVariable( "fPhSpecter44", &ph_sp_44 ); 
+         reader->AddVariable( "fPhSpecter45", &ph_sp_45 ); 
+         reader->AddVariable( "fPhSpecter46", &ph_sp_46 ); 
+         reader->AddVariable( "fPhSpecter47", &ph_sp_47 ); 
+         reader->AddVariable( "fPhSpecter48", &ph_sp_48 ); 
+         reader->AddVariable( "fPhSpecter49", &ph_sp_49 ); 
        
     }
 
@@ -253,48 +272,65 @@ void tmva_app( TString myMethodList = ""
    if(treeName.compare("FgdLongestProjectionTree") ==0 )
    {
       //theTree->SetBranchAddress( "muon_mom", &muon_mom );
-
+      /*
       theTree->SetBranchAddress( "totalPhotons", &totalPhotons );
       theTree->SetBranchAddress( "lMean", &lMean );
       theTree->SetBranchAddress( "lMeanErr", &lMeanErr );
       theTree->SetBranchAddress( "lStdDev", &lStdDev );
       theTree->SetBranchAddress( "lStdDevErr", &lStdDevErr );
       theTree->SetBranchAddress( "lEntries", &lEntries );
-
-      /* 
-      theTree->SetBranchAddress( "fPhSpecter0", &ph_sp_0 );
-      theTree->SetBranchAddress( "fPhSpecter1", &ph_sp_1 );
-      theTree->SetBranchAddress( "fPhSpecter2", &ph_sp_2 );
-      theTree->SetBranchAddress( "fPhSpecter3", &ph_sp_3 );
-      theTree->SetBranchAddress( "fPhSpecter4", &ph_sp_4 );
-      theTree->SetBranchAddress( "fPhSpecter5", &ph_sp_5 );
-      theTree->SetBranchAddress( "fPhSpecter6", &ph_sp_6 );
-      theTree->SetBranchAddress( "fPhSpecter7", &ph_sp_7 );
-      theTree->SetBranchAddress( "fPhSpecter8", &ph_sp_8 );
-      theTree->SetBranchAddress( "fPhSpecter9", &ph_sp_9 );
-
-      theTree->SetBranchAddress( "fPhSpecter10", &ph_sp_10 );
-      theTree->SetBranchAddress( "fPhSpecter11", &ph_sp_11 );
-      theTree->SetBranchAddress( "fPhSpecter12", &ph_sp_12 );
-      theTree->SetBranchAddress( "fPhSpecter13", &ph_sp_13 );
-      theTree->SetBranchAddress( "fPhSpecter14", &ph_sp_14 );
-      theTree->SetBranchAddress( "fPhSpecter15", &ph_sp_15 );
-      theTree->SetBranchAddress( "fPhSpecter16", &ph_sp_16 );
-      theTree->SetBranchAddress( "fPhSpecter17", &ph_sp_17 );
-      theTree->SetBranchAddress( "fPhSpecter18", &ph_sp_18 );
-      theTree->SetBranchAddress( "fPhSpecter19", &ph_sp_19 );
-
-      theTree->SetBranchAddress( "fPhSpecter20", &ph_sp_20 );
-      theTree->SetBranchAddress( "fPhSpecter21", &ph_sp_21 );
-      theTree->SetBranchAddress( "fPhSpecter22", &ph_sp_22 );
-      theTree->SetBranchAddress( "fPhSpecter23", &ph_sp_23 );
-      theTree->SetBranchAddress( "fPhSpecter24", &ph_sp_24 );
-      theTree->SetBranchAddress( "fPhSpecter25", &ph_sp_25 );
-      theTree->SetBranchAddress( "fPhSpecter26", &ph_sp_26 );
-      theTree->SetBranchAddress( "fPhSpecter27", &ph_sp_27 );
-      theTree->SetBranchAddress( "fPhSpecter28", &ph_sp_28 );
-      theTree->SetBranchAddress( "fPhSpecter29", &ph_sp_29 );
       */
+
+      //theTree->SetBranchAddress( "fPhSpecter0", &ph_sp_0 ); 
+      theTree->SetBranchAddress( "fPhSpecter1", &ph_sp_1 ); 
+      theTree->SetBranchAddress( "fPhSpecter2", &ph_sp_2 ); 
+      theTree->SetBranchAddress( "fPhSpecter3", &ph_sp_3 ); 
+      theTree->SetBranchAddress( "fPhSpecter4", &ph_sp_4 ); 
+      theTree->SetBranchAddress( "fPhSpecter5", &ph_sp_5 ); 
+      theTree->SetBranchAddress( "fPhSpecter6", &ph_sp_6 ); 
+      theTree->SetBranchAddress( "fPhSpecter7", &ph_sp_7 ); 
+      theTree->SetBranchAddress( "fPhSpecter8", &ph_sp_8 ); 
+      theTree->SetBranchAddress( "fPhSpecter9", &ph_sp_9 ); 
+      theTree->SetBranchAddress( "fPhSpecter10", &ph_sp_10 ); 
+      theTree->SetBranchAddress( "fPhSpecter11", &ph_sp_11 ); 
+      theTree->SetBranchAddress( "fPhSpecter12", &ph_sp_12 ); 
+      theTree->SetBranchAddress( "fPhSpecter13", &ph_sp_13 ); 
+      theTree->SetBranchAddress( "fPhSpecter14", &ph_sp_14 ); 
+      theTree->SetBranchAddress( "fPhSpecter15", &ph_sp_15 ); 
+      theTree->SetBranchAddress( "fPhSpecter16", &ph_sp_16 ); 
+      theTree->SetBranchAddress( "fPhSpecter17", &ph_sp_17 ); 
+      theTree->SetBranchAddress( "fPhSpecter18", &ph_sp_18 ); 
+      theTree->SetBranchAddress( "fPhSpecter19", &ph_sp_19 ); 
+      theTree->SetBranchAddress( "fPhSpecter20", &ph_sp_20 ); 
+      theTree->SetBranchAddress( "fPhSpecter21", &ph_sp_21 ); 
+      theTree->SetBranchAddress( "fPhSpecter22", &ph_sp_22 ); 
+      theTree->SetBranchAddress( "fPhSpecter23", &ph_sp_23 ); 
+      theTree->SetBranchAddress( "fPhSpecter24", &ph_sp_24 ); 
+      theTree->SetBranchAddress( "fPhSpecter25", &ph_sp_25 ); 
+      theTree->SetBranchAddress( "fPhSpecter26", &ph_sp_26 ); 
+      theTree->SetBranchAddress( "fPhSpecter27", &ph_sp_27 ); 
+      theTree->SetBranchAddress( "fPhSpecter28", &ph_sp_28 ); 
+      theTree->SetBranchAddress( "fPhSpecter29", &ph_sp_29 ); 
+      theTree->SetBranchAddress( "fPhSpecter30", &ph_sp_30 ); 
+      theTree->SetBranchAddress( "fPhSpecter31", &ph_sp_31 ); 
+      theTree->SetBranchAddress( "fPhSpecter32", &ph_sp_32 ); 
+      theTree->SetBranchAddress( "fPhSpecter33", &ph_sp_33 ); 
+      theTree->SetBranchAddress( "fPhSpecter34", &ph_sp_34 ); 
+      theTree->SetBranchAddress( "fPhSpecter35", &ph_sp_35 ); 
+      theTree->SetBranchAddress( "fPhSpecter36", &ph_sp_36 ); 
+      theTree->SetBranchAddress( "fPhSpecter37", &ph_sp_37 ); 
+      theTree->SetBranchAddress( "fPhSpecter38", &ph_sp_38 ); 
+      theTree->SetBranchAddress( "fPhSpecter39", &ph_sp_39 ); 
+      theTree->SetBranchAddress( "fPhSpecter40", &ph_sp_40 ); 
+      theTree->SetBranchAddress( "fPhSpecter41", &ph_sp_41 ); 
+      theTree->SetBranchAddress( "fPhSpecter42", &ph_sp_42 ); 
+      theTree->SetBranchAddress( "fPhSpecter43", &ph_sp_43 ); 
+      theTree->SetBranchAddress( "fPhSpecter44", &ph_sp_44 ); 
+      theTree->SetBranchAddress( "fPhSpecter45", &ph_sp_45 ); 
+      theTree->SetBranchAddress( "fPhSpecter46", &ph_sp_46 ); 
+      theTree->SetBranchAddress( "fPhSpecter47", &ph_sp_47 ); 
+      theTree->SetBranchAddress( "fPhSpecter48", &ph_sp_48 ); 
+      theTree->SetBranchAddress( "fPhSpecter49", &ph_sp_49 ); 
    }
 
    std::cout << "--- Processing: " << theTree->GetEntries() << " events" << std::endl;
