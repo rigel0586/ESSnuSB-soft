@@ -6,6 +6,8 @@
 
 #include <vector>
 #include <ostream>
+#include <map>
+#include <set>
 
 namespace esbroot {
 namespace reconstruction {
@@ -14,6 +16,20 @@ namespace superfgd {
 class FgdMCEventRecord : public TObject
 {
 public:
+
+    enum EventType : int   // Position in the fDataTokens which value represents which data 
+    {
+        MUON_ONLY,
+        ANTI_MUON_ONLY,
+
+        MUON_AND_PROTON_ONLY,
+        ANTI_MUON_AND_PROTON_ONLY,
+
+        MUON_AND_MULTI_PROTON_ONLY,
+        ANTI_MUON_AND_MULTI_PROTON_ONLY,
+
+        UNDEFINED
+    };
 
     FgdMCEventRecord(std::string eventData);
 
@@ -117,6 +133,9 @@ protected:
 
     void Init();
     void InitMembers();
+    void fillType();
+    size_t numOfParTypes(std::map<Int_t, Int_t>& map, std::set<Int_t>& keys, bool countAllExceptKeys);
+    void determineEventType();
     std::string feventData;
 
     
@@ -161,6 +180,9 @@ protected:
     
     std::vector<std::string> fDataTokens;
     std::vector<std::pair<Int_t, TVector3>> fPrimaryParticles;//!<!
+
+    EventType fEventType;//!<!
+    std::map<Int_t, Int_t> fparticleTypes;//!<!
 
     ClassDef(FgdMCEventRecord, 1);
 

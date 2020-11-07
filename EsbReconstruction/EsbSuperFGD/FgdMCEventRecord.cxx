@@ -31,6 +31,7 @@ FgdMCEventRecord::FgdMCEventRecord(std::string eventData)
         , fMuonPolarAngle(0.), fMuonAzumAngle(0.), fElectronNumOfExitingParticles(0)
         , fGenfitMom(TVector3(0,0,0)), fMC_GentFitError(0.), fProtonEdep(0.)
         , fHasHits(false), fDeDx(0.), fEdepDeDx(0.)
+        , fEventType(EventType::UNDEFINED)
 {
     Init();
 }
@@ -336,6 +337,164 @@ void FgdMCEventRecord::InitMembers()
             break;
         }
     }
+
+    fillType();
+    determineEventType();
+}
+
+void FgdMCEventRecord::fillType()
+{
+    fparticleTypes[genie::kPdgMuon] = 0;
+    fparticleTypes[genie::kPdgAntiMuon] = 0;
+    fparticleTypes[genie::kPdgProton] = 0;
+    fparticleTypes[genie::kPdgPiP] = 0;
+    fparticleTypes[genie::kPdgPiM] = 0;
+    fparticleTypes[genie::kPdgElectron] = 0;
+    fparticleTypes[genie::kPdgPositron] = 0;
+    
+
+    for(size_t i = 0; i< fPrimaryParticles.size(); ++i)
+    {
+        std::pair<Int_t, TVector3>& particle = fPrimaryParticles[i];
+        auto iter = fparticleTypes.find(particle.first);
+        if(iter!= fparticleTypes.end())
+        {
+            ++(iter->second);
+        }
+    }
+}
+
+size_t FgdMCEventRecord::numOfParTypes(std::map<Int_t, Int_t>& map, std::set<Int_t>& keys, bool countAllExceptKeys)
+{
+    auto iter = map.begin();
+    size_t res(0);
+    while(iter != map.end())
+    {
+        if(!countAllExceptKeys && keys.find(iter->first) != keys.end())
+        {
+            res += iter->second;
+        }
+        else if(countAllExceptKeys && keys.find(iter->first) == keys.end())
+        {
+            res += iter->second;
+        }
+        ++iter;
+    }
+    return res;
+}
+
+void FgdMCEventRecord::determineEventType()
+{
+    const static size_t SINGLE = 1;
+    const static size_t NONE = 0;
+
+    std::set<Int_t> pdgKeys;
+
+    // ======================================================
+    // 1. Muon only
+    {
+        pdgKeys.insert(genie::kPdgMuon);
+
+        size_t muons = numOfParTypes(fparticleTypes,pdgKeys, false);
+        size_t allExceptMuons = numOfParTypes(fparticleTypes,pdgKeys, true);
+
+        if(muons == SINGLE && allExceptMuons == NONE) {fEventType = EventType::MUON_ONLY; return;}
+        pdgKeys.clear();
+    }
+    // ======================================================
+
+    // ======================================================
+    // 2. AntiMuon only
+    {
+        pdgKeys.insert(genie::kPdgAntiMuon);
+
+        size_t antimuons = numOfParTypes(fparticleTypes,pdgKeys, false);
+        size_t allExceptAntiMuons = numOfParTypes(fparticleTypes,pdgKeys, true);
+
+        if(antimuons == SINGLE && allExceptAntiMuons == NONE) {fEventType = EventType::ANTI_MUON_ONLY; return;}
+        pdgKeys.clear();
+    }
+    // ======================================================
+
+    // ======================================================
+    // 3. Muon and proton only
+    {
+        std::set<Int_t> pdgKeys;
+        pdgKeys.insert(genie::kPdgMuon);
+
+        size_t muons = numOfParTypes(fparticleTypes,pdgKeys, false);
+        pdgKeys.clear();
+        pdgKeys.insert(genie::kPdgProton);
+        size_t protons = numOfParTypes(fparticleTypes,pdgKeys, false);
+        pdgKeys.clear();
+        pdgKeys.insert(genie::kPdgMuon);
+        pdgKeys.insert(genie::kPdgProton);
+        size_t allExceptMuonProton = numOfParTypes(fparticleTypes,pdgKeys, true);
+
+        if(muons == SINGLE && protons == SINGLE && allExceptMuonProton == NONE) {fEventType = EventType::MUON_AND_PROTON_ONLY; return;}
+        pdgKeys.clear();
+    }
+    // ======================================================
+
+    // ======================================================
+    // 4. Anti Muon and proton only
+    {
+        std::set<Int_t> pdgKeys;
+        pdgKeys.insert(genie::kPdgAntiMuon);
+
+        size_t antimuons = numOfParTypes(fparticleTypes,pdgKeys, false);
+        pdgKeys.clear();
+        pdgKeys.insert(genie::kPdgProton);
+        size_t protons = numOfParTypes(fparticleTypes,pdgKeys, false);
+        pdgKeys.clear();
+        pdgKeys.insert(genie::kPdgAntiMuon);
+        pdgKeys.insert(genie::kPdgProton);
+        size_t allExceptMuonProton = numOfParTypes(fparticleTypes,pdgKeys, true);
+
+        if(antimuons == SINGLE && protons == SINGLE && allExceptMuonProton == NONE) {fEventType = EventType::ANTI_MUON_AND_PROTON_ONLY; return;}
+        pdgKeys.clear();
+    }
+    // ======================================================
+
+    // ======================================================
+    // 5. Muon and multi protons
+    {
+        std::set<Int_t> pdgKeys;
+        pdgKeys.insert(genie::kPdgMuon);
+
+        size_t muons = numOfParTypes(fparticleTypes,pdgKeys, false);
+        pdgKeys.clear();
+        pdgKeys.insert(genie::kPdgProton);
+        size_t protons = numOfParTypes(fparticleTypes,pdgKeys, false);
+        pdgKeys.clear();
+        pdgKeys.insert(genie::kPdgMuon);
+        pdgKeys.insert(genie::kPdgProton);
+        size_t allExceptMuonProton = numOfParTypes(fparticleTypes,pdgKeys, true);
+
+        if(muons == SINGLE && protons > SINGLE && allExceptMuonProton == NONE) {fEventType = EventType::MUON_AND_MULTI_PROTON_ONLY; return;}
+        pdgKeys.clear();
+    }
+    // ======================================================
+
+    // ======================================================
+    // 6. Anti Muon and multi protons
+    {
+        std::set<Int_t> pdgKeys;
+        pdgKeys.insert(genie::kPdgAntiMuon);
+
+        size_t antimuons = numOfParTypes(fparticleTypes,pdgKeys, false);
+        pdgKeys.clear();
+        pdgKeys.insert(genie::kPdgProton);
+        size_t protons = numOfParTypes(fparticleTypes,pdgKeys, false);
+        pdgKeys.clear();
+        pdgKeys.insert(genie::kPdgAntiMuon);
+        pdgKeys.insert(genie::kPdgProton);
+        size_t allExceptMuonProton = numOfParTypes(fparticleTypes,pdgKeys, true);
+
+        if(antimuons == SINGLE && protons > SINGLE && allExceptMuonProton == NONE) {fEventType = EventType::MUON_AND_MULTI_PROTON_ONLY; return;}
+        pdgKeys.clear();
+    }
+    // ======================================================
 }
 
 // -------------------------------------------------------------------------

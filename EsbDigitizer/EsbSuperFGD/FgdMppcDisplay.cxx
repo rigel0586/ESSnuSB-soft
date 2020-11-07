@@ -143,6 +143,16 @@ void FgdMppcDisplay::FinishEvent()
     std::cout << "Emtries " << entries << std::endl;
     f_ph_hist->Draw("colz");
     WriteCanvas("Photons");
+    /* 
+    if(f_ph_hist)
+    {
+      std::cout << " Event " << fevNum << std::endl;
+      for(size_t i =0; i < 300 ; ++i)
+      {
+        std::cout << i << " -> " << f_ph_hist->GetBinContent(i) << std::endl;
+      }
+    }
+    */
     f_ph_hist->Reset();
   } 
 
