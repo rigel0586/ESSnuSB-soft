@@ -2,6 +2,7 @@
 #include "EsbReconstruction/EsbSuperFGD/FgdReconTemplate.h"
 //#include "EsbData/EsbSuperFGD/FgdDetectorPoint.h"
 #include "EsbDigitizer/EsbSuperFGD/FgdDigitizer.h"
+#include "EsbReconstruction/EsbSuperFGD/FgdCalorimetric.h"
 
 // FairRoot headers
 #include "FairGeoBuilder.h"
@@ -252,6 +253,13 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
         }   
     }
 
+    Float_t sumAllEdep = 0;
+    for(size_t i = 0; i <  allhits.size() ; ++i)
+    {
+        ReconHit& hit = allhits[i];
+        sumAllEdep += CalculatePhotoEdep(hit);
+    }
+
     // 1a. Extract cube spectrum
     std::vector<Float_t> photoSpectrum;
     for(size_t j = 0; j < allhits.size(); ++j)
@@ -265,6 +273,7 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
     tvmaEventRecord.SetTotalPhotons(sumTotalPhoto);
     tvmaEventRecord.SetTotalCubes(sumTotalCubes); 
     tvmaEventRecord.SetTotalEdep(sumEdep);
+    tvmaEventRecord.SetAllEdep(sumAllEdep);
     tvmaEventRecord.SetTrueEdep(sumTrueEdep);
     tvmaEventRecord.SetPe(sumPe);
     Float_t sumTotph = sumTotalPhoto.X() + sumTotalPhoto.Y() + sumTotalPhoto.Z();
@@ -571,12 +580,14 @@ void FgdTMVAData::FinishTask()
     Float_t totPh = 0.;
     Float_t totalEdep = 0.;
     Float_t trueEdep = 0.;
+    Float_t allEdep = 0.;
     Float_t totalPe = 0.;
 
     longestTrackPrjTree->Branch("totalCubes", &totCubes);
     longestTrackPrjTree->Branch("totalPhotons", &totPh);
     longestTrackPrjTree->Branch("totalEdep", &totalEdep);
     longestTrackPrjTree->Branch("trueEdep", &trueEdep);
+    longestTrackPrjTree->Branch("allEdep", &allEdep);
     longestTrackPrjTree->Branch("totalPe", &totalPe);
     longestTrackPrjTree->Branch("nuEnergy", &lnuEnergy);
     longestTrackPrjTree->Branch("nuPdg", &lnuPdg);
@@ -655,6 +666,7 @@ void FgdTMVAData::FinishTask()
     {
         dataEvent = &feventRecords[ind];
         
+        //LOG(info) << "Event " << ind << " Total Edep " << dataEvent->GetTotalEdep() << " ; True Edep " << dataEvent->GetTrueEdep() << " ; All Edep " << dataEvent->GetAllEdep();
         /* 
         bool isQuasiCC = dataEvent->IsWeakCC();// && dataEvent->IsQuasiElastic();
         if(!isQuasiCC)
@@ -673,6 +685,7 @@ void FgdTMVAData::FinishTask()
         totalEdep = dataEvent->GetTotalEdep();
         totalPe = dataEvent->GetPe();
         trueEdep = dataEvent->GetTrueEdep();
+        allEdep = dataEvent->GetAllEdep();
 
         totPh = dataEvent->GetTotalPhotons().X() + dataEvent->GetTotalPhotons().Y() + dataEvent->GetTotalPhotons().Z();
         totCubes = dataEvent->GetTotalCubes();

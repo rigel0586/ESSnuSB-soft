@@ -47,8 +47,8 @@
 
 using namespace TMVA;
 
-void tmva_train( Int_t numToTrain = 300
-                  , Int_t numToTest = 75
+void tmva_train( Int_t numToTrain = 6000
+                  , Int_t numToTest = 442
                   ,TString myMethodList = "" 
                   ,TString inFileName = "tmva_data.root"              // simulate_3_TMVA_data2.C and simulate_3_TMVA_data.C
                   //,TString inFileName = "tmva_graph_data.root"          // simulate_3_graph_reconstruction.C
@@ -168,6 +168,7 @@ void tmva_train( Int_t numToTrain = 300
 
    if(treeName.compare("FgdLongestProjectionTree") ==0 )
    {
+      dataloader->AddVariable( "allEdep", "All deposited energy", "units", 'F' );
       //dataloader->AddVariable( "muon_mom", "Muon momentum", "units", 'F' );
       /*
       dataloader->AddVariable( "totalPhotons", "Total photons", "units", 'F' );

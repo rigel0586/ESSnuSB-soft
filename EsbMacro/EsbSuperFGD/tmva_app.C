@@ -115,7 +115,7 @@ void tmva_app( TString myMethodList = ""
     //reader->AddVariable( "ph_tr2", &ph_tr2 );
     //reader->AddVariable( "ph_tr3", &ph_tr3 );
 
-    Float_t totalPhotons, totalCubes, totalEdep, muon_mom;
+    Float_t totalPhotons, totalCubes, totalEdep, allEdep, muon_mom;
     //reader->AddVariable( "totalPhotons", &totalPhotons );
     //reader->AddVariable( "totalCubes", &totalCubes );
     //reader->AddVariable( "totalEdep", &totalEdep );
@@ -140,6 +140,7 @@ void tmva_app( TString myMethodList = ""
 
     if(treeName.compare("FgdLongestProjectionTree") ==0 )
     {
+         reader->AddVariable( "allEdep", &allEdep );
          //reader->AddVariable( "muon_mom", &muon_mom );
          /* 
          reader->AddVariable( "totalPhotons", &totalPhotons );
@@ -271,6 +272,7 @@ void tmva_app( TString myMethodList = ""
 
    if(treeName.compare("FgdLongestProjectionTree") ==0 )
    {
+      theTree->SetBranchAddress( "allEdep", &allEdep );
       //theTree->SetBranchAddress( "muon_mom", &muon_mom );
       /*
       theTree->SetBranchAddress( "totalPhotons", &totalPhotons );

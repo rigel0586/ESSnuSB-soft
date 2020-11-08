@@ -340,7 +340,6 @@ void FgdDigitizer::ApplyMPPCResponse(double& npe)
     double rndunif =0.;
     double npe_passed = 0.;
     int npe_integer = (int) (npe+0.5);
-
     for (int i=0;i<npe_integer;i++)
     {
         rndunif = rand.Rndm();
@@ -358,7 +357,28 @@ void FgdDigitizer::ApplyMPPCResponse(double& npe)
 double FgdDigitizer::RevertyMPPCResponse(double npe)
 {
   static const double Inverse_MPPCEff_SuperFGD = 2.15; // From trial an error the best match is chosen for the revert value
-  return (npe * Inverse_MPPCEff_SuperFGD);
+  //return (npe * Inverse_MPPCEff_SuperFGD);
+  //return (npe * 1);
+
+  /* 
+  TRandom3 rand;
+  double rndunif =0.;
+  double npe_passed = 0.;
+  int npe_integer = (int) (npe*0.92);
+  npe_integer /= MPPCEff_SuperFGD;
+  for (int i=0;i<npe_integer;i++)
+  {
+      rndunif = rand.Rndm();
+      if (rndunif < MPPCEff_SuperFGD)
+      {
+          npe_passed++;
+      } 
+  }
+
+  return npe_passed;
+  */
+
+  return npe; // BEST MATCH with the initial Deposited energy
 }
 // -------------------------------------------------------------------------
 

@@ -91,6 +91,9 @@ public:
     void SetTotalEdep(Double_t e){fTotalEdep = e;} // in [MeV]
     Double_t GetTotalEdep(){return fTotalEdep;}
 
+    void SetAllEdep(Double_t e){fAllEdep = e;} // in [MeV]
+    Double_t GetAllEdep(){return fAllEdep;}
+
     void SetTrueEdep(Double_t e){fTrueEdep = e;} // in [MeV]
     Double_t GetTrueEdep(){return fTrueEdep;}
 
@@ -187,6 +190,7 @@ protected:
     Double_t fMuonTrackLengthOrigin;
 
     Float_t fTotalEdep;
+    Float_t fAllEdep;
     Double_t fpe;
     Float_t fTrueEdep;
 
