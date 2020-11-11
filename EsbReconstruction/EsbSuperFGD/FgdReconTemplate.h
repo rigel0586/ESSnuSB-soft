@@ -4,6 +4,7 @@
 // Essnusb
 #include "EsbReconstruction/EsbSuperFGD/FgdReconHit.h"
 #include "EsbGeometry/EsbSuperFGD/EsbFgdDetectorParameters.h"
+#include "EsbGeometry/EsbSuperFGD/EsbSuperFGDDetectorConstruction.h"
 #include "EsbReconstruction/EsbSuperFGD/FgdGraphRecord.h"
 
 // Root
@@ -26,6 +27,8 @@ namespace superfgd {
 #define RETURN_TRY_LIMIT 2
 #define RETURN_CURRENT 2
 #define RETURN_PREVIOUS 3
+
+#define OUT_ARGUMENT
 
 class FgdReconTemplate : public TObject
 {
@@ -72,6 +75,18 @@ public:
                                 , HoughType houghType
                                 , TVector3 trackVertex
                                 , bool useVertex);
+
+    bool FitTrack(std::vector<ReconHit>& track
+                        ,  Bool_t useRefFitter
+                        ,  Int_t pdg
+                        ,  TVector3& posM
+                        ,  TVector3& momM
+                        ,  Bool_t useSmoothPos
+                        , OUT_ARGUMENT TVector3& momentum);
+
+    void SetMinInterations(Int_t minIterations) {fminGenFitInterations = minIterations;}
+    void SetMaxInterations(Int_t maxIterations) {fmaxGenFitIterations = maxIterations;}
+    void SetDebugLevel(double debugLlv) { fDebuglvl_genfit = debugLlv;}
 
 private:
 
@@ -127,6 +142,17 @@ private:
 
     /** Class to hold the Detector parameters read from external file **/
     esbroot::geometry::superfgd::FgdDetectorParameters fParams;//!<! 
+
+    /** Class containing the TGeometry for reconstruction of the tracks **/
+    esbroot::geometry::superfgd::SuperFGDDetectorConstruction    fgdConstructor;//!<!	   //! SuperFgd Detector Constructor
+    Int_t fminGenFitInterations;
+    Int_t fmaxGenFitIterations;
+    Int_t fminHits;
+    /** Start position and momentum **/
+    //  0 - no additional info
+    //  1 - debug info
+    //  2- detail info
+    double fDebuglvl_genfit;
 
     /** Detector dimentions **/
     Double_t flunit;

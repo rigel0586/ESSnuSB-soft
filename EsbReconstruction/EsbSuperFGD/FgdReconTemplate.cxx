@@ -9,6 +9,30 @@
 #include <map>
 #include <algorithm>
 
+// Genfit headers
+#include "AbsBField.h"
+#include "AbsMeasurement.h"
+#include "ConstField.h"
+#include <Exception.h>
+#include <EventDisplay.h>
+#include <FieldManager.h>
+#include "FitStatus.h"
+#include <KalmanFitterRefTrack.h>
+#include <KalmanFitter.h>
+#include "MaterialEffects.h"
+#include "MeasuredStateOnPlane.h"
+#include <PlanarMeasurement.h>
+#include <RKTrackRep.h>
+#include "SpacepointMeasurement.h"
+#include <StateOnPlane.h>
+#include "TDatabasePDG.h"
+#include <TGeoMaterialInterface.h>
+#include <Track.h>
+#include <TrackCand.h>
+#include <TrackPoint.h>
+#include <TRandom.h>
+#include <TVector3.h>
+
 namespace esbroot {
 namespace reconstruction {
 namespace superfgd {
@@ -17,13 +41,17 @@ using namespace std;
 
 #define PERMUTATIONS 23
 
-FgdReconTemplate::FgdReconTemplate() 
+FgdReconTemplate::FgdReconTemplate() : fgdConstructor("")
 {
     LoadTemplates();
 }
 
 FgdReconTemplate::FgdReconTemplate(const char* geoConfigFile, const char* graphTrackConfig, bool validateTrackGrad)
     : fvalidateTrackGrad(validateTrackGrad)
+    , fgdConstructor(geoConfigFile)
+    , fminGenFitInterations(2)
+    , fmaxGenFitIterations(4)
+    , fDebuglvl_genfit(0)
 {
     LoadTemplates();
     fParams.LoadPartParams(geoConfigFile);
@@ -1044,6 +1072,107 @@ void FgdReconTemplate::initGraphRecord(const char* graphTrackConfig)
     {
         LOG(fatal) << e.what();
     }
+}
+
+bool FgdReconTemplate::FitTrack(
+       std::vector<ReconHit>& track
+    ,  Bool_t useRefFitter
+    ,  Int_t pdg
+    ,  TVector3& posM
+    ,  TVector3& momM
+    ,  Bool_t useSmoothPos
+    ,  TVector3& momentum)
+{
+
+    std::shared_ptr<genfit::AbsKalmanFitter> fitter{nullptr};
+    if(useRefFitter)
+    {
+        fitter = make_shared<genfit::KalmanFitterRefTrack>();
+    }
+    else
+    {
+        fitter = make_shared<genfit::KalmanFitter>();
+    }
+    fitter->setMinIterations(fminGenFitInterations);
+    fitter->setMaxIterations(fmaxGenFitIterations);
+    fitter->setDebugLvl(fDebuglvl_genfit);
+
+
+    TVector3 magField = fgdConstructor.GetMagneticField(); // values are in kGauss
+
+    static int detId(1); // Detector id, it is the same, we only have one detector
+    Bool_t rc(false);
+
+    // approximate covariance
+    const double resolution = 2;// Default in example is 0.1;
+    TMatrixDSym hitCov(3);
+    hitCov(0,0) = resolution*resolution;
+    hitCov(1,1) = resolution*resolution;
+    hitCov(2,2) = resolution*resolution;
+
+    TMatrixDSym covM(6);
+    for (int ci = 0; ci < 3; ++ci)
+        covM(ci,ci) = resolution*resolution;
+    for (int ci = 3; ci < 6; ++ci)
+        covM(ci,ci) = covM(ci,ci) = pow(  ((resolution / track.size()) / sqrt(3)), 2); 
+
+    // trackrep
+    genfit::AbsTrackRep* rep = new genfit::RKTrackRep(pdg);
+
+    // smeared start state
+    genfit::MeasuredStateOnPlane stateSmeared(rep);
+
+    stateSmeared.setPosMomCov(posM, momM, covM);
+    //stateSmeared.setPosMomCov(posM, calMom, covM);
+
+    // create track
+    TVectorD seedState(6);
+    TMatrixDSym seedCov(6);
+    stateSmeared.get6DStateCov(seedState, seedCov);
+
+    genfit::Track* toFitTrack = new genfit::Track(rep, seedState, seedCov);
+    // genfit::Track* toFitTrack = new genfit::Track();
+    // toFitTrack->setStateSeed(seedState);
+    // toFitTrack->setCovSeed(seedCov);
+    // toFitTrack->addTrackRep(rep);
+    
+    for(Int_t bh = 0; bh < track.size(); ++bh)
+    {
+      TVectorD hitPos(3);
+      hitPos(0) = useSmoothPos? track[bh].fsmoothco.X() : track[bh].fHitPos.X();
+      hitPos(1) = useSmoothPos? track[bh].fsmoothco.Y() : track[bh].fHitPos.Y();
+      hitPos(2) = useSmoothPos? track[bh].fsmoothco.Z() : track[bh].fHitPos.Z();
+
+      genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, 0, nullptr);
+      std::vector<genfit::AbsMeasurement*> measurements{measurement};
+
+      toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
+    }
+
+    try
+    {
+      //check
+      toFitTrack->checkConsistency();
+
+      // do the fit
+      LOG(info) << "Somthing ";
+      fitter->processTrack(toFitTrack, true);
+      toFitTrack->checkConsistency();
+
+      genfit::FitStatus* fiStatuStatus = toFitTrack->getFitStatus(rep);
+      rc = fiStatuStatus->isFitted() && (fiStatuStatus->isFitConverged() || fiStatuStatus->isFitConvergedPartially());
+      
+      const genfit::MeasuredStateOnPlane& me = (*toFitTrack).getFittedState();
+      momentum = me.getMom();
+    }
+    catch(genfit::Exception& e)
+    {
+        LOG(error) <<"Exception, when tryng to fit track";
+        LOG(error) << "e.what() " << e.what();
+        LOG(error) << "e.getExcString() " << e.getExcString();
+    }
+
+    return rc;
 }
 
 } //superfgd

@@ -1079,6 +1079,20 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
 
     calMom = getCalorimetricMomentum(hitsOnTrack);
     momM = calMom;
+
+    /// TODO: Test template fit
+    // LOG(info) << "Before fit ";
+    // TVector3 momtum;
+    // bool res = freconTemplate.FitTrack(track
+    //                     ,  true
+    //                     ,  pdg
+    //                     ,  posM
+    //                     ,  momM
+    //                     ,  false
+    //                     ,  momtum);
+
+    // LOG(info) << "Fitted Momentum " << "[" << (res?"true":"false") <<"] " << momtum.Mag();
+
     // if(CalculateCalorimetricMomentum(hitsOnTrack, calMom))
     // {
     //     LOG(debug) << " \tCalorimetricMomentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
