@@ -138,7 +138,7 @@ GenieGenerator::GenieGenerator(genie::GFluxI *fluxI, genie::GeomAnalyzerI *geomI
 }
 
 
-Bool_t GenieGenerator::IsPdgAllowed(int pdg)
+Bool_t GenieGenerator::IsPdgAllowed(int pdg, bool exclude)
 {
 	
 	// Workaround for GENIE bug (or "feature") that treats nuclear energy as trackable particle
@@ -153,7 +153,9 @@ Bool_t GenieGenerator::IsPdgAllowed(int pdg)
 		return true;
 	}
 
-	Bool_t isAllowed = std::find(fpdgCodesAllowed.begin(), fpdgCodesAllowed.end(), pdg) != fpdgCodesAllowed.end();
+	Bool_t isAllowed = 	exclude ?
+						std::find(fpdgCodesAllowed.begin(), fpdgCodesAllowed.end(), pdg) == fpdgCodesAllowed.end(): // Particle is not in the list
+						std::find(fpdgCodesAllowed.begin(), fpdgCodesAllowed.end(), pdg) != fpdgCodesAllowed.end(); // Particle is in the list
 	return isAllowed;
 }
 

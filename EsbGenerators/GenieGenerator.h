@@ -134,7 +134,9 @@ protected:
   	Bool_t fIsConfigured = false;
 
 	//! Check if the event particle is allowed by the chosen criteria fo the generator
-	virtual Bool_t IsPdgAllowed(int pdg);
+	//! NOTE: if exclude = false , only pdg particles added in the fpdgCodesAllowed are valid
+	//! 		if exclude = true, only particles NOT in fpdgCodesAllowed are valid
+	virtual Bool_t IsPdgAllowed(int pdg, bool exclude = false);
 
 	//!This method checks if to try to generate a new event
 	//!if the particles in the event have certain criteria
