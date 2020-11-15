@@ -52,7 +52,7 @@ public:
 	static void InitGlobalState(); //!< Initialize the state of Genie backend
 	
 	//! Empty constructor
-	GenieGenerator() {};
+	GenieGenerator();
 	
 	//! Basic constructor
 	GenieGenerator(genie::GFluxI *fluxI, genie::GeomAnalyzerI *geomI);
@@ -98,6 +98,7 @@ public:
 	void AddPdgCode(int pdg){fpdgCodesAllowed.push_back(pdg);}
 	void AddPdgCode(std::vector<int> pdgCodes){fpdgCodesAllowed.insert(fpdgCodesAllowed.end(), pdgCodes.begin(), pdgCodes.end());}
 	void ClearPfgCodes(){fpdgCodesAllowed.clear();}
+	void SetExcludePdgs(bool b){fExclude = b;}
 
 
 protected:
@@ -136,7 +137,8 @@ protected:
 	//! Check if the event particle is allowed by the chosen criteria fo the generator
 	//! NOTE: if exclude = false , only pdg particles added in the fpdgCodesAllowed are valid
 	//! 		if exclude = true, only particles NOT in fpdgCodesAllowed are valid
-	virtual Bool_t IsPdgAllowed(int pdg, bool exclude = false);
+	virtual Bool_t IsPdgAllowed(int pdg);
+	Bool_t fExclude;
 
 	//!This method checks if to try to generate a new event
 	//!if the particles in the event have certain criteria

@@ -24,11 +24,18 @@ namespace generators {
 /*static*/ GenieGenerator::GlobalState_t GenieGenerator::GlobalState;
 /*static*/ bool GenieGenerator::fGlobalStateInit = false;
 
+GenieGenerator::GenieGenerator()
+	:fExclude(false)
+{
+}
+
 //! Constructor which takes user defined Genie flux and geometry drivers.
 //! The Genie backend is not configured until a call to Configure()
 //! @param fluxI user supplied Genie flux driver
 //! @param geomI user supplied Genie geometry driver
-GenieGenerator::GenieGenerator(genie::GFluxI *fluxI, genie::GeomAnalyzerI *geomI) {
+GenieGenerator::GenieGenerator(genie::GFluxI *fluxI, genie::GeomAnalyzerI *geomI)
+	:fExclude(false)
+{
 	SetFluxI(std::shared_ptr<genie::GFluxI>(fluxI));
 	SetGeomI(std::shared_ptr<genie::GeomAnalyzerI>(geomI));
 }
@@ -138,7 +145,7 @@ GenieGenerator::GenieGenerator(genie::GFluxI *fluxI, genie::GeomAnalyzerI *geomI
 }
 
 
-Bool_t GenieGenerator::IsPdgAllowed(int pdg, bool exclude)
+Bool_t GenieGenerator::IsPdgAllowed(int pdg)
 {
 	
 	// Workaround for GENIE bug (or "feature") that treats nuclear energy as trackable particle
@@ -153,7 +160,7 @@ Bool_t GenieGenerator::IsPdgAllowed(int pdg, bool exclude)
 		return true;
 	}
 
-	Bool_t isAllowed = 	exclude ?
+	Bool_t isAllowed = 	fExclude ?
 						std::find(fpdgCodesAllowed.begin(), fpdgCodesAllowed.end(), pdg) == fpdgCodesAllowed.end(): // Particle is not in the list
 						std::find(fpdgCodesAllowed.begin(), fpdgCodesAllowed.end(), pdg) != fpdgCodesAllowed.end(); // Particle is in the list
 	return isAllowed;
