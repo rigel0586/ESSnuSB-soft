@@ -6,15 +6,19 @@
 
 #include "EsbReconstruction/EsbSuperFGD/FgdReconHit.h"
 
+static const double ESB_NORMALIZARTION = 0.1; // In ESB we work in cm, thus  1 mm = 0.1 cm
+
 static const double EdepToPhotConv_FGD = 70.8 / CLHEP::MeV; // contains both collection in fiber and edep->gamma conversion 
 static const double EdepToPhotConv_SuperFGD = EdepToPhotConv_FGD * 1.3;
-static const double DistMPPCscint_FGD = 41*CLHEP::mm;
+//static const double DistMPPCscint_FGD = 41*CLHEP::mm * ESB_NORMALIZARTION;
+static const double DistMPPCscint_FGD = 0;
 static const double LongCompFrac_FGD = 0.816;
-static const double LongAtt_FGD = 11926.*CLHEP::mm;
-static const double ShortAtt_FGD = 312.*CLHEP::mm;
-static const double DecayLength_FGD = 0.0858 / CLHEP::mm;
-static const double Lbar_FGD = 1864.3 * CLHEP::mm;
+static const double LongAtt_FGD = 11926.*CLHEP::mm * ESB_NORMALIZARTION;
+static const double ShortAtt_FGD = 312.*CLHEP::mm * ESB_NORMALIZARTION;
+static const double DecayLength_FGD = 0.0858 / CLHEP::mm * ESB_NORMALIZARTION;
+static const double Lbar_FGD = 1864.3 * CLHEP::mm * ESB_NORMALIZARTION;
 static const double TransTimeInFiber = 1./28.;  //  1cm/2.8e10[cm/s] * 1e9 [ns]
+
 
 
 

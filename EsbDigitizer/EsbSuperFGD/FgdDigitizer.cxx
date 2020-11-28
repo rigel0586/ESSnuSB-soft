@@ -20,6 +20,8 @@ namespace esbroot {
 namespace digitizer {
 namespace superfgd {
 
+const double FgdDigitizer::ESB_NORMALIZARTION = 0.1; // In ESB we work in cm, thus  1 mm = 0.1 cm
+
 // -----   Default constructor   -------------------------------------------
 FgdDigitizer::FgdDigitizer() :
   FairTask(), fX(0), fY(0), fZ(0), fdPoints(nullptr), fHitArray(nullptr)
@@ -156,6 +158,8 @@ void FgdDigitizer::Exec(Option_t* opt)
     double timepeX=time;
     ApplyFiberResponse(peX1,timepeX,mppcX); // along X fiber
     ApplyFiberResponse(peX2,timepeX,mppcX_2ndSide); // along -X fiber
+    ApplyMPPCResponse(peX1);
+    ApplyMPPCResponse(peX2);
     double peX = peX1 + peX2;       // pe along fiber X
 
     double peY1=pe/6.; 
@@ -163,6 +167,8 @@ void FgdDigitizer::Exec(Option_t* opt)
     double timepeY=time;
     ApplyFiberResponse(peY1,timepeY,mppcY); // along Y fiber
     ApplyFiberResponse(peY2,timepeY,mppcY_2ndSide); // along -Y fiber
+    ApplyMPPCResponse(peY1);
+    ApplyMPPCResponse(peY2);
     double peY = peY1 + peY2;       // pe along fiber Y
 
     double peZ1=pe/6.; 
@@ -170,11 +176,10 @@ void FgdDigitizer::Exec(Option_t* opt)
     double timepeZ=time;
     ApplyFiberResponse(peZ1,timepeZ,mppcZ); // along Z fiber
     ApplyFiberResponse(peZ2,timepeZ,mppcZ_2ndSide); // along -Z fiber
+    ApplyMPPCResponse(peZ1);
+    ApplyMPPCResponse(peZ2);
     double peZ = peZ1 + peZ2;       // pe along fiber Z
 
-    ApplyMPPCResponse(peX);
-    ApplyMPPCResponse(peY);
-    ApplyMPPCResponse(peZ);
     TVector3 photoElectrons(peX,peY,peZ);
 
     // Write the mppc location in terms of cube number position in x,y,z
@@ -265,12 +270,13 @@ void FgdDigitizer::RevertFiberResponse(double &numPhotons, double &time, double 
     numPhotons = RevertFiberAttenuation(temp_np, distance);
 }
 
-const double FgdDigitizer::DistMPPCscint_FGD = 41*CLHEP::mm;
+//const double FgdDigitizer::DistMPPCscint_FGD = 41*CLHEP::mm * ESB_NORMALIZARTION; 
+const double FgdDigitizer::DistMPPCscint_FGD = 0;
 const double FgdDigitizer::LongCompFrac_FGD = 0.816;
-const double FgdDigitizer::LongAtt_FGD = 11926.*CLHEP::mm;
-const double FgdDigitizer::ShortAtt_FGD = 312.*CLHEP::mm;
-const double FgdDigitizer::DecayLength_FGD = 0.0858 / CLHEP::mm;
-const double FgdDigitizer::Lbar_FGD = 1864.3 * CLHEP::mm;
+const double FgdDigitizer::LongAtt_FGD = 11926.*CLHEP::mm * ESB_NORMALIZARTION; 
+const double FgdDigitizer::ShortAtt_FGD = 312.*CLHEP::mm * ESB_NORMALIZARTION; 
+const double FgdDigitizer::DecayLength_FGD = 0.0858 / CLHEP::mm * ESB_NORMALIZARTION; 
+const double FgdDigitizer::Lbar_FGD = 1864.3 * CLHEP::mm * ESB_NORMALIZARTION; 
 
 double FgdDigitizer::ApplyFiberAttenuation(double Nphot0,double x)
 {
@@ -337,26 +343,31 @@ const double FgdDigitizer::MPPCEff_SuperFGD = 0.38;
 
 void FgdDigitizer::ApplyMPPCResponse(double& npe)
 {
-    double rndunif =0.;
-    double npe_passed = 0.;
-    int npe_integer = (int) (npe+0.5);
-    for (int i=0;i<npe_integer;i++)
-    {
-        rndunif = rand.Rndm();
-        if (rndunif < MPPCEff_SuperFGD)
-        {
-            npe_passed++;
-        } 
-    }
+    // double rndunif =0.;
+    // double npe_passed = 0.;
+    // int npe_integer = (int) (npe+0.5);
+    // for (int i=0;i<npe_integer;i++)
+    // {
+    //     rndunif = rand.Rndm();
+    //     if (rndunif < MPPCEff_SuperFGD)
+    //     {
+    //         npe_passed++;
+    //     } 
+    // }
 
-    npe =  npe_passed;
+    // npe =  npe_passed;
+
+    int npe_integer = (int) (npe+0.5);
+    double npe_passed = rand.Poisson(npe_integer * MPPCEff_SuperFGD);
+    npe = npe_passed;
     return;
 }
 
 
 double FgdDigitizer::RevertyMPPCResponse(double npe)
 {
-  static const double Inverse_MPPCEff_SuperFGD = 2.15; // From trial an error the best match is chosen for the revert value
+  //static const double Inverse_MPPCEff_SuperFGD = 2.15; // From trial an error the best match is chosen for the revert value
+  static const double Inverse_MPPCEff_SuperFGD = 2.5; // From trial an error the best match is chosen for the revert value
   //return (npe * Inverse_MPPCEff_SuperFGD);
   //return (npe * 1);
 
@@ -376,9 +387,10 @@ double FgdDigitizer::RevertyMPPCResponse(double npe)
   }
 
   return npe_passed;
+  // return npe; // BEST MATCH with the initial Deposited energy
   */
 
-  return npe; // BEST MATCH with the initial Deposited energy
+  return npe * Inverse_MPPCEff_SuperFGD; // BEST MATCH with the initial Deposited energy
 }
 // -------------------------------------------------------------------------
 

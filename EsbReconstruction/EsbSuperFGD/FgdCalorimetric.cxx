@@ -43,7 +43,8 @@ double RevertFiberTime(double &time, double x)
 
 double RevertyMPPCResponse(double npe)
 {
-  static const double Inverse_MPPCEff_SuperFGD = 2.15; // From trial an error the best match is chosen for the revert value
+  //static const double Inverse_MPPCEff_SuperFGD = 2.15; // From trial an error the best match is chosen for the revert value
+  static const double Inverse_MPPCEff_SuperFGD = 2.5; // From trial an error the best match is chosen for the revert value
   return (npe * Inverse_MPPCEff_SuperFGD);
 }
 

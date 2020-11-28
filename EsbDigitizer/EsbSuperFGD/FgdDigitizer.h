@@ -67,6 +67,7 @@ private:
   static const double DecayLength_FGD;
   static const double Lbar_FGD;
   static const double TransTimeInFiber;
+  static const double ESB_NORMALIZARTION;
 
   /** Class to hold the Detector parameters read from external file **/
   esbroot::geometry::superfgd::FgdDetectorParameters fParams;

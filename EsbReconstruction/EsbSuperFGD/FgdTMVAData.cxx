@@ -582,6 +582,7 @@ void FgdTMVAData::FinishTask()
     Float_t trueEdep = 0.;
     Float_t allEdep = 0.;
     Float_t totalPe = 0.;
+    Float_t muon_mom = 0.;
 
     longestTrackPrjTree->Branch("totalCubes", &totCubes);
     longestTrackPrjTree->Branch("totalPhotons", &totPh);
@@ -591,6 +592,8 @@ void FgdTMVAData::FinishTask()
     longestTrackPrjTree->Branch("totalPe", &totalPe);
     longestTrackPrjTree->Branch("nuEnergy", &lnuEnergy);
     longestTrackPrjTree->Branch("nuPdg", &lnuPdg);
+    longestTrackPrjTree->Branch("muon_mom", &muon_mom);
+    
 
 
     // Photon spectrum
@@ -674,20 +677,25 @@ void FgdTMVAData::FinishTask()
             continue;
         }
         */
+
+        /*
         FgdTMVAEventRecord::EventType eventType = dataEvent->GetEventType();// && dataEvent->IsQuasiElastic();
         if(eventType != FgdTMVAEventRecord::EventType::MUON_AND_PROTON_ONLY)
         {
             continue;
         }
-
+        */
+        muon_mom = dataEvent->GetMuonMom().Mag();
         lnuEnergy = dataEvent->GetNuE();
         lnuPdg = dataEvent->GetNuPdg();
         totalEdep = dataEvent->GetTotalEdep();
-        totalPe = dataEvent->GetPe();
+        //totalPe = dataEvent->GetPe();
+        totalPe = dataEvent->GetTotalPhotons().X() + dataEvent->GetTotalPhotons().Y() + dataEvent->GetTotalPhotons().Z();
         trueEdep = dataEvent->GetTrueEdep();
         allEdep = dataEvent->GetAllEdep();
 
-        totPh = dataEvent->GetTotalPhotons().X() + dataEvent->GetTotalPhotons().Y() + dataEvent->GetTotalPhotons().Z();
+        //totPh = dataEvent->GetTotalPhotons().X() + dataEvent->GetTotalPhotons().Y() + dataEvent->GetTotalPhotons().Z();
+        totPh = dataEvent->GetPe();
         totCubes = dataEvent->GetTotalCubes();
 
         if(ind<ftrackLenghts.size() && ind<ftrackPhotos.size())
@@ -756,7 +764,7 @@ void FgdTMVAData::FinishTask()
     
     delete outFile;
 
-    printNotUsed();
+    //printNotUsed();
     FgdMCGenFitRecon::FinishTask();
 }
 
