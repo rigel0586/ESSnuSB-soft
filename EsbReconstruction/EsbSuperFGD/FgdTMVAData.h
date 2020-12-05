@@ -9,6 +9,9 @@
 #define PHOTON_SPECTRUM_SIZE 50
 #define PHOTON_SPECTRUM_MAX 300
 
+#define EVENT_TIME_SPECTRUM_SIZE 100
+#define EVENT_TIME_SPECTRUM_MAX 2
+
 namespace esbroot {
 namespace reconstruction {
 namespace superfgd {
@@ -58,6 +61,10 @@ protected:
   Bool_t isParticleAllowed(Int_t pdg);
   void clearSpectrum();
   void copySpectrum(size_t ind);
+
+  void clearTime();
+  void copyTimeSpectrum(size_t ind);
+
   void printNotUsed();
 
   std::string feventData;//!<!
@@ -71,7 +78,10 @@ protected:
 
   std::vector<std::vector<Float_t>> ftrackLenghts;//!<!
   std::vector<std::vector<Float_t>> ftrackPhotos;//!<!
+  std::vector<std::vector<Float_t>> ftrackEntryTimes;//!<!
+
   std::vector<std::vector<Float_t>> fphotonSpectrum;//!<!
+  std::vector<std::vector<Float_t>> fTimeSpectrum;//!<!
 
   int feventNum;//!<!
   Float_t fmagField_X;
@@ -91,6 +101,10 @@ protected:
   Float_t fPhSpecter[PHOTON_SPECTRUM_SIZE];
   Bool_t fSpecConst[PHOTON_SPECTRUM_SIZE];
   TH1F* f_hist_spectrum;
+
+  Float_t fTimeSpec[EVENT_TIME_SPECTRUM_SIZE];
+  Bool_t fTimeSpecConst[EVENT_TIME_SPECTRUM_SIZE];
+  TH1F* f_hist_time;
   	   
   ClassDef(FgdTMVAData, 2);
 

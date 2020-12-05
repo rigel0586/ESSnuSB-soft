@@ -78,6 +78,7 @@ private:
   TH2F* f_xz_hist;
   TH1F* f_ph_hist;
   TH1F* f_ph_hist_total;
+  TH1F* f_time_hist;
   double f_photo_ave;
   int f_photo_count;
 

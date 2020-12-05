@@ -95,8 +95,9 @@ InitStatus FgdMppcDisplay::Init()
   f_yz_hist = new TH2F("hist_yz","YZ histogram",f_bin_Y,0,f_bin_Y,f_bin_Z,0,f_bin_Z);
   f_xz_hist = new TH2F("hist_zx","XZ histogram",f_bin_X,0,f_bin_X,f_bin_Z,0,f_bin_Z);
 
-  f_ph_hist = new TH1F("hist_ph","Photons per cube histogram",300,0,300);
+  f_ph_hist = new TH1F("hist_ph","Photons per cube histogram",50,0,300);
   f_ph_hist_total = new TH1F("hist_ph_total","Total Photons histogram",100,0,30000);
+  f_time_hist  = new TH1F("hist_time","Total Photons histogram",100,0,2);
 
   return kSUCCESS;
 }
@@ -156,6 +157,13 @@ void FgdMppcDisplay::FinishEvent()
     f_ph_hist->Reset();
   } 
 
+  if(f_time_hist)
+  {
+    f_time_hist->Draw("colz");
+    WriteCanvas("Total_time");
+    f_time_hist->Reset();
+  }
+
   if(fcanvas)
   {
     fcanvas->ResetDrawn();
@@ -192,8 +200,9 @@ void FgdMppcDisplay::Exec(Option_t* opt)
       float temp = mppcLoc.X() + mppcLoc.Y() + mppcLoc.Z();
       max = max < temp? temp : max;
       sum += temp;
-
+      //cout  << "Time " << hit->GetTime() << endl;
       f_ph_hist->Fill(temp);
+      f_time_hist->Fill(hit->GetTime());
   }
   f_ph_hist_total->Fill(sum);
   cout  << "Max photons per cube are " << max << endl;

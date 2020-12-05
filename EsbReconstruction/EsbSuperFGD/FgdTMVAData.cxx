@@ -90,6 +90,7 @@ FgdTMVAData::FgdTMVAData(const char* name
     , fMaxtrack(1),fMaxTotph(1),fMaxCubes(1), fMaxTrph(1), fMaxTotEdep(1)
     , fMaxTotPe(1)
     , f_hist_spectrum{nullptr}
+    , f_hist_time(nullptr)
 { 
     fpdgDB = make_shared<TDatabasePDG>();
 
@@ -97,6 +98,12 @@ FgdTMVAData::FgdTMVAData(const char* name
     {
         fPhSpecter[i]=0;
         fSpecConst[i]=false;
+    }
+
+    for(size_t i = 0; i< EVENT_TIME_SPECTRUM_SIZE; ++i)
+    {
+        fTimeSpec[i]=0;
+        fTimeSpecConst[i]=false;
     }
 
     clearSpectrum();
@@ -156,6 +163,7 @@ InitStatus FgdTMVAData::Init()
     } 
 
     f_hist_spectrum = new TH1F("hist_ph","Photons cube spectrum",PHOTON_SPECTRUM_SIZE, 0, PHOTON_SPECTRUM_MAX);
+    f_hist_time = new TH1F("hist_time","Time event spectrum",EVENT_TIME_SPECTRUM_SIZE, 0, EVENT_TIME_SPECTRUM_MAX);
 
     return kSUCCESS;
 }
@@ -234,6 +242,8 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
     Float_t sumEdep = 0;
     Float_t sumPe = 0;
     Float_t sumTrueEdep = 0;
+
+    std::vector<Float_t> timeSpectrum;
     for(size_t i = 0; i <  foundTracks.size() ; ++i)
     {
         std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
@@ -250,8 +260,10 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
 
             fhitCoordinates[feventNum].emplace_back(hit.fmppcLoc);
             fhitPhotons[feventNum].emplace_back(hit.fphotons);
+            timeSpectrum.emplace_back(hit.ftime);  
         }   
     }
+    fTimeSpectrum.emplace_back(std::move(timeSpectrum));
 
     Float_t sumAllEdep = 0;
     for(size_t i = 0; i <  allhits.size() ; ++i)
@@ -266,7 +278,7 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
     {   
         ReconHit& hit = allhits[j];
         Float_t sumCubePh = hit.fphotons.X() + hit.fphotons.Y() + hit.fphotons.Z();
-        photoSpectrum.emplace_back(sumCubePh);;    
+        photoSpectrum.emplace_back(sumCubePh);   
     }
     fphotonSpectrum.emplace_back(std::move(photoSpectrum));
 
@@ -308,6 +320,7 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
 
     size_t limit = foundTracks.size() > MAX_LENGTH_TRACKS_TO_RECORD? MAX_LENGTH_TRACKS_TO_RECORD: foundTracks.size();
     std::vector<Float_t> track = {0.,0.,0.};
+    std::vector<Float_t> entryTime = {0.,0.,0.};
     std::vector<Float_t> phototrack = {0.,0.,0.};
     for(size_t i = 0; i <  limit ; ++i)
     {
@@ -341,9 +354,12 @@ Bool_t FgdTMVAData::ProcessStats(std::vector<std::vector<ReconHit>>& foundTracks
         }
         phototrack[i] = sumPh;
 
+        entryTime[i] = hitsOnTrack[0].ftime; // each track is sorted by time at the beginning of ProcessStats method
+        //LOG(WARNING) << "Time for track " << i << " " << hitsOnTrack[0].ftime << " - " << hitsOnTrack[hitsOnTrack.size()-1].ftime;
     }
     ftrackLenghts.emplace_back(std::move(track));
     ftrackPhotos.emplace_back(std::move(phototrack));
+    ftrackEntryTimes.emplace_back(std::move(entryTime));
 
     feventRecords[feventNum].SetHasHits(true);
     ++feventNum; // Increment to next event from eventData read from simulation`s genie export
@@ -574,6 +590,15 @@ void FgdTMVAData::FinishTask()
     longestTrackPrjTree->Branch("ph_tr2", &ph_tr2);
     longestTrackPrjTree->Branch("ph_tr3", &ph_tr3);
 
+
+    Float_t time_tr1(0);
+    Float_t time_tr2(0);
+    Float_t time_tr3(0);
+
+    longestTrackPrjTree->Branch("time_tr1", &time_tr1);
+    longestTrackPrjTree->Branch("time_tr2", &time_tr2);
+    longestTrackPrjTree->Branch("time_tr3", &time_tr3);
+
     Float_t lnuEnergy = 0.;
     Float_t lnuPdg = 0;
     Float_t totCubes = 0;
@@ -698,19 +723,28 @@ void FgdTMVAData::FinishTask()
         totPh = dataEvent->GetPe();
         totCubes = dataEvent->GetTotalCubes();
 
-        if(ind<ftrackLenghts.size() && ind<ftrackPhotos.size())
+        if(ind<ftrackLenghts.size())
         {
             std::vector<Float_t>& tr = ftrackLenghts[ind];
-            std::vector<Float_t>& ph_tr = ftrackPhotos[ind];
-    
             tr1 = tr[0];
-            ph_tr1 = ph_tr[0];
-
             tr2 = tr[1];
-            ph_tr2 = ph_tr[1];
-
             tr3 = tr[2];
+        }
+
+        if(ind<ftrackPhotos.size())
+        {
+            std::vector<Float_t>& ph_tr = ftrackPhotos[ind];
+            ph_tr1 = ph_tr[0];
+            ph_tr2 = ph_tr[1];
             ph_tr3 = ph_tr[2];
+        }
+
+        if(ind<ftrackEntryTimes.size())
+        {
+            std::vector<Float_t>& time_tr = ftrackEntryTimes[ind];
+            time_tr1 = time_tr[0];
+            time_tr2 = time_tr[1];
+            time_tr3 = time_tr[2];
         }
 
         // if(tr1==0)
@@ -755,6 +789,9 @@ void FgdTMVAData::FinishTask()
         ph_tr1 = 0;
         ph_tr2 = 0;
         ph_tr3 = 0;
+        time_tr1 = 0;
+        time_tr2 = 0;
+        time_tr3 = 0;
      }
     outFile->WriteTObject(longestTrackPrjTree);                      
     // =================================================================
@@ -790,6 +827,19 @@ void FgdTMVAData::clearSpectrum()
     }
 }
 
+void FgdTMVAData::clearTime()
+{
+    for(size_t i =0 ; i < EVENT_TIME_SPECTRUM_SIZE; ++i)
+    {
+        fTimeSpec[i] = 0;
+    }
+
+    if(f_hist_time!=nullptr)
+    {
+        f_hist_time->Reset();
+    }
+}
+
 void FgdTMVAData::copySpectrum(size_t ind)
 {
     if(ind >= fphotonSpectrum.size()) return;
@@ -812,6 +862,28 @@ void FgdTMVAData::copySpectrum(size_t ind)
         }
     }
 }
+
+
+void FgdTMVAData::copyTimeSpectrum(size_t ind)
+{
+    if(ind >= fTimeSpectrum.size()) return;
+
+    const std::vector<Float_t>& vec = fTimeSpectrum[ind];
+    for(size_t i = 0; i < vec.size(); ++i)
+    {
+        f_hist_time->Fill(vec[i]);
+    }
+
+    for(size_t i = 0; i < EVENT_TIME_SPECTRUM_SIZE; ++i)
+    {
+        fTimeSpec[i] = f_hist_time->GetBinContent(i);
+        if(fTimeSpec[i]!=0)
+        {
+            fTimeSpecConst[i] = true;
+        }
+    }
+}
+
 
 void FgdTMVAData::printNotUsed()
 {
