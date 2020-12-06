@@ -403,13 +403,27 @@ void FgdMCGenFitRecon::FinishTask()
     }
     //========================================================
 
+    //========================================================
+    TTree * pionFitErrTree = new TTree("pionFitErrTree"
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+
+    Float_t pionFitErr = 0;;
+    pionFitErrTree->Branch("pionFitErr", &pionFitErr);
+    for(size_t i = 0; i < fpionFitErr.size(); ++i)
+    {
+      pionFitErr = fpionFitErr[i];
+      pionFitErrTree->Fill();
+    }
+    //========================================================
+  
     outFile->WriteTObject(trainTree);  
     outFile->WriteTObject(fittedMomTree);  
     outFile->WriteTObject(calorimetricMomTree);     
 
     outFile->WriteTObject(electronFitErrTree); 
     outFile->WriteTObject(muonFitErrTree); 
-    outFile->WriteTObject(protonFitErrTree);                 
+    outFile->WriteTObject(protonFitErrTree); 
+    outFile->WriteTObject(pionFitErrTree);                 
   }
   catch(...)
   {
@@ -622,11 +636,20 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
         continue;
       }
 
-      if(!isMuontrack)
+      if(!isAllowed(hitsOnTrack[0].fpdg) || isParticleNeutral(hitsOnTrack[0].fpdg))
       {
-        LOG(debug) << " Fitting only muon tracks pdg = " << hitsOnTrack[0].fpdg;
-        //continue;
+        LOG(debug) << " Particle is not allowed for fitting " << hitsOnTrack[0].fpdg;
+        continue;
       }
+      LOG(debug) << " Fit particle track " << hitsOnTrack[0].ftrackId << " " 
+              <<  hitsOnTrack[0].fpdg << " [Momentum = " << hitsOnTrack[0].fmom.Mag() << "]"
+              << "(" << hitsOnTrack[0].fmom.X() << "," << hitsOnTrack[0].fmom.Y() << "," << hitsOnTrack[0].fmom.Z() << ")";
+      
+      // if(!isMuontrack)
+      // {
+      //   LOG(debug) << " Fitting only muon tracks pdg = " << hitsOnTrack[0].fpdg;
+      //   continue;
+      // }
 
       // Sort by time, the 1st hit in time is the start of the track
       //std::sort(hitsOnTrack.begin(), hitsOnTrack.end(), [](ReconHit& bh1, ReconHit& bh2){return bh1.ftime<bh2.ftime;});
@@ -638,22 +661,23 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       //genfit::MaterialEffects::getInstance()->drawdEdx(pdg);
 
       TVector3 calMom = getCalorimetricMomentum(hitsOnTrack);
-      if(isMuontrack)
-      {
-          // calMom = getCalorimetricMomentum(hitsOnTrack);
-          // momM = calMom;
-          momM = tvmaEventRecord.GetMuonMom();
-      }
+      // momM = calMom;
+      // if(isMuontrack)
+      // {
+      //     // calMom = getCalorimetricMomentum(hitsOnTrack);
+      //     // momM = calMom;
+      //     momM = tvmaEventRecord.GetMuonMom();
+      // }
 
       Bool_t inlcudeBetheBloch = (pdg != genie::kPdgProton); // For proton ignore bethe bloch
       genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(inlcudeBetheBloch);
 
 
-      if(isParticleNeutral(pdg))
-      {
-        LOG(debug) << "Track " << i << " is of neutral particle ["<< pdg << "] continue with next track.";
-        continue;
-      }
+      // if(isParticleNeutral(pdg))
+      // {
+      //   LOG(debug) << "Track " << i << " is of neutral particle ["<< pdg << "] continue with next track.";
+      //   continue;
+      // }
 
       // approximate covariance
       const double resolution = 1;// Default in example is 0.1;
@@ -690,10 +714,10 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       LOG(debug) << " \tHits in track "<< hitsOnTrack.size();
       LOG(debug) << " \tTrack Momentum [" << hitsOnTrack[0].fmom.Mag() << "]" << "(" << hitsOnTrack[0].fmom.X() << "," << hitsOnTrack[0].fmom.Y() << "," << hitsOnTrack[0].fmom.Z() << ")";
 
-      if(isMuontrack)
-      {
-          LOG(debug) << " \tCalorimetric Momentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
-      }
+      // if(isMuontrack)
+      // {
+      //     LOG(debug) << " \tCalorimetric Momentum [" << calMom.Mag() << "]" << "(" << calMom.X() << "," << calMom.Y() << "," << calMom.Z() << ")";
+      // }
       
       //for(Int_t bh = 0; bh < hitsOnTrack.size(); bh+=3)
       std::vector<genfit::AbsMeasurement*> measurements;
@@ -704,7 +728,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
         hitPos(1) = hitsOnTrack[bh].fHitPos.Y();
         hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
 
-        genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, 0, nullptr);
+        genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
         measurements.emplace_back(measurement);
       }
       toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
@@ -872,9 +896,10 @@ void FgdMCGenFitRecon::WriteOutput( Int_t pdg
 {
   Float_t&& temp = fitMom.Mag() - mcMom.Mag();
   //LOG(WARNING)<< "Diff " << " Fitted " << fitMom.Mag() << " - Mc " << mcMom.Mag() << " = " << temp;
-  if(pdg == genie::kPdgElectron || pdg == genie::kPdgPositron)  { felectronFitErr.emplace_back(temp);}
-  if(pdg == genie::kPdgMuon || pdg == genie::kPdgAntiMuon)  { fmuonFitErr.emplace_back(temp); }
-  if(genie::kPdgProton)                                     { fprotonFitErr.emplace_back(temp);}
+  if(pdg == genie::kPdgElectron || pdg == genie::kPdgPositron)      { felectronFitErr.emplace_back(temp);}
+  if(pdg == genie::kPdgMuon || pdg == genie::kPdgAntiMuon)          { fmuonFitErr.emplace_back(temp); }
+  if(pdg == genie::kPdgProton)                                      { fprotonFitErr.emplace_back(temp);}
+  if(pdg == genie::kPdgPiP || pdg == genie::kPdgPiM)                { fpionFitErr.emplace_back(temp);}
 }
 
 Bool_t FgdMCGenFitRecon::isParticleNeutral(Int_t pdg)
@@ -885,6 +910,19 @@ Bool_t FgdMCGenFitRecon::isParticleNeutral(Int_t pdg)
                       genie::pdg::IsNeutralLepton(pdg);
 
   return isNeutral;
+}
+
+Bool_t FgdMCGenFitRecon::isAllowed(Int_t pdg)
+{
+  Bool_t allowed = (pdg ==  genie::kPdgElectron) ||
+                      (pdg ==  genie::kPdgPositron) ||
+                      (pdg ==  genie::kPdgMuon) ||
+                      (pdg ==  genie::kPdgAntiMuon) ||
+                      (pdg ==  genie::kPdgProton) ||
+                      (pdg ==  genie::kPdgPiP) ||
+                      (pdg ==  genie::kPdgPiM);
+
+  return allowed;
 }
 
 Long_t FgdMCGenFitRecon::ArrInd(int x, int y, int z)

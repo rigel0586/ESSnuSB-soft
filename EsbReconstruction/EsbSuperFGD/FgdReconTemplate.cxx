@@ -1144,7 +1144,7 @@ bool FgdReconTemplate::FitTrack(
       hitPos(1) = useSmoothPos? track[bh].fsmoothco.Y() : track[bh].fHitPos.Y();
       hitPos(2) = useSmoothPos? track[bh].fsmoothco.Z() : track[bh].fHitPos.Z();
 
-      genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, 0, nullptr);
+      genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
       measurements.emplace_back(measurement);
     }
     toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));

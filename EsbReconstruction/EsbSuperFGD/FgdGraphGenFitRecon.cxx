@@ -1164,7 +1164,7 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
       hitPos(1) = fuseSmoothPos? hitsOnTrack[bh].fsmoothco.Y() : hitsOnTrack[bh].fHitPos.Y();
       hitPos(2) = fuseSmoothPos? hitsOnTrack[bh].fsmoothco.Z() : hitsOnTrack[bh].fHitPos.Z();
 
-      genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, 0, nullptr);
+      genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
       measurements.emplace_back(measurement);
     }
     toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));

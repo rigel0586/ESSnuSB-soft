@@ -594,7 +594,7 @@ Bool_t FgdMCLeptonStats::FitTrack(std::vector<ReconHit>& hitsOnTrack, TVector3& 
         hitPos(1) = hitsOnTrack[bh].fHitPos.Y();
         hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
 
-        genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, 0, nullptr);
+        genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
         measurements.emplace_back(measurement);
     }
     toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));

@@ -95,6 +95,7 @@ protected:
   Long_t ArrInd(int i, int j, int k);
 
   Bool_t isParticleNeutral(Int_t pdg);
+  Bool_t isAllowed(Int_t pdg);
 
   /** Class to hold the Detector parameters read from external file **/
   esbroot::geometry::superfgd::FgdDetectorParameters fParams;//!<!
@@ -151,6 +152,7 @@ protected:
   std::vector<Float_t> felectronFitErr;//!<!
   std::vector<Float_t> fmuonFitErr;//!<!
   std::vector<Float_t> fprotonFitErr;//!<!
+  std::vector<Float_t> fpionFitErr;//!<!
 
   std::string fMCeventData;//!<!
   std::vector<FgdTMVAEventRecord> fMCeventRecords;//!<!
