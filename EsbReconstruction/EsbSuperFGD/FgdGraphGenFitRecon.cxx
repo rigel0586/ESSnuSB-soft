@@ -1155,6 +1155,7 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
       }
     }
     
+    std::vector<genfit::AbsMeasurement*> measurements;
     for(Int_t bh = 0; bh < bhlimit; ++bh)
     //for(Int_t bh = 0; bh < bhlimit; bh+=2)
     {
@@ -1164,10 +1165,9 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
       hitPos(2) = fuseSmoothPos? hitsOnTrack[bh].fsmoothco.Z() : hitsOnTrack[bh].fHitPos.Z();
 
       genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, 0, nullptr);
-      std::vector<genfit::AbsMeasurement*> measurements{measurement};
-
-      toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
+      measurements.emplace_back(measurement);
     }
+    toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
 
     try
     {
@@ -1209,6 +1209,7 @@ bool FgdGraphGenFitRecon::FitTrack(std::vector<ReconHit>& track
       
       const genfit::MeasuredStateOnPlane& me = (*toFitTrack).getFittedState();
       momentum = me.getMom();
+      LOG(debug) << " \tFitted Momentum [" << momentum.Mag() << "]" << "(" << momentum.X() << "," << momentum.Y() << "," << momentum.Z() << ")";
     }
     catch(genfit::Exception& e)
     {

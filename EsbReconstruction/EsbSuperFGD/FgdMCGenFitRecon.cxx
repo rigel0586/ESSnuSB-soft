@@ -526,8 +526,8 @@ void FgdMCGenFitRecon::SplitTrack(std::vector<ReconHit>& allHits, std::vector<st
 void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks)
 {
     // init fitter
-    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
-    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
+    std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
+    //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
     fitter->setMinIterations(fminGenFitInterations);
     fitter->setMaxIterations(fmaxGenFitIterations);
     fitter->setDebugLvl(fDebuglvl_genfit);
@@ -583,7 +583,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       if(!isMuontrack)
       {
         LOG(debug) << " Fitting only muon tracks pdg = " << hitsOnTrack[0].fpdg;
-        continue;
+        //continue;
       }
 
       // Sort by time, the 1st hit in time is the start of the track
@@ -654,6 +654,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       }
       
       //for(Int_t bh = 0; bh < hitsOnTrack.size(); bh+=3)
+      std::vector<genfit::AbsMeasurement*> measurements;
       for(Int_t bh = 0; bh < hitsOnTrack.size(); ++bh)
       {
         TVectorD hitPos(3);
@@ -662,10 +663,9 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
         hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
 
         genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, 0, nullptr);
-        std::vector<genfit::AbsMeasurement*> measurements{measurement};
-
-        toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
+        measurements.emplace_back(measurement);
       }
+      toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
 
       try
       {

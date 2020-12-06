@@ -1136,6 +1136,7 @@ bool FgdReconTemplate::FitTrack(
     // toFitTrack->setCovSeed(seedCov);
     // toFitTrack->addTrackRep(rep);
     
+    std::vector<genfit::AbsMeasurement*> measurements;
     for(Int_t bh = 0; bh < track.size(); ++bh)
     {
       TVectorD hitPos(3);
@@ -1144,10 +1145,9 @@ bool FgdReconTemplate::FitTrack(
       hitPos(2) = useSmoothPos? track[bh].fsmoothco.Z() : track[bh].fHitPos.Z();
 
       genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, 0, nullptr);
-      std::vector<genfit::AbsMeasurement*> measurements{measurement};
-
-      toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
+      measurements.emplace_back(measurement);
     }
+    toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
 
     try
     {
