@@ -1171,9 +1171,10 @@ void FgdGenFitRecon::FitTracks(std::vector<std::vector<TVector3>>& foundTracks)
         hitPos(2) = hitsOnTrack[bh].Z();
 
         genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
-        std::vector<genfit::AbsMeasurement*> measurements{measurement};
+        toFitTrack->insertMeasurement(measurement, bh);
 
-        toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
+        //std::vector<genfit::AbsMeasurement*> measurements{measurement};
+        //toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
       }
 
       try

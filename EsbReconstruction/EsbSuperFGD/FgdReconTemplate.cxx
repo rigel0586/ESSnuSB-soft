@@ -1095,6 +1095,7 @@ bool FgdReconTemplate::FitTrack(
     }
     fitter->setMinIterations(fminGenFitInterations);
     fitter->setMaxIterations(fmaxGenFitIterations);
+    //fitter->setDeltaPval(1e-7);
     fitter->setDebugLvl(fDebuglvl_genfit);
 
 
@@ -1102,6 +1103,9 @@ bool FgdReconTemplate::FitTrack(
 
     static int detId(1); // Detector id, it is the same, we only have one detector
     Bool_t rc(false);
+
+    // genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(false);
+    // genfit::MaterialEffects::getInstance()->drawdEdx(pdg);
 
     // approximate covariance
     const double resolution = 2;// Default in example is 0.1;
@@ -1136,7 +1140,7 @@ bool FgdReconTemplate::FitTrack(
     // toFitTrack->setCovSeed(seedCov);
     // toFitTrack->addTrackRep(rep);
     
-    std::vector<genfit::AbsMeasurement*> measurements;
+    //std::vector<genfit::AbsMeasurement*> measurements;
     for(Int_t bh = 0; bh < track.size(); ++bh)
     {
       TVectorD hitPos(3);
@@ -1145,9 +1149,10 @@ bool FgdReconTemplate::FitTrack(
       hitPos(2) = useSmoothPos? track[bh].fsmoothco.Z() : track[bh].fHitPos.Z();
 
       genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
-      measurements.emplace_back(measurement);
+      toFitTrack->insertMeasurement(measurement, bh);
+      //measurements.emplace_back(measurement);
     }
-    toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
+    //toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
 
     try
     {

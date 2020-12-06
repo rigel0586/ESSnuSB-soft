@@ -586,6 +586,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
     //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
     fitter->setMinIterations(fminGenFitInterations);
     fitter->setMaxIterations(fmaxGenFitIterations);
+    //fitter->setDeltaPval(1e-7);
     fitter->setDebugLvl(fDebuglvl_genfit);
 
     bool primaryMuonFound(false);
@@ -658,8 +659,6 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       TVector3 posM(hitsOnTrack[0].fHitPos);
       TVector3 momM(hitsOnTrack[0].fmom);
 
-      //genfit::MaterialEffects::getInstance()->drawdEdx(pdg);
-
       TVector3 calMom = getCalorimetricMomentum(hitsOnTrack);
       // momM = calMom;
       // if(isMuontrack)
@@ -669,8 +668,10 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       //     momM = tvmaEventRecord.GetMuonMom();
       // }
 
-      Bool_t inlcudeBetheBloch = (pdg != genie::kPdgProton); // For proton ignore bethe bloch
-      genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(inlcudeBetheBloch);
+      //Bool_t inlcudeBetheBloch = (pdg != genie::kPdgProton); // For proton ignore bethe bloch
+      //genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(inlcudeBetheBloch);
+      genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(true);
+      //genfit::MaterialEffects::getInstance()->drawdEdx(pdg);
 
 
       // if(isParticleNeutral(pdg))
@@ -720,7 +721,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       // }
       
       //for(Int_t bh = 0; bh < hitsOnTrack.size(); bh+=3)
-      std::vector<genfit::AbsMeasurement*> measurements;
+      //std::vector<genfit::AbsMeasurement*> measurements;
       for(Int_t bh = 0; bh < hitsOnTrack.size(); ++bh)
       {
         TVectorD hitPos(3);
@@ -729,9 +730,10 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
         hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
 
         genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
-        measurements.emplace_back(measurement);
+        //measurements.emplace_back(measurement);
+        toFitTrack->insertMeasurement(measurement, bh);
       }
-      toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
+      //toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
 
       try
       {
