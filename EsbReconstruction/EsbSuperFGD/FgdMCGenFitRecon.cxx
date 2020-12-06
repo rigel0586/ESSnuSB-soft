@@ -362,12 +362,54 @@ void FgdMCGenFitRecon::FinishTask()
         trainTree->Fill();
         fittedMomTree->Fill();
         calorimetricMomTree->Fill();
-     }
+    }
 
+    //========================================================
+    TTree * electronFitErrTree = new TTree("electronFitErrTree"
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+
+    Float_t electronFitErr = 0.;
+    electronFitErrTree->Branch("electronFitErr", &electronFitErr);
+    for(size_t i = 0; i < felectronFitErr.size(); ++i)
+    {
+      electronFitErr = felectronFitErr[i];
+      electronFitErrTree->Fill();
+    }
+    //========================================================
+
+    //========================================================
+    TTree * muonFitErrTree = new TTree("muonFitErrTree"
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+
+    Float_t muonFitErr = 0;
+    muonFitErrTree->Branch("muonFitErr", &muonFitErr);
+    for(size_t i = 0; i < fmuonFitErr.size(); ++i)
+    {
+      muonFitErr = fmuonFitErr[i];
+      muonFitErrTree->Fill();
+    }
+    //========================================================
+
+    //========================================================
+    TTree * protonFitErrTree = new TTree("protonFitErrTree"
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+
+    Float_t protonFitErr = 0;;
+    protonFitErrTree->Branch("protonFitErr", &protonFitErr);
+    for(size_t i = 0; i < fprotonFitErr.size(); ++i)
+    {
+      protonFitErr = fprotonFitErr[i];
+      protonFitErrTree->Fill();
+    }
+    //========================================================
 
     outFile->WriteTObject(trainTree);  
     outFile->WriteTObject(fittedMomTree);  
-    outFile->WriteTObject(calorimetricMomTree);                     
+    outFile->WriteTObject(calorimetricMomTree);     
+
+    outFile->WriteTObject(electronFitErrTree); 
+    outFile->WriteTObject(muonFitErrTree); 
+    outFile->WriteTObject(protonFitErrTree);                 
   }
   catch(...)
   {
@@ -683,7 +725,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
 
         WriteOutput(  pdg
                     , (*toFitTrack).getFittedState().getMom()
-                    , momM
+                    , hitsOnTrack[0].fmom
                     , *toFitTrack
                     , fiStatuStatus);
 
@@ -828,7 +870,11 @@ void FgdMCGenFitRecon::WriteOutput( Int_t pdg
                           , const genfit::Track& fitTrack
                           , genfit::FitStatus*& fiStatuStatus)
 {
-  // TODO nothing to do in base class
+  Float_t&& temp = fitMom.Mag() - mcMom.Mag();
+  //LOG(WARNING)<< "Diff " << " Fitted " << fitMom.Mag() << " - Mc " << mcMom.Mag() << " = " << temp;
+  if(pdg == genie::kPdgElectron || pdg == genie::kPdgPositron)  { felectronFitErr.emplace_back(temp);}
+  if(pdg == genie::kPdgMuon || pdg == genie::kPdgAntiMuon)  { fmuonFitErr.emplace_back(temp); }
+  if(genie::kPdgProton)                                     { fprotonFitErr.emplace_back(temp);}
 }
 
 Bool_t FgdMCGenFitRecon::isParticleNeutral(Int_t pdg)

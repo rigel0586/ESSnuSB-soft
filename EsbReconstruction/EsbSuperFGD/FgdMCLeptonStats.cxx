@@ -586,18 +586,18 @@ Bool_t FgdMCLeptonStats::FitTrack(std::vector<ReconHit>& hitsOnTrack, TVector3& 
     LOG(debug) << " \tHits in track "<< hitsOnTrack.size();
     LOG(debug) << " \tTrack Momentum [" << momM.Mag() << "]" << "(" << momM.X() << "," << momM.Y() << "," << momM.Z() << ")";
     
+    std::vector<genfit::AbsMeasurement*> measurements;
     for(Int_t bh = 0; bh < hitsOnTrack.size(); ++bh)
     {
-    TVectorD hitPos(3);
-    hitPos(0) = hitsOnTrack[bh].fHitPos.X();
-    hitPos(1) = hitsOnTrack[bh].fHitPos.Y();
-    hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
+        TVectorD hitPos(3);
+        hitPos(0) = hitsOnTrack[bh].fHitPos.X();
+        hitPos(1) = hitsOnTrack[bh].fHitPos.Y();
+        hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
 
-    genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, 0, nullptr);
-    std::vector<genfit::AbsMeasurement*> measurements{measurement};
-
-    toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
+        genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, 0, nullptr);
+        measurements.emplace_back(measurement);
     }
+    toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
 
     try
     {

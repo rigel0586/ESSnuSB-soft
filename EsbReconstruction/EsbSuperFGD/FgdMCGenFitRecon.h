@@ -148,6 +148,10 @@ protected:
   std::string fGenFitVisOption;//!<!
   std::vector<genfit::Track*> fgenTracks;//!<!
 
+  std::vector<Float_t> felectronFitErr;//!<!
+  std::vector<Float_t> fmuonFitErr;//!<!
+  std::vector<Float_t> fprotonFitErr;//!<!
+
   std::string fMCeventData;//!<!
   std::vector<FgdTMVAEventRecord> fMCeventRecords;//!<!
   std::string foutputRootFile;//!<!
