@@ -81,6 +81,7 @@ public:
                         ,  Int_t pdg
                         ,  TVector3& posM
                         ,  TVector3& momM
+                        ,  Bool_t smearMomentum
                         ,  Bool_t useSmoothPos
                         , OUT_ARGUMENT TVector3& momentum);
 

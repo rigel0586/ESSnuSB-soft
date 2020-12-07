@@ -1080,6 +1080,7 @@ bool FgdReconTemplate::FitTrack(
     ,  Int_t pdg
     ,  TVector3& posM
     ,  TVector3& momM
+    ,  Bool_t smearMomentum
     ,  Bool_t useSmoothPos
     ,  TVector3& momentum)
 {
@@ -1106,9 +1107,15 @@ bool FgdReconTemplate::FitTrack(
 
     // genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(false);
     // genfit::MaterialEffects::getInstance()->drawdEdx(pdg);
+    // genfit::MaterialEffects::getInstance()->setNoiseBetheBloch(true);
+    // genfit::MaterialEffects::getInstance()->setNoiseCoulomb(true);
+    // genfit::MaterialEffects::getInstance()->setEnergyLossBrems(true);
+    // genfit::MaterialEffects::getInstance()->setNoiseBrems(true);
+    // genfit::MaterialEffects::getInstance()->ignoreBoundariesBetweenEqualMaterials(true);
 
     // approximate covariance
-    const double resolution = 2;// Default in example is 0.1;
+    const double resolution = 1;  // Default in example is 0.1;
+                                    // cm; resolution of generated measurements
     TMatrixDSym hitCov(3);
     hitCov(0,0) = resolution*resolution;
     hitCov(1,1) = resolution*resolution;
@@ -1134,7 +1141,10 @@ bool FgdReconTemplate::FitTrack(
     TMatrixDSym seedCov(6);
     stateSmeared.get6DStateCov(seedState, seedCov);
 
-    genfit::Track* toFitTrack = new genfit::Track(rep, seedState, seedCov);
+    genfit::Track* toFitTrack = nullptr;
+    if(smearMomentum) { toFitTrack = new genfit::Track(rep, seedState, seedCov);}
+    else {toFitTrack = new genfit::Track(rep, posM, momM); }
+    
     // genfit::Track* toFitTrack = new genfit::Track();
     // toFitTrack->setStateSeed(seedState);
     // toFitTrack->setCovSeed(seedCov);
