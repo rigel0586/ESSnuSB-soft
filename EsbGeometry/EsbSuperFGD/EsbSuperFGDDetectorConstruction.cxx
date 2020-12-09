@@ -41,6 +41,9 @@ TGeoVolume* SuperFGDDetectorConstruction::Construct()
     Double_t useFiber = fParams.ParamAsBool(DP::useFiber); 
     fSuperFGDConstructor.SetUseFiber(useFiber);
 
+    Double_t useSimpleCube = fParams.ParamAsBool(DP::useSimpleCube); 
+    fSuperFGDConstructor.SetUseSimpleCube(useSimpleCube);
+
     fSuperVol = fSuperFGDConstructor.Construct(); 
     fSensVolume = fSuperFGDConstructor.GetSensitiveVolume();
     return fSuperVol;

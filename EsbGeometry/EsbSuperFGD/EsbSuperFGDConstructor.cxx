@@ -18,7 +18,7 @@ const char* SuperFGDConstructor::SuperFgdName = fgdnames::superFGDName;
 SuperFGDConstructor::SuperFGDConstructor() :  fWidth(0.),fHeight(0.),fLength(0.),fIsVisible(false),fEdge(0.)
   ,fCubeNumX(0),fCubeNumY(0),fCubeNumZ(0),fPosX(0.),fPosY(0.),fPosZ(0.)
   ,fFiberRadius(0.),fFiberMaterial(""), fSuperGVol(nullptr), fSensVol(nullptr)
-  ,fUseFiber(true)
+  ,fUseFiber(true), fUseSimpleShape(false)
 {
 }
   
@@ -50,6 +50,7 @@ TGeoVolume* SuperFGDConstructor::Construct()
   cube.SetFiberRadius(0.05);
   cube.SetCoatingThickness(0.025);
   cube.SetUseFiber(fUseFiber);
+  cube.SetUseSimpleCube(fUseSimpleShape);
   cube.SetGap(0.0);
   
   double shift = 0.15; 

@@ -210,6 +210,11 @@ public:
       *@param fiber - use fibers in the cube volume
       **/
       void SetUseFiber(bool fiber) {fUseFiber = fiber;}
+
+      /** Set to use simple cube shape (with scintilator material)
+      *@param c - flag to use simple cube shape
+      **/
+      void SetUseSimpleCube(bool c) {fSimpleCube = c;}
       
       /** Get current visibility **/ 
       bool GetVisibility(void) {return false; /*fIsVisible;*/}
@@ -274,6 +279,9 @@ private:
 
       /// Flag if the hole volume of the cube will be used. No fibers inside (for simulation purposes).
       bool fUseFiber;
+
+      /// Flag to use simple shape for the cube, box filled with scintilator material
+      bool fSimpleCube;
 
       /// The WLS fiber material
       std::string fFiberMaterial;

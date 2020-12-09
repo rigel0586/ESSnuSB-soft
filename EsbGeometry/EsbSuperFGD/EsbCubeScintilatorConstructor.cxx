@@ -19,7 +19,7 @@ CubeScintConstructor::CubeScintConstructor() : fLength(0.), fBase(0.), fHeight(0
       , fCoatingThickness(0.), fGap(0.), fIsVisible(false), fCoatingMaterial("")
       , fScintillatorMaterial(""), fUseFGDScint(false), fFiberMaterial(""), fFiberRadius(0.)
       , fcubeTVol(nullptr), fcubeScntVol(nullptr)
-      , fUseFiber(true)
+      , fUseFiber(true) , fSimpleCube(false)
 {
 }
   
@@ -178,37 +178,44 @@ TGeoVolume* CubeScintConstructor::Construct()
   TGeoMedium* scintillatorMixMedium = new TGeoMedium("scintillatorMixMat", materials::GetNextIndex(), scintillatorMixMat);
 
   
-  // Create the mother cube volume 
-  TGeoMedium *vacuum = gGeoManager->GetMedium(materials::vacuum);
-  TGeoVolume* cubeWithCoatingVolume = new TGeoVolume(fgdnames::cubeName,cubeWithCoating, vacuum);
-
-  // Place the coating
-  TGeoCompositeShape* coating = new TGeoCompositeShape("coating","CubeCoating - Cube - FX:locationX - FY:locationY - FY:locationZ");
-  TGeoVolume* coatingVolume = new TGeoVolume(fgdnames::coatingVolume,coating, coatingMedium);
-  cubeWithCoatingVolume->AddNode(coatingVolume, 1 /* One Element*/ /*, Identity matrix is by default used for location*/);
-
-  // Place the scintilator cube into the cube coating
-  TGeoVolume* cubeScntVol = fUseFiber ?
-                            new TGeoVolume(fgdnames::scintilatorVolume, cubeComp, scintillatorMixMedium):
-                            new TGeoVolume(fgdnames::scintilatorVolume, cube, scintillatorMixMedium);
-
-  fcubeScntVol = cubeScntVol;
-  // NOTE: using AddNodeOverlap may lead to exception when using materialInterface_->findNextBoundary
-  // in genfit::MaterialEffects::stepper
-  cubeWithCoatingVolume->AddNode(cubeScntVol, 1 /* One Element*/ /*, Identity matrix is by default used for location*/); 
-
-  // Place the fiber coatings with fiber core
-  // NOTE: using AddNodeOverlap may lead to exception when using materialInterface_->findNextBoundary
-  // in genfit::MaterialEffects::stepper
-  if(fUseFiber)
+  if(fSimpleCube)
   {
-    cubeWithCoatingVolume->AddNode(fiberXCoatVolume, 1 /* One Element*/, locationX);
-    cubeWithCoatingVolume->AddNode(fiberYCoatVolume, 1 /* One Element*/, locationY);
-    cubeWithCoatingVolume->AddNode(fiberZCoatVolume, 1 /* One Element*/, locationZ);
+      fcubeScntVol = new TGeoVolume(fgdnames::cubeName,cubeWithCoating, scintillatorMixMedium);
+      fcubeTVol = fcubeScntVol;
+  }
+  else
+  {
+      // Create the mother cube volume 
+      TGeoMedium *vacuum = gGeoManager->GetMedium(materials::vacuum);
+      TGeoVolume* cubeWithCoatingVolume = new TGeoVolume(fgdnames::cubeName,cubeWithCoating, vacuum);
+
+      // Place the coating
+      TGeoCompositeShape* coating = new TGeoCompositeShape("coating","CubeCoating - Cube - FX:locationX - FY:locationY - FY:locationZ");
+      TGeoVolume* coatingVolume = new TGeoVolume(fgdnames::coatingVolume,coating, coatingMedium);
+      cubeWithCoatingVolume->AddNode(coatingVolume, 1 /* One Element*/ /*, Identity matrix is by default used for location*/);
+
+      // Place the scintilator cube into the cube coating
+      TGeoVolume* cubeScntVol = fUseFiber ?
+                                new TGeoVolume(fgdnames::scintilatorVolume, cubeComp, scintillatorMixMedium):
+                                new TGeoVolume(fgdnames::scintilatorVolume, cube, scintillatorMixMedium);
+
+      fcubeScntVol = cubeScntVol;
+      // NOTE: using AddNodeOverlap may lead to exception when using materialInterface_->findNextBoundary
+      // in genfit::MaterialEffects::stepper
+      cubeWithCoatingVolume->AddNode(cubeScntVol, 1 /* One Element*/ /*, Identity matrix is by default used for location*/); 
+
+      // Place the fiber coatings with fiber core
+      // NOTE: using AddNodeOverlap may lead to exception when using materialInterface_->findNextBoundary
+      // in genfit::MaterialEffects::stepper
+      if(fUseFiber)
+      {
+        cubeWithCoatingVolume->AddNode(fiberXCoatVolume, 1 /* One Element*/, locationX);
+        cubeWithCoatingVolume->AddNode(fiberYCoatVolume, 1 /* One Element*/, locationY);
+        cubeWithCoatingVolume->AddNode(fiberZCoatVolume, 1 /* One Element*/, locationZ);
+      }
+      fcubeTVol = cubeWithCoatingVolume;
   }
   
-
-  fcubeTVol = cubeWithCoatingVolume;
   return fcubeTVol;
 
   // NOTE: adding the volume with gGeoManager->AddVolume

@@ -110,6 +110,13 @@ public:
     /** Get use fiber flag **/
     bool GetUseFiber() {return fUseFiber;}
 
+    /** Set if to use simple box shape for the sensitive volume
+     *@param simple - use fiber
+     **/
+    void SetUseSimpleCube(bool simple) {fUseSimpleShape = simple;}
+    /** Get use fiber flag **/
+    bool GetUseSimpleCube() {return fUseSimpleShape;}
+
   
     /** The name of the material to use for the fiber. 
      *  [Default: FiberCore]
@@ -166,6 +173,9 @@ private:
   
     /// Flag to use fibers.
     bool fUseFiber;
+
+    /// Flag to use simple shape.
+    bool fUseSimpleShape;
 
     /// The name of the material to use for the fiber.
     std::string fFiberMaterial;

@@ -30,6 +30,7 @@ namespace DP
     static const string  number_cubes_Z = "number_cubes_Z";
 
     static const string  useFiber = "useFiber";
+    static const string  useSimpleCube = "useSimpleCube";
     
     static const string  visdetail = "visdetail";
 
