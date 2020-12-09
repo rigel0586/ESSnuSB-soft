@@ -206,6 +206,11 @@ public:
       **/
       void SetVisibility(bool vis) {fIsVisible = vis;}
 
+      /** Set do not include fibers in the cube
+      *@param fiber - use fibers in the cube volume
+      **/
+      void SetUseFiber(bool fiber) {fUseFiber = fiber;}
+      
       /** Get current visibility **/ 
       bool GetVisibility(void) {return false; /*fIsVisible;*/}
 
@@ -266,6 +271,9 @@ private:
 
       /// Flag if we want to use FGD scintillator material for this bar.
       bool fUseFGDScint;
+
+      /// Flag if the hole volume of the cube will be used. No fibers inside (for simulation purposes).
+      bool fUseFiber;
 
       /// The WLS fiber material
       std::string fFiberMaterial;

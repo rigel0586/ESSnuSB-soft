@@ -103,6 +103,13 @@ public:
     /** Get the radius of the WLS fiber. **/
     virtual double GetFiberRadius(void) {return fFiberRadius;};
 
+    /** Set if to use fibers in the sensitive volume
+     *@param uf - use fiber
+     **/
+    void SetUseFiber(bool uf) {fUseFiber = uf;}
+    /** Get use fiber flag **/
+    bool GetUseFiber() {return fUseFiber;}
+
   
     /** The name of the material to use for the fiber. 
      *  [Default: FiberCore]
@@ -157,6 +164,9 @@ private:
     /// The radius of the WLS fiber.
     double fFiberRadius;
   
+    /// Flag to use fibers.
+    bool fUseFiber;
+
     /// The name of the material to use for the fiber.
     std::string fFiberMaterial;
 

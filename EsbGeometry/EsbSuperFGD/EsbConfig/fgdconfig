@@ -9,6 +9,10 @@ number_cubes_X=140
 number_cubes_Y=140
 number_cubes_Z=50
 
+
+#set to use fiber in cube sensitive volume
+useFiber=1
+
 #magnetic field [1 kGauss = 0.1 T]
 magField_X=0    #in [kG] 
 magField_Y=10    #in [kG] 

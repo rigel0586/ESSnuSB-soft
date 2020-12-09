@@ -29,6 +29,8 @@ namespace DP
     static const string  number_cubes_Y = "number_cubes_Y";
     static const string  number_cubes_Z = "number_cubes_Z";
 
+    static const string  useFiber = "useFiber";
+    
     static const string  visdetail = "visdetail";
 
     static const string  magField_X = "magField_X";
