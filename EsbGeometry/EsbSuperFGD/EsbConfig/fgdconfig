@@ -11,7 +11,9 @@ number_cubes_Z=50
 
 
 #set to use fiber in cube sensitive volume
-useFiber=1
+# 1 - include fiber
+# 0 - exclude fibers
+useFiber=0
 
 #magnetic field [1 kGauss = 0.1 T]
 magField_X=0    #in [kG] 
