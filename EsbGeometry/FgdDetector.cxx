@@ -136,9 +136,10 @@ Bool_t  FgdDetector::ProcessHits(FairVolume* vol)
   fLength += TVirtualMC::GetMC()->TrackStep();
 
   // Create FairTutorialDet1Point at exit of active volume
-  if ( TVirtualMC::GetMC()->IsTrackExiting()    ||
-       TVirtualMC::GetMC()->IsTrackStop()       ||
-       TVirtualMC::GetMC()->IsTrackDisappeared()   ) {
+  if ( TVirtualMC::GetMC()->IsTrackExiting()
+      //  || TVirtualMC::GetMC()->IsTrackStop()
+      //  || TVirtualMC::GetMC()->IsTrackDisappeared()
+       ) {
 
     fTrackID  = TVirtualMC::GetMC()->GetStack()->GetCurrentTrackNumber();
     fVolumeID = vol->getMCid();
