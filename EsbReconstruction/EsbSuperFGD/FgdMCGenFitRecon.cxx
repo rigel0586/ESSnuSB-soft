@@ -219,7 +219,6 @@ InitStatus FgdMCGenFitRecon::Init()
   {
     fdisplay->setOptions(fGenFitVisOption);
   }
-  
 
   return kSUCCESS;
 }
@@ -630,6 +629,13 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       std::vector<ReconHit>& hitsOnTrack = foundTracks[i];
       bool isMuontrack = (hitsOnTrack[0].fpdg == genie::kPdgMuon || hitsOnTrack[0].fpdg == genie::kPdgAntiMuon);
 
+      Int_t maxPhotonsPerCube = 1;
+      for(Int_t ph = 0; ph < hitsOnTrack.size(); ++ph)
+      {
+        Int_t sumPhotons = hitsOnTrack[ph].fphotons.X() + hitsOnTrack[ph].fphotons.Y() + hitsOnTrack[ph].fphotons.Z();
+        if(maxPhotonsPerCube < sumPhotons) {maxPhotonsPerCube = sumPhotons;}
+      }
+
       // Set lower limit on track size
       if(hitsOnTrack.size()<fminHits)
       {
@@ -652,6 +658,23 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       //   continue;
       // }
 
+
+
+      double sum = 0.;
+      for(Int_t bh = 0; bh < hitsOnTrack.size(); ++bh)
+      {
+        std::sort(hitsOnTrack.begin(), hitsOnTrack.end(), [](ReconHit& bh1, ReconHit& bh2){return bh1.ftime<bh2.ftime;});
+        ReconHit& hit = hitsOnTrack[bh];
+        sum += hit.fEdep;
+        LOG(warning) << " \tMom [ "  << hit.fpdg << " ] \t" << hit.fmom.Mag()  << "  \tdEdx " << hit.fEdep
+                    << "  \tL " << hit.ftrackLength << "  \tE/L " << hit.fEdep/hit.ftrackLength
+                    << "(" << hit.fmppcLoc.X() << "," << hit.fmppcLoc.Y() << "," << hit.fmppcLoc.Z() << ")";
+      }
+
+      LOG(warning) << " \tAvg dEdx " << 12.71 * sum/hitsOnTrack[hitsOnTrack.size()-1].ftrackLengthOrigin;
+
+      //continue;
+
       // Sort by time, the 1st hit in time is the start of the track
       //std::sort(hitsOnTrack.begin(), hitsOnTrack.end(), [](ReconHit& bh1, ReconHit& bh2){return bh1.ftime<bh2.ftime;});
       
@@ -660,7 +683,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       TVector3 momM(hitsOnTrack[0].fmom);
 
       TVector3 calMom = getCalorimetricMomentum(hitsOnTrack);
-      momM = calMom;
+      // momM = calMom;
       // if(isMuontrack)
       // {
       //     // calMom = getCalorimetricMomentum(hitsOnTrack);
@@ -671,15 +694,15 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       //Bool_t inlcudeBetheBloch = (pdg != genie::kPdgProton); // For proton ignore bethe bloch
       //genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(inlcudeBetheBloch);
 
-      genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(true);
+      // genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(true);
       // genfit::MaterialEffects::getInstance()->setMscModel("Highland");
-      genfit::MaterialEffects::getInstance()->drawdEdx(pdg);
-      genfit::MaterialEffects::getInstance()->setNoEffects();
-      genfit::MaterialEffects::getInstance()->setNoiseBetheBloch(true);
-      genfit::MaterialEffects::getInstance()->setNoiseCoulomb(true);
-      genfit::MaterialEffects::getInstance()->setEnergyLossBrems(true);
-      genfit::MaterialEffects::getInstance()->setNoiseBrems(true);
-      genfit::MaterialEffects::getInstance()->ignoreBoundariesBetweenEqualMaterials(true);
+      // genfit::MaterialEffects::getInstance()->drawdEdx(pdg);
+      // genfit::MaterialEffects::getInstance()->setNoEffects();
+      // genfit::MaterialEffects::getInstance()->setNoiseBetheBloch(true);
+      // genfit::MaterialEffects::getInstance()->setNoiseCoulomb(true);
+      // genfit::MaterialEffects::getInstance()->setEnergyLossBrems(true);
+      // genfit::MaterialEffects::getInstance()->setNoiseBrems(true);
+      // genfit::MaterialEffects::getInstance()->ignoreBoundariesBetweenEqualMaterials(true);
 
 
       // if(isParticleNeutral(pdg))
@@ -689,7 +712,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       // }
 
       // approximate covariance
-      const double resolution = 1;// Default in example is 0.1; 
+      static const double resolution = 0.1;// Default in example is 0.1;   1/sqrt(12)
                                     // cm; resolution of generated measurements
       TMatrixDSym hitCov(3);
       hitCov(0,0) = resolution*resolution;
@@ -739,11 +762,53 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
         hitPos(1) = hitsOnTrack[bh].fHitPos.Y();
         hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
 
-        genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
+        // hitPos(0) = hitsOnTrack[bh].fMCPos.X();
+        // hitPos(1) = hitsOnTrack[bh].fMCPos.Y();
+        // hitPos(2) = hitsOnTrack[bh].fMCPos.Z();
+        // LOG(warning) << "X " << hitsOnTrack[bh].fHitPos.X() << " " << hitsOnTrack[bh].fMCPos.X();
+        // LOG(warning) << "Y " << hitsOnTrack[bh].fHitPos.Y() << " " << hitsOnTrack[bh].fMCPos.Y();
+        // LOG(warning) << "Z " << hitsOnTrack[bh].fHitPos.Z() << " " << hitsOnTrack[bh].fMCPos.Z();
+
+        
+        Int_t sumPhotons = hitsOnTrack[bh].fphotons.X() + hitsOnTrack[bh].fphotons.Y() + hitsOnTrack[bh].fphotons.Z();
+
+        TMatrixDSym phhitCov(3);
+        // The more photons, the more likely the particle went through the center
+        // dimention of resolution is in [cm]
+        double cube_diag_length = (sqrt(3)/2);
+        double normCoeff = cube_diag_length*(1 - sumPhotons/maxPhotonsPerCube);     //std::sqrt(sumPhotons);
+        //normCoeff = std::sqrt(normCoeff);
+        normCoeff = normCoeff == 0 ? 1 : normCoeff;
+        phhitCov(0,0) = resolution * resolution  * normCoeff;
+        phhitCov(1,1) = resolution * resolution  * normCoeff;
+        phhitCov(2,2) = resolution * resolution  * normCoeff;
+
+
+        //genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
+        //genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, phhitCov, detId, bh, nullptr);
         //measurements.emplace_back(measurement);
+
+        genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, phhitCov, detId, bh, nullptr);
         toFitTrack->insertMeasurement(measurement, bh);
       }
       //toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
+
+
+      // for(Int_t bh = 0; bh < hitsOnTrack.size()-1; ++bh)
+      // {
+      //   ReconHit& first = hitsOnTrack[bh];
+      //   ReconHit& second = hitsOnTrack[bh+1];
+      //   TVectorD hitPos(3);
+      //   hitPos(0) = (first.fHitPos.X() + second.fHitPos.X())/2;
+      //   hitPos(1) = (first.fHitPos.Y() + second.fHitPos.Y())/2;
+      //   hitPos(2) = (first.fHitPos.Z() + second.fHitPos.Z())/2;;
+        
+
+      //   genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh + hitsOnTrack.size(), nullptr);
+      //   //measurements.emplace_back(measurement);
+      //   toFitTrack->insertMeasurement(measurement, bh);
+      // }
+
 
       try
       {
@@ -765,7 +830,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
                     , *toFitTrack
                     , fiStatuStatus);
 
-        if(fiStatuStatus->isFitted())
+        if(fiStatuStatus->isFitted() && fiStatuStatus->isFitConverged())
         {
           fgenTracks.push_back(toFitTrack);
         }

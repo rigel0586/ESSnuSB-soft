@@ -83,6 +83,7 @@ public:
                         ,  TVector3& momM
                         ,  Bool_t smearMomentum
                         ,  Bool_t useSmoothPos
+                        ,  Bool_t usePhotonResolution
                         , OUT_ARGUMENT TVector3& momentum);
 
     void SetMinInterations(Int_t minIterations) {fminGenFitInterations = minIterations;}

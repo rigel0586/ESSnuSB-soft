@@ -1082,6 +1082,7 @@ bool FgdReconTemplate::FitTrack(
     ,  TVector3& momM
     ,  Bool_t smearMomentum
     ,  Bool_t useSmoothPos
+    ,  Bool_t usePhotonResolution
     ,  TVector3& momentum)
 {
 
@@ -1114,18 +1115,26 @@ bool FgdReconTemplate::FitTrack(
     // genfit::MaterialEffects::getInstance()->ignoreBoundariesBetweenEqualMaterials(true);
 
     // approximate covariance
-    const double resolution = 1;  // Default in example is 0.1;
-                                    // cm; resolution of generated measurements
+    static const double poisson_resolution = 0.1;  // Default in example is 0.1;
+                                                               // cm; resolution of generated measurements
+
+    Int_t maxPhotonsPerCube = 1;
+    for(Int_t ph = 0; ph < track.size(); ++ph)
+    {
+        Int_t sumPhotons = track[ph].fphotons.X() + track[ph].fphotons.Y() + track[ph].fphotons.Z();
+        if(maxPhotonsPerCube < sumPhotons) {maxPhotonsPerCube = sumPhotons;}
+    }
+
     TMatrixDSym hitCov(3);
-    hitCov(0,0) = resolution*resolution;
-    hitCov(1,1) = resolution*resolution;
-    hitCov(2,2) = resolution*resolution;
+    hitCov(0,0) = poisson_resolution*poisson_resolution;
+    hitCov(1,1) = poisson_resolution*poisson_resolution;
+    hitCov(2,2) = poisson_resolution*poisson_resolution;
 
     TMatrixDSym covM(6);
     for (int ci = 0; ci < 3; ++ci)
-        covM(ci,ci) = resolution*resolution;
+        covM(ci,ci) = poisson_resolution*poisson_resolution;
     for (int ci = 3; ci < 6; ++ci)
-        covM(ci,ci) = covM(ci,ci) = pow(  ((resolution / track.size()) / sqrt(3)), 2); 
+        covM(ci,ci) = covM(ci,ci) = pow(  ((poisson_resolution / track.size()) / sqrt(3)), 2); 
 
     // trackrep
     genfit::AbsTrackRep* rep = new genfit::RKTrackRep(pdg);
@@ -1153,14 +1162,33 @@ bool FgdReconTemplate::FitTrack(
     //std::vector<genfit::AbsMeasurement*> measurements;
     for(Int_t bh = 0; bh < track.size(); ++bh)
     {
-      TVectorD hitPos(3);
-      hitPos(0) = useSmoothPos? track[bh].fsmoothco.X() : track[bh].fHitPos.X();
-      hitPos(1) = useSmoothPos? track[bh].fsmoothco.Y() : track[bh].fHitPos.Y();
-      hitPos(2) = useSmoothPos? track[bh].fsmoothco.Z() : track[bh].fHitPos.Z();
+        static const double cube_diag = f_step_X*f_step_X + f_step_Y*f_step_Y + f_step_Z*f_step_Z;
+        static const double res_length = (sqrt(cube_diag)/2);
+        TVectorD hitPos(3);
+        hitPos(0) = useSmoothPos? track[bh].fsmoothco.X() : track[bh].fHitPos.X();
+        hitPos(1) = useSmoothPos? track[bh].fsmoothco.Y() : track[bh].fHitPos.Y();
+        hitPos(2) = useSmoothPos? track[bh].fsmoothco.Z() : track[bh].fHitPos.Z();
 
-      genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
-      toFitTrack->insertMeasurement(measurement, bh);
-      //measurements.emplace_back(measurement);
+        // Use monte carlo coordiantes
+        // hitPos(0) = hitsOnTrack[bh].fMCPos.X();
+        // hitPos(1) = hitsOnTrack[bh].fMCPos.Y();
+        // hitPos(2) = hitsOnTrack[bh].fMCPos.Z();
+
+        Int_t sumPhotons = track[bh].fphotons.X() + track[bh].fphotons.Y() + track[bh].fphotons.Z();
+        double normCoeff = res_length * (1 - sumPhotons/maxPhotonsPerCube);     //std::sqrt(sumPhotons);
+        normCoeff = normCoeff == 0 ? 1 : normCoeff;
+        TMatrixDSym phhitCov(3);
+        // The more photons, the more likely the particle went through the center
+        phhitCov(0,0) = poisson_resolution * poisson_resolution * normCoeff;
+        phhitCov(1,1) = poisson_resolution * poisson_resolution * normCoeff;
+        phhitCov(2,2) = poisson_resolution * poisson_resolution * normCoeff;
+
+        genfit::AbsMeasurement* measurement = nullptr;
+        if(usePhotonResolution) {measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr); }
+        else {measurement = new genfit::SpacepointMeasurement(hitPos, phhitCov, detId, bh, nullptr); }
+
+        toFitTrack->insertMeasurement(measurement, bh);
+        //measurements.emplace_back(measurement);
     }
     //toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
 

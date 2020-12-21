@@ -6,7 +6,7 @@
 
 void simulate_1_fairgenerator(TString outFileName = "evetest.root",
              Int_t nStartEvent = 0, 
-	     Int_t nEvents = 1)
+	     Int_t nEvents = 25)
 {
   using namespace esbroot;
   
@@ -57,7 +57,15 @@ void simulate_1_fairgenerator(TString outFileName = "evetest.root",
   //~ FairParticleGenerator* partGen = new FairParticleGenerator(2212, 1, 0, 0, 1, 0, 0, 0);
   //FairParticleGenerator* partGen = new FairParticleGenerator(13, 1, 0, 0, 0.4, 0, 0, 150);
   //FairParticleGenerator* partGen = new FairParticleGenerator(2212, 1, 0.1, 0.1, 0.4, 0.5, 0.5, -50); // Initial
-  FairParticleGenerator* partGen = new FairParticleGenerator(13, 1, 0., 0., 1., -40., 0., -50);
+  FairParticleGenerator* partGen = new FairParticleGenerator(
+     13, // Pdg code
+     1,   // multiplicity (number of particles)
+     0.,  // x momentum
+     0.,  // y momentum
+     1.,  // z momentum
+     0.5, // x vertix
+     0.5,   // y vertix
+     -550); // z vertix
   primGen->AddGenerator(partGen);
 
   fRun->SetOutputFile(outFileName.Data()); // set output file
