@@ -52,7 +52,8 @@ class FgdMuonRecon : public FgdMCGenFitRecon
                             ,   const TVector3& fitMom
                             ,   const TVector3& mcMom
                             ,   const genfit::Track& fitTrack
-                            ,   genfit::FitStatus*& fiStatuStatus) override;
+                            ,   genfit::FitStatus*& fiStatuStatus
+                            ,   std::vector<ReconHit>& track) override;
 
 protected:
     

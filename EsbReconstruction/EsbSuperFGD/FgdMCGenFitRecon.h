@@ -72,11 +72,42 @@ class FgdMCGenFitRecon : public FairTask
                           , const TVector3& fitMom
                           , const TVector3& mcMom
                           , const genfit::Track& fitTrack
-                          , genfit::FitStatus*& fiStatuStatus);
+                          , genfit::FitStatus*& fiStatuStatus
+                          , std::vector<ReconHit>& track);
 
   void SetOutputRootFile(std::string rootFIlePath){foutputRootFile = rootFIlePath;}
+  void SetErrOutFile(std::string errOutPath){ ferrOutPath = errOutPath;}
 
 protected:
+
+  struct FitData
+  {
+    TVector3 fitMom;
+    TVector3 mcMom;
+    TVector3 trackProj;
+    Int_t totalPath;
+    Bool_t isFitted;
+
+    FitData(){}
+
+    FitData(const FitData& c)
+    {
+      fitMom = c.fitMom;
+      mcMom = c.mcMom;
+      trackProj = c.trackProj;
+      totalPath = c.totalPath;
+      isFitted = c.isFitted;
+    }
+
+    FitData& operator=(const FitData& c)
+    {
+      fitMom = c.fitMom;
+      mcMom = c.mcMom;
+      trackProj = c.trackProj;
+      totalPath = c.totalPath;
+      isFitted = c.isFitted;
+    }
+  };
 
   /** Get all hits **/
   Bool_t GetHits(std::vector<ReconHit>& allHits);
@@ -96,6 +127,7 @@ protected:
 
   Bool_t isParticleNeutral(Int_t pdg);
   Bool_t isAllowed(Int_t pdg);
+  void   writeErrFile(const std::string& fileEnding, std::vector<FitData>& dataVec);
 
   /** Class to hold the Detector parameters read from external file **/
   esbroot::geometry::superfgd::FgdDetectorParameters fParams;//!<!
@@ -158,6 +190,14 @@ protected:
   std::vector<FgdTMVAEventRecord> fMCeventRecords;//!<!
   std::string foutputRootFile;//!<!
   int fMCeventNum;//!<!
+
+  
+  std::string ferrOutPath;//!<!
+  std::vector<FitData> fmuonFitData;//!<!
+  std::vector<FitData> fprotonFitData;//!<!
+  std::vector<FitData> felectronFitData;//!<!
+  std::vector<FitData> fpionFitData;//!<!
+  
   	   
   ClassDef(FgdMCGenFitRecon, 2);
 

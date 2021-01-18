@@ -153,7 +153,8 @@ void FgdMuonRecon::WriteOutput( Int_t pdg
                             ,   const TVector3& fitMom
                             ,   const TVector3& mcMom
                             ,   const genfit::Track& fitTrack
-                            ,   genfit::FitStatus*& fiStatuStatus)
+                            ,   genfit::FitStatus*& fiStatuStatus
+                            ,   std::vector<ReconHit>& track)
 {
     Bool_t isMUon = (pdg==genie::kPdgMuon) || (pdg == genie::kPdgAntiMuon);
     static Double_t radToDeg = 180./TMath::Pi();

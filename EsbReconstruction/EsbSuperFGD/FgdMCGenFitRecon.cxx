@@ -84,6 +84,7 @@ FgdMCGenFitRecon::FgdMCGenFitRecon() :
   , fminHits(25)
   , fMCeventData("")
   , foutputRootFile("")
+  , ferrOutPath("")
   , fMCeventNum(0)
 { 
 }
@@ -114,6 +115,7 @@ FgdMCGenFitRecon::FgdMCGenFitRecon(const char* name
   , fminHits(25)
   , fMCeventData(eventData)
   , foutputRootFile("")
+  , ferrOutPath("")
   , fMCeventNum(0)
 { 
   fParams.LoadPartParams(geoConfigFile);
@@ -432,6 +434,39 @@ void FgdMCGenFitRecon::FinishTask()
   outFile->Close();
   
   delete outFile;
+
+
+  //========================================================
+  //==========  Write Err data
+  //========================================================
+  if(!ferrOutPath.empty())
+  {
+    writeErrFile(std::string("_muon.txt"),        fmuonFitData);
+    writeErrFile(std::string("_proton.txt"),      fprotonFitData);
+    writeErrFile(std::string("_electron.txt"),    felectronFitData);
+    writeErrFile(std::string("_pion.txt"),        fpionFitData);
+  }
+}
+
+void FgdMCGenFitRecon::writeErrFile(const std::string& fileEnding, std::vector<FitData>& dataVec)
+{
+  std::stringstream ss;
+  ss << ferrOutPath << fileEnding;
+  std::string path = ss.str();
+
+  std::ofstream outfile(path, std::ios::app);
+  if(outfile.is_open())
+  {
+    for(size_t i = 0; i < dataVec.size(); ++i)
+    {
+      FitData& data = dataVec[i];
+      outfile << " FitMom " << data.fitMom.Mag() << " McMom " << data.mcMom.Mag()
+                  << " X " << data.trackProj.X()  << " Y " << data.trackProj.Y() << " Z " << data.trackProj.Z()
+                  << " Total " << data.totalPath << " IsFitted " << data.isFitted
+                  << endl;
+    }
+  }
+  outfile.close();
 }
 
 void FgdMCGenFitRecon::Exec(Option_t* opt) 
@@ -828,7 +863,8 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
                     , (*toFitTrack).getFittedState().getMom()
                     , hitsOnTrack[0].fmom
                     , *toFitTrack
-                    , fiStatuStatus);
+                    , fiStatuStatus
+                    , hitsOnTrack);
 
         if(fiStatuStatus->isFitted() && fiStatuStatus->isFitConverged())
         {
@@ -969,7 +1005,8 @@ void FgdMCGenFitRecon::WriteOutput( Int_t pdg
                           , const TVector3& fitMom
                           , const TVector3& mcMom
                           , const genfit::Track& fitTrack
-                          , genfit::FitStatus*& fiStatuStatus)
+                          , genfit::FitStatus*& fiStatuStatus
+                          , std::vector<ReconHit>& track)
 {
   Float_t&& temp = fitMom.Mag() - mcMom.Mag();
   //LOG(WARNING)<< "Diff " << " Fitted " << fitMom.Mag() << " - Mc " << mcMom.Mag() << " = " << temp;
@@ -977,6 +1014,28 @@ void FgdMCGenFitRecon::WriteOutput( Int_t pdg
   if(pdg == genie::kPdgMuon || pdg == genie::kPdgAntiMuon)          { fmuonFitErr.emplace_back(temp); }
   if(pdg == genie::kPdgProton)                                      { fprotonFitErr.emplace_back(temp);}
   if(pdg == genie::kPdgPiP || pdg == genie::kPdgPiM)                { fpionFitErr.emplace_back(temp);}
+
+
+  std::set<Int_t> xproj;
+  std::set<Int_t> yproj;
+  std::set<Int_t> zproj;
+  for(Int_t i = 0; i < track.size(); ++i)
+  {
+      xproj.insert(track[i].fmppcLoc.X());
+      yproj.insert(track[i].fmppcLoc.Y());
+      zproj.insert(track[i].fmppcLoc.Z());
+  }
+  FitData dataItem;
+  dataItem.fitMom = fitMom;
+  dataItem.mcMom = mcMom;
+  dataItem.trackProj.SetXYZ(xproj.size(), yproj.size(), zproj.size());
+  dataItem.totalPath = track.size();
+  dataItem.isFitted = fiStatuStatus->isFitted() && fiStatuStatus->isFitConverged();
+
+  if(pdg == genie::kPdgElectron || pdg == genie::kPdgPositron)      { felectronFitData.emplace_back(dataItem);}
+  if(pdg == genie::kPdgMuon || pdg == genie::kPdgAntiMuon)          { fmuonFitData.emplace_back(dataItem); }
+  if(pdg == genie::kPdgProton)                                      { fprotonFitData.emplace_back(dataItem);}
+  if(pdg == genie::kPdgPiP || pdg == genie::kPdgPiM)                { fpionFitData.emplace_back(dataItem);}
 }
 
 Bool_t FgdMCGenFitRecon::isParticleNeutral(Int_t pdg)

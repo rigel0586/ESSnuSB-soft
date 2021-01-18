@@ -16,8 +16,9 @@ void simulate_3_MC_reconstruction(TString inFile = "fgd_dig.root",
 	      TString outFile = "fgd_mc_recon.root",
         TString eventDat = "../../EsbMacro/tests/eventsData.dat",
         std::string outputRootdata = "../../EsbMacro/tests/tmva_mc_recon_data.root",
+        std::string errOutFile = "../../EsbMacro/tests/errData/errData",
         Int_t nStartEvent = 0,
-        Int_t nEvents = 15)
+        Int_t nEvents = 25)
 {
   using namespace esbroot;
 
@@ -53,8 +54,11 @@ void simulate_3_MC_reconstruction(TString inFile = "fgd_dig.root",
     , false                            // To visualize the tracks using genfit::Eventdisplay
     , "D");                           // Option to be passed for genfit::Eventdisplay if used
 
-  ((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetMinHits(3);
+  ((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetMinHits(5);
   ((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetOutputRootFile(outputRootdata);
+  //((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetMinInterations(5);
+  //((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetMaxInterations(7);
+  ((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetErrOutFile(errOutFile);
 
   
   fRun->AddTask(recon);   
