@@ -85,6 +85,7 @@ FgdMCGenFitRecon::FgdMCGenFitRecon() :
   , fMCeventData("")
   , foutputRootFile("")
   , ferrOutPath("")
+  , fmomErrWidth(1)
   , fMCeventNum(0)
 { 
 }
@@ -116,6 +117,7 @@ FgdMCGenFitRecon::FgdMCGenFitRecon(const char* name
   , fMCeventData(eventData)
   , foutputRootFile("")
   , ferrOutPath("")
+  , fmomErrWidth(1)
   , fMCeventNum(0)
 { 
   fParams.LoadPartParams(geoConfigFile);

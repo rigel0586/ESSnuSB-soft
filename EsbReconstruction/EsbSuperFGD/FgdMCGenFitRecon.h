@@ -77,6 +77,7 @@ class FgdMCGenFitRecon : public FairTask
 
   void SetOutputRootFile(std::string rootFIlePath){foutputRootFile = rootFIlePath;}
   void SetErrOutFile(std::string errOutPath){ ferrOutPath = errOutPath;}
+  void SetErrMomBinWidth(float momErrWidth){ fmomErrWidth = momErrWidth;}
 
 protected:
 
@@ -193,6 +194,8 @@ protected:
 
   
   std::string ferrOutPath;//!<!
+  // Mom error width in MB
+  float fmomErrWidth;//!<!
   std::vector<FitData> fmuonFitData;//!<!
   std::vector<FitData> fprotonFitData;//!<!
   std::vector<FitData> felectronFitData;//!<!

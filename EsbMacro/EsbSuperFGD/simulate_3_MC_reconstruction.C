@@ -59,6 +59,7 @@ void simulate_3_MC_reconstruction(TString inFile = "fgd_dig.root",
   //((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetMinInterations(5);
   //((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetMaxInterations(7);
   ((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetErrOutFile(errOutFile);
+  ((reconstruction::superfgd::FgdMCGenFitRecon*)recon)->SetErrMomBinWidth(10);
 
   
   fRun->AddTask(recon);   
