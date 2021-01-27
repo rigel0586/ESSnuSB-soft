@@ -483,6 +483,8 @@ void FgdMCGenFitRecon::writeErrFile(const std::string& fileEnding, Axis axis, st
   for(size_t i = 0; i < dataVec.size(); ++i)
   {
     FitData& data = dataVec[i];
+    if(!data.isFitted) continue;
+
     int proj(0);
     float err(0.);
     switch(axis)
@@ -520,23 +522,24 @@ void FgdMCGenFitRecon::writeErrFile(const std::string& fileEnding, Axis axis, st
     while(it!= projErr.end())
     {
       int keyProj = it->first;
-      float stdDev = calcStdDev(it->second);
+      float mean(0.);
+      float stdDev = calcStdDev(mean, it->second);
       ++it;
 
-      outfile << keyProj << " " << stdDev << endl;
+      outfile << keyProj << " " << mean << " " << stdDev << endl;
     }
   }
   outfile.close();
 }
 
-float  FgdMCGenFitRecon::calcStdDev(std::vector<float>& vals)
+float  FgdMCGenFitRecon::calcStdDev(float& mean, std::vector<float>& vals)
 {
   float sum(0.);
   for(size_t i = 0; i < vals.size(); ++i)
   {
     sum+= vals[i];
   }
-  float mean = sum/vals.size();
+  mean = sum/vals.size();
 
   float sumMean(0.);
   for(size_t i = 0; i < vals.size(); ++i)
@@ -775,18 +778,18 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
 
 
 
-      double sum = 0.;
-      for(Int_t bh = 0; bh < hitsOnTrack.size(); ++bh)
-      {
-        std::sort(hitsOnTrack.begin(), hitsOnTrack.end(), [](ReconHit& bh1, ReconHit& bh2){return bh1.ftime<bh2.ftime;});
-        ReconHit& hit = hitsOnTrack[bh];
-        sum += hit.fEdep;
-        LOG(warning) << " \tMom [ "  << hit.fpdg << " ] \t" << hit.fmom.Mag()  << "  \tdEdx " << hit.fEdep
-                    << "  \tL " << hit.ftrackLength << "  \tE/L " << hit.fEdep/hit.ftrackLength
-                    << "(" << hit.fmppcLoc.X() << "," << hit.fmppcLoc.Y() << "," << hit.fmppcLoc.Z() << ")";
-      }
+      // double sum = 0.;
+      // for(Int_t bh = 0; bh < hitsOnTrack.size(); ++bh)
+      // {
+      //   std::sort(hitsOnTrack.begin(), hitsOnTrack.end(), [](ReconHit& bh1, ReconHit& bh2){return bh1.ftime<bh2.ftime;});
+      //   ReconHit& hit = hitsOnTrack[bh];
+      //   sum += hit.fEdep;
+      //   LOG(warning) << " \tMom [ "  << hit.fpdg << " ] \t" << hit.fmom.Mag()  << "  \tdEdx " << hit.fEdep
+      //               << "  \tL " << hit.ftrackLength << "  \tE/L " << hit.fEdep/hit.ftrackLength
+      //               << "(" << hit.fmppcLoc.X() << "," << hit.fmppcLoc.Y() << "," << hit.fmppcLoc.Z() << ")";
+      // }
 
-      LOG(warning) << " \tAvg dEdx " << 12.71 * sum/hitsOnTrack[hitsOnTrack.size()-1].ftrackLengthOrigin;
+      //LOG(warning) << " \tAvg dEdx " << 12.71 * sum/hitsOnTrack[hitsOnTrack.size()-1].ftrackLengthOrigin;
 
       //continue;
 
@@ -827,7 +830,7 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       // }
 
       // approximate covariance
-      static const double resolution = 0.1;// Default in example is 0.1;   1/sqrt(12)
+      static const double resolution = 1;// Default in example is 0.1;   1/sqrt(12)
                                     // cm; resolution of generated measurements
       TMatrixDSym hitCov(3);
       hitCov(0,0) = resolution*resolution;
@@ -887,23 +890,23 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
         
         Int_t sumPhotons = hitsOnTrack[bh].fphotons.X() + hitsOnTrack[bh].fphotons.Y() + hitsOnTrack[bh].fphotons.Z();
 
-        TMatrixDSym phhitCov(3);
-        // The more photons, the more likely the particle went through the center
-        // dimention of resolution is in [cm]
-        double cube_diag_length = (sqrt(3)/2);
-        double normCoeff = cube_diag_length*(1 - sumPhotons/maxPhotonsPerCube);     //std::sqrt(sumPhotons);
-        //normCoeff = std::sqrt(normCoeff);
-        normCoeff = normCoeff == 0 ? 1 : normCoeff;
-        phhitCov(0,0) = resolution * resolution  * normCoeff;
-        phhitCov(1,1) = resolution * resolution  * normCoeff;
-        phhitCov(2,2) = resolution * resolution  * normCoeff;
+        // TMatrixDSym phhitCov(3);
+        // // The more photons, the more likely the particle went through the center
+        // // dimention of resolution is in [cm]
+        // double cube_diag_length = (sqrt(3)/2);
+        // double normCoeff = cube_diag_length*(1 - sumPhotons/maxPhotonsPerCube);     //std::sqrt(sumPhotons);
+        // //normCoeff = std::sqrt(normCoeff);
+        // normCoeff = (normCoeff == 0) ? 1 : normCoeff;
+        // phhitCov(0,0) = resolution * resolution  * normCoeff;
+        // phhitCov(1,1) = resolution * resolution  * normCoeff;
+        // phhitCov(2,2) = resolution * resolution  * normCoeff;
 
 
-        //genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
+        genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
         //genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, phhitCov, detId, bh, nullptr);
         //measurements.emplace_back(measurement);
 
-        genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, phhitCov, detId, bh, nullptr);
+        //genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, phhitCov, detId, bh, nullptr);
         toFitTrack->insertMeasurement(measurement, bh);
       }
       //toFitTrack->insertPoint(new genfit::TrackPoint(measurements, toFitTrack));
@@ -1088,6 +1091,19 @@ void FgdMCGenFitRecon::WriteOutput( Int_t pdg
                           , genfit::FitStatus*& fiStatuStatus
                           , std::vector<ReconHit>& track)
 {
+  // float valLimit = 400;
+  // if( (pdg == genie::kPdgMuon || pdg == genie::kPdgAntiMuon) && (fitMom.X() > valLimit
+  //   || fitMom.Y() > valLimit
+  //   || fitMom.Z() > valLimit
+  //   || mcMom.X() > valLimit
+  //   || mcMom.Y() > valLimit
+  //   || mcMom.Z() > valLimit)
+  //   )
+  //   {
+  //     LOG(ERROR) << "Too big momentum?";
+  //     exit(1);
+  //   }
+
   Float_t&& temp = fitMom.Mag() - mcMom.Mag();
   //LOG(WARNING)<< "Diff " << " Fitted " << fitMom.Mag() << " - Mc " << mcMom.Mag() << " = " << temp;
   if(pdg == genie::kPdgElectron || pdg == genie::kPdgPositron)      { felectronFitErr.emplace_back(temp);}

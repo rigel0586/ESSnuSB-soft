@@ -1115,7 +1115,7 @@ bool FgdReconTemplate::FitTrack(
     // genfit::MaterialEffects::getInstance()->ignoreBoundariesBetweenEqualMaterials(true);
 
     // approximate covariance
-    static const double poisson_resolution = 0.1;  // Default in example is 0.1;
+    static const double poisson_resolution = 1;  // Default in example is 0.1;
                                                                // cm; resolution of generated measurements
 
     Int_t maxPhotonsPerCube = 1;
@@ -1175,13 +1175,16 @@ bool FgdReconTemplate::FitTrack(
         // hitPos(2) = hitsOnTrack[bh].fMCPos.Z();
 
         Int_t sumPhotons = track[bh].fphotons.X() + track[bh].fphotons.Y() + track[bh].fphotons.Z();
-        double normCoeff = res_length * (1 - sumPhotons/maxPhotonsPerCube);     //std::sqrt(sumPhotons);
-        normCoeff = normCoeff == 0 ? 1 : normCoeff;
+        // double normCoeff = res_length * (1 - sumPhotons/maxPhotonsPerCube);     //std::sqrt(sumPhotons);
+        // normCoeff = normCoeff == 0 ? 1 : normCoeff;
         TMatrixDSym phhitCov(3);
         // The more photons, the more likely the particle went through the center
-        phhitCov(0,0) = poisson_resolution * poisson_resolution * normCoeff;
-        phhitCov(1,1) = poisson_resolution * poisson_resolution * normCoeff;
-        phhitCov(2,2) = poisson_resolution * poisson_resolution * normCoeff;
+        // phhitCov(0,0) = poisson_resolution * poisson_resolution * normCoeff;
+        // phhitCov(1,1) = poisson_resolution * poisson_resolution * normCoeff;
+        // phhitCov(2,2) = poisson_resolution * poisson_resolution * normCoeff;
+        phhitCov(0,0) = poisson_resolution * poisson_resolution;
+        phhitCov(1,1) = poisson_resolution * poisson_resolution;
+        phhitCov(2,2) = poisson_resolution * poisson_resolution;
 
         genfit::AbsMeasurement* measurement = nullptr;
         if(usePhotonResolution) {measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr); }
