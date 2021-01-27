@@ -129,6 +129,9 @@ protected:
   Bool_t isParticleNeutral(Int_t pdg);
   Bool_t isAllowed(Int_t pdg);
   void   writeErrFile(const std::string& fileEnding, std::vector<FitData>& dataVec);
+  void   addErrData(int projection, float trueMom, float fitMom, std::map<int, std::map<float,std::vector<float>>>& vals);
+  float  calcStdDev(float, std::vector<float>&);
+  void   writeErrData(const std::string& fileEnding, const std::string& axis, std::map<int, std::map<float,std::vector<float>>>& axisData);
 
   /** Class to hold the Detector parameters read from external file **/
   esbroot::geometry::superfgd::FgdDetectorParameters fParams;//!<!

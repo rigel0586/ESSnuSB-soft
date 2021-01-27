@@ -443,32 +443,125 @@ void FgdMCGenFitRecon::FinishTask()
   //========================================================
   if(!ferrOutPath.empty())
   {
-    writeErrFile(std::string("_muon.txt"),        fmuonFitData);
-    writeErrFile(std::string("_proton.txt"),      fprotonFitData);
-    writeErrFile(std::string("_electron.txt"),    felectronFitData);
-    writeErrFile(std::string("_pion.txt"),        fpionFitData);
+    writeErrFile(std::string("_muon"),        fmuonFitData);
+    writeErrFile(std::string("_proton"),      fprotonFitData);
+    writeErrFile(std::string("_electron"),    felectronFitData);
+    writeErrFile(std::string("_pion"),        fpionFitData);
   }
 }
 
 void FgdMCGenFitRecon::writeErrFile(const std::string& fileEnding, std::vector<FitData>& dataVec)
 {
+  std::map<int, std::map<float,std::vector<float>>    > xvals;
+  std::map<int, std::map<float,std::vector<float>>    > yvals;
+  std::map<int, std::map<float,std::vector<float>>    > zvals;
+
+  for(size_t i = 0; i < dataVec.size(); ++i)
+  {
+    FitData& data = dataVec[i];
+
+    // Add x axis valuse
+    Int_t xproj = data.trackProj.X();
+    float xMCmom = data.mcMom.X();
+    float xfitmom = data.fitMom.X();
+    addErrData(xproj, xMCmom, xfitmom, xvals);
+
+    // Add y axis values
+    Int_t yproj = data.trackProj.Y();
+    float yMCmom = data.mcMom.Y();
+    float yfitmom = data.fitMom.Y();
+    addErrData(yproj, yMCmom, yfitmom, yvals);
+
+    // Add z axis values
+    Int_t zproj = data.trackProj.Z();
+    float zMCmom = data.mcMom.Z();
+    float zfitmom = data.fitMom.Z();
+    addErrData(zproj, zMCmom, zfitmom, zvals);
+  }
+
+  writeErrData(fileEnding, "X",xvals);
+  writeErrData(fileEnding, "Y",yvals);
+  writeErrData(fileEnding, "Z",zvals);
+}
+
+void FgdMCGenFitRecon::writeErrData(const std::string& fileEnding
+        , const std::string& axis
+        , std::map<int, std::map<float,std::vector<float>>>& axisData)
+{
   std::stringstream ss;
-  ss << ferrOutPath << fileEnding;
+  ss << ferrOutPath << fileEnding << "_" << axis << ".txt";
   std::string path = ss.str();
 
   std::ofstream outfile(path, std::ios::app);
   if(outfile.is_open())
   {
-    for(size_t i = 0; i < dataVec.size(); ++i)
+    auto keyIter = axisData.begin();
+    while(keyIter != axisData.end())
     {
-      FitData& data = dataVec[i];
-      outfile << " FitMom " << data.fitMom.Mag() << " McMom " << data.mcMom.Mag()
-                  << " X " << data.trackProj.X()  << " Y " << data.trackProj.Y() << " Z " << data.trackProj.Z()
-                  << " Total " << data.totalPath << " IsFitted " << data.isFitted
-                  << endl;
+        int proj = keyIter->first;
+        std::map<float,std::vector<float>>& vals = keyIter->second;
+
+        auto momIter = vals.begin();
+        while(momIter != vals.end())
+        {
+            float mcMom = momIter->first;
+            std::vector<float>& fitMoms = momIter->second;
+            float stdDev = calcStdDev(mcMom, fitMoms);
+
+            outfile << proj << " " << mcMom << " " << stdDev << endl;
+
+            ++momIter;
+        }
+
+        ++keyIter;
     }
   }
   outfile.close();
+}
+
+float  FgdMCGenFitRecon::calcStdDev(float mean, std::vector<float>& vals)
+{
+  float sum(0.);
+  for(size_t i = 0; i < vals.size(); ++i)
+  {
+    float val = vals[i];
+    float&& temp = (mean - val);
+    sum+= (temp*temp);
+  }
+
+  float avgsum = sum/vals.size();
+  return std::sqrt(avgsum);
+}
+
+void  FgdMCGenFitRecon::addErrData(int projection, float trueMom, float fitMom, std::map<int, std::map<float,std::vector<float>>>& vals)
+{
+    bool containsProj = (vals.find(projection) != vals.end());
+
+    if(containsProj)
+    {
+        std::map<float,std::vector<float>>& mapTrue = vals[projection];
+        bool containsTrueMom = (mapTrue.find(trueMom) != mapTrue.end());
+
+        if(containsTrueMom)
+        {
+          std::vector<float>& vec = mapTrue[trueMom];
+          vec.insert(vec.end(), fitMom);
+        }
+        else
+        {
+          std::vector<float> newVals;
+          newVals.insert(newVals.end(), fitMom);
+          mapTrue[trueMom] = std::move(newVals);
+        }
+    }
+    else
+    {
+      std::vector<float> newVals;
+      newVals.insert(newVals.end(), fitMom);
+      std::map<float,std::vector<float>> mapFitMom;
+      mapFitMom[trueMom] = std::move(newVals);
+      vals[projection] = std::move(mapFitMom);
+    }
 }
 
 void FgdMCGenFitRecon::Exec(Option_t* opt) 
