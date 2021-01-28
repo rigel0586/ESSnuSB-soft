@@ -136,6 +136,8 @@ protected:
   Bool_t isParticleNeutral(Int_t pdg);
   Bool_t isAllowed(Int_t pdg);
   void   writeErrFile(const std::string& fileEnding, Axis axis, std::vector<FitData>& dataVec);
+  void   writeErrFile(const std::string& fileEnding, std::vector<FitData>& dataVec);
+  void   writeTrErrFile(const std::string& fileEnding, std::vector<FitData>& dataVec);
   float  calcStdDev(float& mean, std::vector<float>&);
 
   /** Class to hold the Detector parameters read from external file **/

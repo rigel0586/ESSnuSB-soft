@@ -458,6 +458,16 @@ void FgdMCGenFitRecon::FinishTask()
     writeErrFile(std::string("_pion"),  Axis::X,      fpionFitData);
     writeErrFile(std::string("_pion"),  Axis::Y,      fpionFitData);
     writeErrFile(std::string("_pion"),  Axis::Z,      fpionFitData);
+
+    writeErrFile(std::string("_muon"),        fmuonFitData);
+    writeErrFile(std::string("_proton"),      fprotonFitData);
+    writeErrFile(std::string("_electron"),    felectronFitData);
+    writeErrFile(std::string("_pion"),        fpionFitData);
+
+    writeTrErrFile(std::string("_muon"),        fmuonFitData);
+    writeTrErrFile(std::string("_proton"),      fprotonFitData);
+    writeTrErrFile(std::string("_electron"),    felectronFitData);
+    writeTrErrFile(std::string("_pion"),        fpionFitData);
   }
 }
 
@@ -479,57 +489,114 @@ void FgdMCGenFitRecon::writeErrFile(const std::string& fileEnding, Axis axis, st
   ss<< ".txt";
   std::string path = ss.str();
 
-  std::map<int, std::vector<float>> projErr;
-  for(size_t i = 0; i < dataVec.size(); ++i)
-  {
-    FitData& data = dataVec[i];
-    if(!data.isFitted) continue;
+  // std::map<int, std::vector<float>> projErr;
+  // for(size_t i = 0; i < dataVec.size(); ++i)
+  // {
+  //   FitData& data = dataVec[i];
+  //   if(!data.isFitted) continue;
 
-    int proj(0);
-    float err(0.);
-    switch(axis)
-    {
-      case Axis::X: proj = data.trackProj.X();
-                    err = (data.mcMom.X() - data.fitMom.X());
-                    break;
-      case Axis::Y: proj = data.trackProj.Y();
-                    err = (data.mcMom.Y() - data.fitMom.Y());
-                    break;
-      case Axis::Z: proj = data.trackProj.Z(); 
-                    err = (data.mcMom.Z() - data.fitMom.Z());;
-                    break;
-      default: 
-                    break;
-    }
+  //   int proj(0);
+  //   float err(0.);
+  //   switch(axis)
+  //   {
+  //     case Axis::X: proj = data.trackProj.X();
+  //                   err = (data.mcMom.X() - data.fitMom.X());
+  //                   break;
+  //     case Axis::Y: proj = data.trackProj.Y();
+  //                   err = (data.mcMom.Y() - data.fitMom.Y());
+  //                   break;
+  //     case Axis::Z: proj = data.trackProj.Z(); 
+  //                   err = (data.mcMom.Z() - data.fitMom.Z());;
+  //                   break;
+  //     default: 
+  //                   break;
+  //   }
 
-    bool hasProj = (projErr.find(proj) != projErr.end());
-    if(hasProj)
-    {
-      projErr[proj].insert(projErr[proj].end(), err);
-    }
-    else
-    {
-      std::vector<float> errs;
-      errs.insert(errs.end(), err);
-      projErr[proj] = std::move(errs);
-    }
-  }
+  //   bool hasProj = (projErr.find(proj) != projErr.end());
+  //   if(hasProj)
+  //   {
+  //     projErr[proj].insert(projErr[proj].end(), err);
+  //   }
+  //   else
+  //   {
+  //     std::vector<float> errs;
+  //     errs.insert(errs.end(), err);
+  //     projErr[proj] = std::move(errs);
+  //   }
+  // }
 
   std::ofstream outfile(path, std::ios::trunc);
   if(outfile.is_open())
   {
-    auto it = projErr.begin();
-    while(it!= projErr.end())
+    for(size_t i = 0; i < dataVec.size(); ++i)
     {
-      int keyProj = it->first;
-      float mean(0.);
-      float stdDev = calcStdDev(mean, it->second);
-      ++it;
+      FitData& data = dataVec[i];
+      if(!data.isFitted) continue;
 
-      outfile << keyProj << " " << mean << " " << stdDev << endl;
+      switch(axis)
+      {
+        case Axis::X: outfile << data.mcMom.X() << " " << (data.mcMom.X() - data.fitMom.X()) << endl;
+                      break;
+        case Axis::Y: outfile << data.mcMom.Y() << " " << (data.mcMom.Y() - data.fitMom.Y()) << endl;
+                      break;
+        case Axis::Z: outfile << data.mcMom.Z() << " " << (data.mcMom.Z() - data.fitMom.Z()) << endl;
+                      break;
+        default: 
+                      break;
+      }
     }
+    // auto it = projErr.begin();
+    // while(it!= projErr.end())
+    // {
+    //   int keyProj = it->first;
+    //   float mean(0.);
+    //   float stdDev = calcStdDev(mean, it->second);
+    //   ++it;
+
+    //   outfile << keyProj << " " << mean << " " << stdDev << endl;
+    // }
   }
   outfile.close();
+}
+
+void   FgdMCGenFitRecon::writeErrFile(const std::string& fileEnding, std::vector<FitData>& dataVec)
+{
+  std::stringstream ss;
+  ss << ferrOutPath << fileEnding << ".txt";
+  std::string path = ss.str();
+  std::ofstream outfile(path, std::ios::trunc);
+
+  if(outfile.is_open())
+  {
+    for(size_t i = 0; i < dataVec.size(); ++i)
+    {
+      FitData& data = dataVec[i];
+      if(!data.isFitted) continue;
+
+      outfile << data.mcMom.Mag() << " " << (data.mcMom.Mag() - data.fitMom.Mag()) << endl;
+    }
+  }
+  outfile.close(); 
+}
+
+void   FgdMCGenFitRecon::writeTrErrFile(const std::string& fileEnding, std::vector<FitData>& dataVec)
+{
+  std::stringstream ss;
+  ss << ferrOutPath << fileEnding << "tr.txt";
+  std::string path = ss.str();
+  std::ofstream outfile(path, std::ios::trunc);
+
+  if(outfile.is_open())
+  {
+    for(size_t i = 0; i < dataVec.size(); ++i)
+    {
+      FitData& data = dataVec[i];
+      if(!data.isFitted) continue;
+
+      outfile << data.totalPath << " " << (data.mcMom.Mag() - data.fitMom.Mag()) << endl;
+    }
+  }
+  outfile.close(); 
 }
 
 float  FgdMCGenFitRecon::calcStdDev(float& mean, std::vector<float>& vals)
