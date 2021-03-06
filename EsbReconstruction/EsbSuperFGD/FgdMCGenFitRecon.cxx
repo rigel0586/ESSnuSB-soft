@@ -38,6 +38,7 @@
 #include <PlanarMeasurement.h>
 #include <RKTrackRep.h>
 #include "SpacepointMeasurement.h"
+#include "ProlateSpacepointMeasurement.h"
 #include <StateOnPlane.h>
 #include "TDatabasePDG.h"
 #include <TGeoMaterialInterface.h>
@@ -879,15 +880,15 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       //Bool_t inlcudeBetheBloch = (pdg != genie::kPdgProton); // For proton ignore bethe bloch
       //genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(inlcudeBetheBloch);
 
-      // genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(true);
+      // genfit::MaterialEffects::getInstance()->setEnergyLossBetheBloch(false);
       // genfit::MaterialEffects::getInstance()->setMscModel("Highland");
       // genfit::MaterialEffects::getInstance()->drawdEdx(pdg);
       // genfit::MaterialEffects::getInstance()->setNoEffects();
-      // genfit::MaterialEffects::getInstance()->setNoiseBetheBloch(true);
-      // genfit::MaterialEffects::getInstance()->setNoiseCoulomb(true);
-      // genfit::MaterialEffects::getInstance()->setEnergyLossBrems(true);
-      // genfit::MaterialEffects::getInstance()->setNoiseBrems(true);
-      // genfit::MaterialEffects::getInstance()->ignoreBoundariesBetweenEqualMaterials(true);
+      // genfit::MaterialEffects::getInstance()->setNoiseBetheBloch(false);
+      // genfit::MaterialEffects::getInstance()->setNoiseCoulomb(false);
+      // genfit::MaterialEffects::getInstance()->setEnergyLossBrems(false);
+      // genfit::MaterialEffects::getInstance()->setNoiseBrems(false);
+      // genfit::MaterialEffects::getInstance()->ignoreBoundariesBetweenEqualMaterials(false);
 
 
       // if(isParticleNeutral(pdg))
@@ -923,8 +924,8 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       TMatrixDSym seedCov(6);
       stateSmeared.get6DStateCov(seedState, seedCov);
   
-      //genfit::Track* toFitTrack = new genfit::Track(rep, seedState, seedCov);
-      genfit::Track* toFitTrack = new genfit::Track(rep, posM, momM);
+      genfit::Track* toFitTrack = new genfit::Track(rep, seedState, seedCov);
+      //genfit::Track* toFitTrack = new genfit::Track(rep, posM, momM);
 
       LOG(debug) << "******************************************* ";
       LOG(debug) << "******    Track "<< i << "  ************************";
@@ -943,13 +944,13 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       for(Int_t bh = 0; bh < hitsOnTrack.size(); ++bh)
       {
         TVectorD hitPos(3);
-        hitPos(0) = hitsOnTrack[bh].fHitPos.X();
-        hitPos(1) = hitsOnTrack[bh].fHitPos.Y();
-        hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
+        // hitPos(0) = hitsOnTrack[bh].fHitPos.X();
+        // hitPos(1) = hitsOnTrack[bh].fHitPos.Y();
+        // hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
 
-        // hitPos(0) = hitsOnTrack[bh].fMCPos.X();
-        // hitPos(1) = hitsOnTrack[bh].fMCPos.Y();
-        // hitPos(2) = hitsOnTrack[bh].fMCPos.Z();
+        hitPos(0) = hitsOnTrack[bh].fMCPos.X();
+        hitPos(1) = hitsOnTrack[bh].fMCPos.Y();
+        hitPos(2) = hitsOnTrack[bh].fMCPos.Z();
         // LOG(warning) << "X " << hitsOnTrack[bh].fHitPos.X() << " " << hitsOnTrack[bh].fMCPos.X();
         // LOG(warning) << "Y " << hitsOnTrack[bh].fHitPos.Y() << " " << hitsOnTrack[bh].fMCPos.Y();
         // LOG(warning) << "Z " << hitsOnTrack[bh].fHitPos.Z() << " " << hitsOnTrack[bh].fMCPos.Z();
@@ -970,6 +971,8 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
 
 
         genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
+        //genfit::AbsMeasurement* measurement = new genfit::ProlateSpacepointMeasurement(hitPos, hitCov, detId, bh, nullptr);
+        
         //genfit::AbsMeasurement* measurement = new genfit::SpacepointMeasurement(hitPos, phhitCov, detId, bh, nullptr);
         //measurements.emplace_back(measurement);
 
@@ -1170,6 +1173,13 @@ void FgdMCGenFitRecon::WriteOutput( Int_t pdg
   //     LOG(ERROR) << "Too big momentum?";
   //     exit(1);
   //   }
+
+  bool isFitted = fiStatuStatus->isFitted() && fiStatuStatus->isFitConverged();
+
+  if(!isFitted)
+  {
+    return;
+  }
 
   Float_t&& temp = fitMom.Mag() - mcMom.Mag();
   //LOG(WARNING)<< "Diff " << " Fitted " << fitMom.Mag() << " - Mc " << mcMom.Mag() << " = " << temp;
