@@ -97,6 +97,7 @@ protected:
     Bool_t isFitted;
 
     FitData(){}
+    ~FitData(){}
 
     FitData(const FitData& c)
     {
@@ -114,6 +115,38 @@ protected:
       trackProj = c.trackProj;
       totalPath = c.totalPath;
       isFitted = c.isFitted;
+    }
+  };
+
+  struct HoughPoint
+  {
+    int a;
+    int b;
+    int r;
+    int count;
+
+    HoughPoint(): a(0), b(0), r(0), count(0) {}
+    ~HoughPoint(){}
+
+    HoughPoint(const HoughPoint& c)
+    {
+      a = c.a;
+      b = c.b;
+      r = c.r;
+      count = c.count;
+    }
+
+    HoughPoint& operator=(const HoughPoint& c)
+    {
+      a = c.a;
+      b = c.b;
+      r = c.r;
+      count = c.count;
+    }
+
+    bool operator==(const HoughPoint& c)
+    {
+      return (a == c.a) && (b == c.b) && (r == c.r);
     }
   };
 
@@ -214,6 +247,10 @@ protected:
   	   
   ClassDef(FgdMCGenFitRecon, 2);
 
+private:
+  Double_t Radius(const TVector3& p1, const TVector3& p2, const TVector3& p3);
+  bool GetHoughMomentum(std::vector<ReconHit>& track, Double_t& momentum);
+  bool HoughRadius(std::vector<ReconHit>& track, Double_t& initialRadius, Double_t& radius);
 };
 
 } //superfgd

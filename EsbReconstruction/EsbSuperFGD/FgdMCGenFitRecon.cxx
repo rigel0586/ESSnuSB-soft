@@ -56,6 +56,7 @@
 
 
 // STL headers
+#include <cmath>
 #include <vector>
 #include <fstream>
 #include <iostream>
@@ -395,6 +396,28 @@ void FgdMCGenFitRecon::FinishTask()
     //========================================================
 
     //========================================================
+    TTree * muonFitErrXYZTree = new TTree("muonFitErrXYZTree"
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+
+    Float_t muonFitXErr = 0;
+    Float_t muonFitYErr = 0;
+    Float_t muonFitZErr = 0;
+    muonFitErrXYZTree->Branch("muonFitXErr", &muonFitXErr);
+    muonFitErrXYZTree->Branch("muonFitYErr", &muonFitYErr);
+    muonFitErrXYZTree->Branch("muonFitZErr", &muonFitZErr);
+    for(size_t i = 0; i < fmuonFitData.size(); ++i)
+    {
+      FitData& dat = fmuonFitData[i];
+      muonFitXErr = dat.fitMom.X() - dat.mcMom.X();
+      muonFitYErr = dat.fitMom.Y() - dat.mcMom.Y();
+      muonFitZErr = dat.fitMom.Z() - dat.mcMom.Z();
+      muonFitErrXYZTree->Fill();
+      muonFitErrXYZTree->Fill();
+      muonFitErrXYZTree->Fill();
+    }
+    //========================================================
+
+    //========================================================
     TTree * protonFitErrTree = new TTree("protonFitErrTree"
                                 ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
 
@@ -425,7 +448,8 @@ void FgdMCGenFitRecon::FinishTask()
     outFile->WriteTObject(calorimetricMomTree);     
 
     outFile->WriteTObject(electronFitErrTree); 
-    outFile->WriteTObject(muonFitErrTree); 
+    outFile->WriteTObject(muonFitErrTree);
+    outFile->WriteTObject(muonFitErrXYZTree);  
     outFile->WriteTObject(protonFitErrTree); 
     outFile->WriteTObject(pionFitErrTree);                 
   }
@@ -944,13 +968,13 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
       for(Int_t bh = 0; bh < hitsOnTrack.size(); ++bh)
       {
         TVectorD hitPos(3);
-        // hitPos(0) = hitsOnTrack[bh].fHitPos.X();
-        // hitPos(1) = hitsOnTrack[bh].fHitPos.Y();
-        // hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
+        hitPos(0) = hitsOnTrack[bh].fHitPos.X();
+        hitPos(1) = hitsOnTrack[bh].fHitPos.Y();
+        hitPos(2) = hitsOnTrack[bh].fHitPos.Z();
 
-        hitPos(0) = hitsOnTrack[bh].fMCPos.X();
-        hitPos(1) = hitsOnTrack[bh].fMCPos.Y();
-        hitPos(2) = hitsOnTrack[bh].fMCPos.Z();
+        // hitPos(0) = hitsOnTrack[bh].fMCPos.X();
+        // hitPos(1) = hitsOnTrack[bh].fMCPos.Y();
+        // hitPos(2) = hitsOnTrack[bh].fMCPos.Z();
         // LOG(warning) << "X " << hitsOnTrack[bh].fHitPos.X() << " " << hitsOnTrack[bh].fMCPos.X();
         // LOG(warning) << "Y " << hitsOnTrack[bh].fHitPos.Y() << " " << hitsOnTrack[bh].fMCPos.Y();
         // LOG(warning) << "Z " << hitsOnTrack[bh].fHitPos.Z() << " " << hitsOnTrack[bh].fMCPos.Z();
@@ -1018,6 +1042,15 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
                     , *toFitTrack
                     , fiStatuStatus
                     , hitsOnTrack);
+
+
+        Double_t momentum=0;
+        bool houghFlag = GetHoughMomentum(hitsOnTrack,momentum);
+        //if()
+        {
+          float mcMom = std::sqrt(  hitsOnTrack[0].fmom.X()*hitsOnTrack[0].fmom.X()  +  hitsOnTrack[0].fmom.Z()*hitsOnTrack[0].fmom.Z()   );
+          LOG(debug) << "Found Hough " << houghFlag <<" Hough Momentum " << momentum << " MC mom " << mcMom;
+        }
 
         if(fiStatuStatus->isFitted() && fiStatuStatus->isFitConverged())
         {
@@ -1175,6 +1208,16 @@ void FgdMCGenFitRecon::WriteOutput( Int_t pdg
   //   }
 
   bool isFitted = fiStatuStatus->isFitted() && fiStatuStatus->isFitConverged();
+  // bool momentumToLowX(false);
+  // bool momentumToLowY(false);
+  // bool momentumToLowZ(false);
+  // static const TVector3 magField = fgdConstructor.GetMagneticField();
+  // static const float lowlimit = 0.08;
+  // if(magField.X()!=0){ momentumToLowX = (std::abs(mcMom.X())<lowlimit); }
+  // if(magField.Y()!=0){ momentumToLowY = (std::abs(mcMom.Y())<lowlimit); }
+  // if(magField.Z()!=0){ momentumToLowZ = (std::abs(mcMom.Z())<lowlimit); }
+  // bool momentumLow = momentumToLowX || momentumToLowY || momentumToLowZ;
+  
 
   if(!isFitted)
   {
@@ -1182,6 +1225,13 @@ void FgdMCGenFitRecon::WriteOutput( Int_t pdg
   }
 
   Float_t&& temp = fitMom.Mag() - mcMom.Mag();
+  // if((pdg == genie::kPdgMuon || pdg == genie::kPdgAntiMuon)    && (temp>4.0 || temp<-4.0))
+  // {
+  //   LOG(warning)<< "momentumToLowX " << momentumToLowX <<  " momentumToLowX " << momentumToLowY << " momentumToLowZ " << momentumToLowZ;
+  //   LOG(warning)<< "std::abs(mcMom.Y()) " << std::abs(mcMom.Y());
+  //   LOG(fatal)<< "Diff " << " Fitted " << fitMom.Mag() << " - Mc " << mcMom.Mag() << " = " << temp;
+  //   exit(1);
+  // }
   //LOG(WARNING)<< "Diff " << " Fitted " << fitMom.Mag() << " - Mc " << mcMom.Mag() << " = " << temp;
   if(pdg == genie::kPdgElectron || pdg == genie::kPdgPositron)      { felectronFitErr.emplace_back(temp);}
   if(pdg == genie::kPdgMuon || pdg == genie::kPdgAntiMuon)          { fmuonFitErr.emplace_back(temp); }
@@ -1239,6 +1289,211 @@ Long_t FgdMCGenFitRecon::ArrInd(int x, int y, int z)
   return (x*f_bin_Y*f_bin_Z + y*f_bin_Z+z);
 }
 
+// Calculate the radius from 3 points using the "Menger curvature" theorem
+Double_t FgdMCGenFitRecon::Radius(const TVector3& p1, const TVector3& p2, const TVector3& p3)
+{
+  //
+  //          p1
+  //          /\\
+  //     y   /  \\  x
+  //        /    \\
+  //       /______\\
+  //      p2        p3
+  //          z
+  //
+  //                    2 sin (Angle(xyz))
+  //      c(x,y,z) = ------------------------
+  //                        |x - z|
+  //
+  //    where Angle(xyz) is the angle from point p2 to point p1 and p3
+  //    and |x - z| is the magnitude of the line connecting points p2 and p3
+
+  TVector3 x = p3 - p1;
+  TVector3 y = p2 - p1;
+  TVector3 z = p2 - p3;
+
+  Double_t angle = y.Angle(x);
+  Double_t x_z_Mag = z.Mag();
+
+  Double_t c = (2*std::sin(angle))/x_z_Mag;
+  Double_t R = 1./c;
+
+  LOG(debug3) << "Radius is -> " << R << " [cm]";
+
+  return R;
+}
+
+bool FgdMCGenFitRecon::GetHoughMomentum(std::vector<ReconHit>& track, Double_t& momentum)
+{
+    // For calculation charge is taken as 1 unit of 'e'
+    static const Double_t charge = 1.;
+    static const Double_t inf = std::numeric_limits<Double_t>::infinity();
+
+    bool rc(false);
+    TVector3 p1 = track[0].fmppcLoc;
+    TVector3 p2 = track[track.size()/2].fmppcLoc;
+    TVector3 p3 = track[track.size()-1].fmppcLoc;
+
+    TVector3 magField = fgdConstructor.GetMagneticField();
+
+    size_t countAxis{0};
+
+    // We don`t want to calculate the momentum in the direction of the magnetic field
+    if(magField.X()!=0)
+    {
+      p1.SetX(0);
+      p2.SetX(0);
+      p3.SetX(0);
+      ++countAxis;
+    }
+
+    // We don`t want to calculate the momentum in the direction of the magnetic field
+    if(magField.Y()!=0)
+    {
+      p1.SetY(0);
+      p2.SetY(0);
+      p3.SetY(0);
+      ++countAxis;
+    }
+
+    // We don`t want to calculate the momentum in the direction of the magnetic field
+    if(magField.Z()!=0)
+    {
+      p1.SetZ(0);
+      p2.SetZ(0);
+      p3.SetZ(0);
+      ++countAxis;
+    }
+
+    // We can calculate the momentum if we have a magnetic field only in ONE axis
+    // the radius is extracted from a 2D plane, not a 3D. 
+    if(countAxis!=1)
+    {
+      return false;
+    }
+
+    Double_t radius = Radius(p1, p2, p3); // get initial radius
+    Double_t houghRadius = 0;
+
+    // if(!std::isnan(radius) 
+    //     && radius!=inf 
+    //     && HoughRadius(track, radius, houghRadius))
+    radius = 0;
+    if(HoughRadius(track, radius, houghRadius))
+    {
+      rc = true;
+
+      // The magnetic field is expected to be only in one axis
+      Double_t magField_T =  magField.X();
+      if(magField.Y()!=0) {magField_T = magField.Y();}
+      if(magField.Z()!=0) {magField_T = magField.Z();}
+      magField_T = magField_T / 10.; // convert from kGauss to Tesla units
+
+      Double_t R = houghRadius/100.; // convert in meters
+      momentum = charge * R * magField_T;
+      LOG(debug) << "Menger [r] = " << radius << ", Hough [r] = " << houghRadius;
+      LOG(debug) << "Menger [p] = " << (charge * (radius/100) * magField_T) << ", Hough [p] = " << (charge * R * magField_T);
+    }
+
+    return rc;
+}
+
+bool FgdMCGenFitRecon::HoughRadius(std::vector<ReconHit>& track, Double_t& initialRadius, Double_t& radius)
+{
+  // Hough circle transform
+  // For each A[a,b,r] = 0; // fill with zeroes initially, instantiate 3D matrix
+  // For each cell(x,y)
+  //     For each theta t = 0 to 360  // the possible  theta 0 to 360
+  //        b = y – r * sin(t * PI / 180);  //polar coordinate for center (convert to radians)
+  //        a = x – r * cos(t * PI / 180); //polar coordinate for center (convert to radians)
+  //        A[a,b,r] +=1; //voting
+  //     end
+  // end
+
+  // Double_t rot90deg = TMath::Pi()/2;
+
+  bool rc(false);
+  TVector3 magField = fgdConstructor.GetMagneticField();
+  auto degToRad = (TMath::Pi() / 180);
+  std::vector<HoughPoint> houghPoints;
+  
+  static Double_t range = 100;
+  static int min_r = 10;
+
+  int r_start = initialRadius - range;
+  r_start = (r_start < min_r) ? min_r : r_start;
+  int r_end = initialRadius + range;
+  int r_delta = 2;
+
+  int t_start = 0;
+  int t_delta = 15;
+  int t_end = 360;
+  for(int r = r_start;  r <= r_end; r+= r_delta)
+  {
+    for(int i = 0; i < track.size(); i+=2)
+    {
+      int x = 0;
+      int y = 0;
+      // Assume magnetic field is only in one axis
+      ReconHit& hit = track[i];
+      if(magField.X()!=0)
+      {
+          x = hit.fmppcLoc.Y();
+          y = hit.fmppcLoc.Z();
+      }
+      else if(magField.Y()!=0)
+      {
+          x = hit.fmppcLoc.X();
+          y = hit.fmppcLoc.Z();
+      }
+      else
+      {
+          x = hit.fmppcLoc.X();
+          y = hit.fmppcLoc.Y();
+      }
+      for(int t = t_start;  t <= t_end; t+=t_delta)
+      {
+          HoughPoint point;
+          point.b = y - r * sin(t * degToRad);  //polar coordinate for center (convert to radians)
+          point.a = x - r * cos(t * degToRad);  //polar coordinate for center (convert to radians)
+          point.r = r;
+          
+          std::vector<HoughPoint>::iterator it = find(houghPoints.begin(), houghPoints.end(),point);
+          if(it == houghPoints.end())
+          {
+            ++point.count;
+            houghPoints.emplace_back(point);
+          }else
+          {
+            ++(*it).count;
+          }
+      }
+    }
+  }
+
+  int ind = -1;
+  int currentMax = -1;
+  for(int i = 0;  i < houghPoints.size(); ++i)
+  {
+    HoughPoint& point = houghPoints[i];
+    //LOG(debug) << "A["<< point.a << " ," << point.b << " ," << point.r << "] = " << point.count;
+    if( currentMax < point.count)
+    {
+        ind = i;
+        currentMax = point.count;
+    }
+  }
+
+  if(ind != -1)
+  {
+    rc = true;
+    HoughPoint& point = houghPoints[ind];
+    radius = point.r;
+    LOG(debug) << "Found A["<< point.a << " ," << point.b << " ," << point.r << "] = " << point.count;
+  }
+
+  return rc;
+}
 // -------------------------------------------------------------------------
 
 }// namespace superfgd
