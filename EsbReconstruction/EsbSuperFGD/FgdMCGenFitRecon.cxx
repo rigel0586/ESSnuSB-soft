@@ -1485,7 +1485,7 @@ bool FgdMCGenFitRecon::HoughRadius(std::vector<ReconHit>& track, Double_t& initi
   cubeLength = (cubeLength < f_step_Z) ? f_step_Z : cubeLength;
   
   Double_t range = 150;
-  int min_r = cubeLength * 5;
+  int min_r = cubeLength * 1;
 
   int r_start = initialRadius - range;
   r_start = (r_start < min_r) ? min_r : r_start;
