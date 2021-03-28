@@ -86,7 +86,8 @@ public:
     Double_t fChangeAngle;
     Double_t fpe;
 
-    Int_t fLocalId;
+    Int_t fLocalId;     // Id which is used when building a graph - relative to the graph structure
+    Long_t fHitId;      // Id which is used in detector coordinates - relative to the position in the detector
     Bool_t fIsVisited;
     std::vector<ReconHit*> fAllHits;//!<! 
 

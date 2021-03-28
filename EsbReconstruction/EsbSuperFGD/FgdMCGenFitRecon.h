@@ -123,9 +123,9 @@ protected:
     int a;
     int b;
     int r;
-    int count;
+    std::set<Long_t> count;
 
-    HoughPoint(): a(0), b(0), r(0), count(0) {}
+    HoughPoint(): a(0), b(0), r(0) {}
     ~HoughPoint(){}
 
     HoughPoint(const HoughPoint& c)
@@ -150,6 +150,34 @@ protected:
     }
   };
 
+  ///      I  |  II
+  ///  *------------
+  ///     III | IV
+  /// Starts from * and is clockwise
+  /// I - from 0 to 90
+  /// II - from 90 to 180
+  /// III - from 180 to 270
+  /// IV - from 270 to 360
+  enum Quadrant
+  {
+      One,
+      Two,
+      Three,
+      Four
+  };
+
+  ///         I
+  ///  *------------
+  ///         II
+  /// Starts from * and is clockwise
+  /// I - from 0 to 180
+  /// II - from 180 to 360
+  enum SemiCircle
+  {
+      SemiOne,
+      SemiTwo
+  };
+
   /** Get all hits **/
   Bool_t GetHits(std::vector<ReconHit>& allHits);
 
@@ -165,6 +193,8 @@ protected:
   void PrintFitTrack(genfit::Track& track);
 
   Long_t ArrInd(int i, int j, int k);
+  Long_t HitId(ReconHit& hit);
+  void FillHitIds(std::vector<ReconHit>& track);
 
   Bool_t isParticleNeutral(Int_t pdg);
   Bool_t isAllowed(Int_t pdg);

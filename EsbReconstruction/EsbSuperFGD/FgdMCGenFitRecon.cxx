@@ -1289,6 +1289,21 @@ Long_t FgdMCGenFitRecon::ArrInd(int x, int y, int z)
   return (x*f_bin_Y*f_bin_Z + y*f_bin_Z+z);
 }
 
+
+Long_t FgdMCGenFitRecon::HitId(ReconHit& hit)
+{
+  hit.fHitId = (hit.fmppcLoc.X()*f_bin_Y*f_bin_Z + hit.fmppcLoc.Y()*f_bin_Z + hit.fmppcLoc.Z());
+  return hit.fHitId;
+}
+
+void FgdMCGenFitRecon::FillHitIds(std::vector<ReconHit>& track )
+{
+    for(size_t i = 0; i < track.size(); ++i)
+    {
+      HitId(track[i]);
+    }
+} 
+
 // Calculate the radius from 3 points using the "Menger curvature" theorem
 Double_t FgdMCGenFitRecon::Radius(const TVector3& p1, const TVector3& p2, const TVector3& p3)
 {
@@ -1375,11 +1390,12 @@ bool FgdMCGenFitRecon::GetHoughMomentum(std::vector<ReconHit>& track, Double_t& 
     Double_t radius = Radius(p1, p2, p3); // get initial radius
     Double_t houghRadius = 0;
 
-    // if(!std::isnan(radius) 
-    //     && radius!=inf 
-    //     && HoughRadius(track, radius, houghRadius))
-    radius = 0;
-    if(HoughRadius(track, radius, houghRadius))
+    Double_t temp = 0;
+    if(!std::isnan(radius) 
+        && radius!=inf 
+        && HoughRadius(track, temp, houghRadius))
+    // Double_t temp = 0;
+    // if(HoughRadius(track, temp, houghRadius))
     {
       rc = true;
 
@@ -1389,10 +1405,17 @@ bool FgdMCGenFitRecon::GetHoughMomentum(std::vector<ReconHit>& track, Double_t& 
       if(magField.Z()!=0) {magField_T = magField.Z();}
       magField_T = magField_T / 10.; // convert from kGauss to Tesla units
 
+      Double_t totalEdep = 0;
+      for(int i = 0; i < track.size(); i+=2)
+      {
+        totalEdep += track[i].fEdep;
+      }
+
+
       Double_t R = houghRadius/100.; // convert in meters
       momentum = charge * R * magField_T;
       LOG(debug) << "Menger [r] = " << radius << ", Hough [r] = " << houghRadius;
-      LOG(debug) << "Menger [p] = " << (charge * (radius/100) * magField_T) << ", Hough [p] = " << (charge * R * magField_T);
+      LOG(debug) << "Menger [p] = " << (charge * (radius/100) * magField_T) << ", Hough [p] = " << (charge * R * magField_T) << " => total Edep = " << totalEdep;
     }
 
     return rc;
@@ -1413,24 +1436,83 @@ bool FgdMCGenFitRecon::HoughRadius(std::vector<ReconHit>& track, Double_t& initi
   // Double_t rot90deg = TMath::Pi()/2;
 
   bool rc(false);
+
+  FillHitIds(track);
   TVector3 magField = fgdConstructor.GetMagneticField();
   auto degToRad = (TMath::Pi() / 180);
-  std::vector<HoughPoint> houghPoints;
+  std::map<int, std::map<long long, HoughPoint>> houghPoints;
+
+  Quadrant quad = Quadrant::One;
+  SemiCircle semi = SemiCircle::SemiOne;
+  // Find quadrant and semicircle
+  {
+    ReconHit& first = track[0];
+    ReconHit& last = track[track.size() -1];
+    int x = 0;
+    int y = 0;
+    if(magField.X()!=0)
+    {
+        x = last.fmppcLoc.Y() - first.fmppcLoc.Y();
+        y = last.fmppcLoc.Z() - first.fmppcLoc.Z();
+    }
+    else if(magField.Y()!=0)
+    {
+        x = last.fmppcLoc.X() - first.fmppcLoc.X();
+        y = last.fmppcLoc.Z() - first.fmppcLoc.Z();
+    }
+    else
+    {
+        x = last.fmppcLoc.X() - first.fmppcLoc.X();
+        y = last.fmppcLoc.Y() - first.fmppcLoc.Y();
+    }
+
+    if(y >= 0) {semi = SemiCircle::SemiOne;}
+    if(y < 0) {semi = SemiCircle::SemiTwo;}
+
+    if(y >= 0) 
+    { 
+        if(x >= 0) {quad = Quadrant::One;}
+        else{quad = Quadrant::Two;}
+    }
+    if(y < 0) 
+    { 
+        if(x >= 0) {quad = Quadrant::Four;}
+        else{quad = Quadrant::Three;}
+    }
+  }
   
-  static Double_t range = 100;
-  static int min_r = 10;
+  int cubeLength = (f_step_X < f_step_Y) ? f_step_Y : f_step_X;
+  cubeLength = (cubeLength < f_step_Z) ? f_step_Z : cubeLength;
+  
+  Double_t range = 150;
+  int min_r = cubeLength * 5;
 
   int r_start = initialRadius - range;
   r_start = (r_start < min_r) ? min_r : r_start;
   int r_end = initialRadius + range;
-  int r_delta = 2;
+  int r_delta = 1;
+
+  int t_delta = 1;
 
   int t_start = 0;
-  int t_delta = 15;
   int t_end = 360;
+
+  switch(semi)
+  { 
+    case SemiCircle::SemiOne: t_start = 1; t_end = 179; 
+                          break;
+    case SemiCircle::SemiTwo: t_start = 181; t_end = 359;
+                          break;
+    default:
+          break;
+  }
+
+
   for(int r = r_start;  r <= r_end; r+= r_delta)
   {
-    for(int i = 0; i < track.size(); i+=2)
+    std::map<long long, HoughPoint> currHoughPoints;
+
+    for(int i = 0; i < track.size(); i+=1)
     {
       int x = 0;
       int y = 0;
@@ -1454,42 +1536,58 @@ bool FgdMCGenFitRecon::HoughRadius(std::vector<ReconHit>& track, Double_t& initi
       for(int t = t_start;  t <= t_end; t+=t_delta)
       {
           HoughPoint point;
-          point.b = y - r * sin(t * degToRad);  //polar coordinate for center (convert to radians)
           point.a = x - r * cos(t * degToRad);  //polar coordinate for center (convert to radians)
+          point.b = y - r * sin(t * degToRad);  //polar coordinate for center (convert to radians)
           point.r = r;
           
-          std::vector<HoughPoint>::iterator it = find(houghPoints.begin(), houghPoints.end(),point);
-          if(it == houghPoints.end())
+          long long id = (long long)point.a*r_end*r_end + (long long)point.b*r_end + point.r;
+
+          std::map<long long, HoughPoint>::iterator it = currHoughPoints.find(id);
+          if(it == currHoughPoints.end())
           {
-            ++point.count;
-            houghPoints.emplace_back(point);
+            currHoughPoints[id] = point;
+            point.count.insert(hit.fHitId);
           }else
           {
-            ++(*it).count;
+            HoughPoint& p = currHoughPoints[id];
+            p.count.insert(hit.fHitId);
           }
       }
     }
+    houghPoints[r] = currHoughPoints;
   }
 
-  int ind = -1;
   int currentMax = -1;
-  for(int i = 0;  i < houghPoints.size(); ++i)
+  HoughPoint maxpoint;
+  std::map<int, std::map<long long, HoughPoint>>::iterator it = houghPoints.begin();
+  while( it!= houghPoints.end())
   {
-    HoughPoint& point = houghPoints[i];
-    //LOG(debug) << "A["<< point.a << " ," << point.b << " ," << point.r << "] = " << point.count;
-    if( currentMax < point.count)
-    {
-        ind = i;
-        currentMax = point.count;
-    }
+      
+      std::map<long long, HoughPoint> tempMap = it->second;
+      // LOG(debug) << "Radius "<<  it->first << "; Entries " << tempMap.size();
+       
+      std::map<long long, HoughPoint>::iterator tempIt = tempMap.begin();
+      while( tempIt!= tempMap.end())
+      {
+        HoughPoint& point = tempIt->second;
+        // LOG(debug) << "point.count "<<  point.count.size();
+        const int& sizeCount = point.count.size();
+        if( currentMax <= sizeCount)
+        {
+            currentMax = sizeCount;
+            maxpoint = point;
+        }
+        ++tempIt;
+      }
+
+      ++it;
   }
 
-  if(ind != -1)
+  if(currentMax != -1)
   {
     rc = true;
-    HoughPoint& point = houghPoints[ind];
-    radius = point.r;
-    LOG(debug) << "Found A["<< point.a << " ," << point.b << " ," << point.r << "] = " << point.count;
+    radius = maxpoint.r;
+    LOG(debug) << "Found A["<< maxpoint.a << " ," << maxpoint.b << " ," << maxpoint.r << "] = " << maxpoint.count.size();
   }
 
   return rc;
