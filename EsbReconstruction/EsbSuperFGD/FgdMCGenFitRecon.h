@@ -280,7 +280,7 @@ protected:
 private:
   Double_t Radius(const TVector3& p1, const TVector3& p2, const TVector3& p3);
   bool GetHoughMomentum(std::vector<ReconHit>& track, Double_t& momentum);
-  bool HoughRadius(std::vector<ReconHit>& track, Double_t& initialRadius, Double_t& radius);
+  bool HoughRadius(std::vector<ReconHit>& track, Double_t& initialRadius, Double_t& radius, Int_t& cubesInCirlcle);
 };
 
 } //superfgd

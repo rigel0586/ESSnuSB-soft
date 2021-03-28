@@ -1341,7 +1341,8 @@ Double_t FgdMCGenFitRecon::Radius(const TVector3& p1, const TVector3& p2, const 
 bool FgdMCGenFitRecon::GetHoughMomentum(std::vector<ReconHit>& track, Double_t& momentum)
 {
     // For calculation charge is taken as 1 unit of 'e'
-    static const Double_t charge = 1.;
+    static const Double_t charge = 0.3; // Charge is 1e, but to convert from meter * T to GeV/c a factor of 0.3 has to be added
+                                        // thus 1e * 0.3 => 0.3
     static const Double_t inf = std::numeric_limits<Double_t>::infinity();
 
     bool rc(false);
@@ -1391,9 +1392,10 @@ bool FgdMCGenFitRecon::GetHoughMomentum(std::vector<ReconHit>& track, Double_t& 
     Double_t houghRadius = 0;
 
     Double_t temp = 0;
+    Int_t cubesInCirlcle = 0;
     if(!std::isnan(radius) 
         && radius!=inf 
-        && HoughRadius(track, temp, houghRadius))
+        && HoughRadius(track, temp, houghRadius, cubesInCirlcle))
     // Double_t temp = 0;
     // if(HoughRadius(track, temp, houghRadius))
     {
@@ -1413,15 +1415,23 @@ bool FgdMCGenFitRecon::GetHoughMomentum(std::vector<ReconHit>& track, Double_t& 
 
 
       Double_t R = houghRadius/100.; // convert in meters
+      
       momentum = charge * R * magField_T;
       LOG(debug) << "Menger [r] = " << radius << ", Hough [r] = " << houghRadius;
-      LOG(debug) << "Menger [p] = " << (charge * (radius/100) * magField_T) << ", Hough [p] = " << (charge * R * magField_T) << " => total Edep = " << totalEdep;
+      LOG(debug) << "Menger [p] = " << (charge * (radius/100) * magField_T) << ", Hough [p] = " 
+                                    << (charge * R * magField_T) 
+                                    << " => total Edep = " << totalEdep;
+
+      float partCubesCovered = (float)cubesInCirlcle/track.size();
+      LOG(debug) << "Menger [p] = " << (charge * (radius/100) * magField_T) << ", Hough [p] = " 
+                                    << (partCubesCovered * charge * R * magField_T) 
+                                    << " => total Edep = " << totalEdep;
     }
 
     return rc;
 }
 
-bool FgdMCGenFitRecon::HoughRadius(std::vector<ReconHit>& track, Double_t& initialRadius, Double_t& radius)
+bool FgdMCGenFitRecon::HoughRadius(std::vector<ReconHit>& track, Double_t& initialRadius, Double_t& radius, Int_t& cubesInCirlcle)
 {
   // Hough circle transform
   // For each A[a,b,r] = 0; // fill with zeroes initially, instantiate 3D matrix
@@ -1587,6 +1597,7 @@ bool FgdMCGenFitRecon::HoughRadius(std::vector<ReconHit>& track, Double_t& initi
   {
     rc = true;
     radius = maxpoint.r;
+    cubesInCirlcle = maxpoint.count.size();
     LOG(debug) << "Found A["<< maxpoint.a << " ," << maxpoint.b << " ," << maxpoint.r << "] = " << maxpoint.count.size();
   }
 
