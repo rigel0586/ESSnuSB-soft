@@ -370,6 +370,7 @@ void FgdMCGenFitRecon::FinishTask()
     }
 
     //========================================================
+    Float_t electron_threashold_cut = 1.6;
     TTree * electronFitErrTree = new TTree("electronFitErrTree"
                                 ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
 
@@ -377,12 +378,32 @@ void FgdMCGenFitRecon::FinishTask()
     electronFitErrTree->Branch("electronFitErr", &electronFitErr);
     for(size_t i = 0; i < felectronFitErr.size(); ++i)
     {
-      electronFitErr = felectronFitErr[i];
-      electronFitErrTree->Fill();
+      if(felectronFitErr[i] < electron_threashold_cut)
+      {
+        electronFitErr = felectronFitErr[i];
+        electronFitErrTree->Fill();
+      }
+      
+    }
+
+    TTree * electronFitErrTree_Above_Thres = new TTree("electronFitErrTree_Above_Thres"
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+
+    Float_t electronFitErr_Above_Thres = 0.;
+    electronFitErrTree_Above_Thres->Branch("electronFitErr_Above_Thres", &electronFitErr_Above_Thres);
+    for(size_t i = 0; i < felectronFitErr.size(); ++i)
+    {
+      if(electron_threashold_cut < felectronFitErr[i])
+      {
+        electronFitErr_Above_Thres = felectronFitErr[i];
+        electronFitErrTree_Above_Thres->Fill();
+      }
+      
     }
     //========================================================
 
     //========================================================
+    Float_t muon_threashold_cut = 1.6;
     TTree * muonFitErrTree = new TTree("muonFitErrTree"
                                 ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
 
@@ -390,8 +411,27 @@ void FgdMCGenFitRecon::FinishTask()
     muonFitErrTree->Branch("muonFitErr", &muonFitErr);
     for(size_t i = 0; i < fmuonFitErr.size(); ++i)
     {
-      muonFitErr = fmuonFitErr[i];
-      muonFitErrTree->Fill();
+      
+      if(fmuonFitErr[i] < muon_threashold_cut)
+      {
+          muonFitErr = fmuonFitErr[i];
+          muonFitErrTree->Fill();
+      }      
+    }
+
+    TTree * muonFitErrTree_Above_Thres = new TTree("muonFitErrTree_Above_Thres"
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+
+    Float_t muonFitErrAboveThr = 0;
+    muonFitErrTree_Above_Thres->Branch("muonFitErr_Above_Threashold", &muonFitErrAboveThr);
+    for(size_t i = 0; i < fmuonFitErr.size(); ++i)
+    {
+      
+      if(muon_threashold_cut < fmuonFitErr[i])
+      {
+          muonFitErrAboveThr = fmuonFitErr[i];
+          muonFitErrTree_Above_Thres->Fill();
+      }      
     }
     //========================================================
 
@@ -418,6 +458,7 @@ void FgdMCGenFitRecon::FinishTask()
     //========================================================
 
     //========================================================
+    Float_t proton_threashold_cut = 1.6;
     TTree * protonFitErrTree = new TTree("protonFitErrTree"
                                 ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
 
@@ -425,8 +466,25 @@ void FgdMCGenFitRecon::FinishTask()
     protonFitErrTree->Branch("protonFitErr", &protonFitErr);
     for(size_t i = 0; i < fprotonFitErr.size(); ++i)
     {
-      protonFitErr = fprotonFitErr[i];
-      protonFitErrTree->Fill();
+      if(fprotonFitErr[i] < proton_threashold_cut)
+      {
+        protonFitErr = fprotonFitErr[i];
+        protonFitErrTree->Fill();
+      }
+    }
+
+    TTree * protonFitErrTree_Above_Threashold = new TTree("protonFitErrTree_Above_Threashold"
+                                ,esbroot::geometry::superfgd::DP::FGD_TMVA_DATA_ROOT_FILE.c_str());
+
+    Float_t protonFitErr_Above_Threashold = 0;;
+    protonFitErrTree_Above_Threashold->Branch("protonFitErr_Above_Threashold", &protonFitErr_Above_Threashold);
+    for(size_t i = 0; i < fprotonFitErr.size(); ++i)
+    {
+      if(proton_threashold_cut < fprotonFitErr[i])
+      {
+        protonFitErr_Above_Threashold = fprotonFitErr[i];
+        protonFitErrTree_Above_Threashold->Fill();
+      }
     }
     //========================================================
 
@@ -448,9 +506,14 @@ void FgdMCGenFitRecon::FinishTask()
     outFile->WriteTObject(calorimetricMomTree);     
 
     outFile->WriteTObject(electronFitErrTree); 
+    outFile->WriteTObject(electronFitErrTree_Above_Thres);
+
     outFile->WriteTObject(muonFitErrTree);
+    outFile->WriteTObject(muonFitErrTree_Above_Thres);
     outFile->WriteTObject(muonFitErrXYZTree);  
+
     outFile->WriteTObject(protonFitErrTree); 
+    outFile->WriteTObject(protonFitErrTree_Above_Threashold); 
     outFile->WriteTObject(pionFitErrTree);                 
   }
   catch(...)
@@ -1044,13 +1107,13 @@ void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks
                     , hitsOnTrack);
 
 
-        Double_t momentum=0;
-        bool houghFlag = GetHoughMomentum(hitsOnTrack,momentum);
-        //if()
-        {
-          float mcMom = std::sqrt(  hitsOnTrack[0].fmom.X()*hitsOnTrack[0].fmom.X()  +  hitsOnTrack[0].fmom.Z()*hitsOnTrack[0].fmom.Z()   );
-          LOG(debug) << "Found Hough " << houghFlag <<" Hough Momentum " << momentum << " MC mom " << mcMom;
-        }
+        // Double_t momentum=0;
+        // bool houghFlag = GetHoughMomentum(hitsOnTrack,momentum);
+        // //if()
+        // {
+        //   float mcMom = std::sqrt(  hitsOnTrack[0].fmom.X()*hitsOnTrack[0].fmom.X()  +  hitsOnTrack[0].fmom.Z()*hitsOnTrack[0].fmom.Z()   );
+        //   LOG(debug) << "Found Hough " << houghFlag <<" Hough Momentum " << momentum << " MC mom " << mcMom;
+        // }
 
         if(fiStatuStatus->isFitted() && fiStatuStatus->isFitConverged())
         {
@@ -1422,10 +1485,10 @@ bool FgdMCGenFitRecon::GetHoughMomentum(std::vector<ReconHit>& track, Double_t& 
                                     << (charge * R * magField_T) 
                                     << " => total Edep = " << totalEdep;
 
-      float partCubesCovered = (float)cubesInCirlcle/track.size();
-      LOG(debug) << "Menger [p] = " << (charge * (radius/100) * magField_T) << ", Hough [p] = " 
-                                    << (partCubesCovered * charge * R * magField_T) 
-                                    << " => total Edep = " << totalEdep;
+      // float partCubesCovered = (float)cubesInCirlcle/track.size();
+      // LOG(debug) << "Menger [p] = " << (charge * (radius/100) * magField_T) << ", Hough [p] = " 
+      //                               << (partCubesCovered * charge * R * magField_T) 
+      //                               << " => total Edep = " << totalEdep;
     }
 
     return rc;
@@ -1494,7 +1557,7 @@ bool FgdMCGenFitRecon::HoughRadius(std::vector<ReconHit>& track, Double_t& initi
   int cubeLength = (f_step_X < f_step_Y) ? f_step_Y : f_step_X;
   cubeLength = (cubeLength < f_step_Z) ? f_step_Z : cubeLength;
   
-  Double_t range = 150;
+  Double_t range = 500;
   int min_r = cubeLength * 1;
 
   int r_start = initialRadius - range;
@@ -1522,7 +1585,7 @@ bool FgdMCGenFitRecon::HoughRadius(std::vector<ReconHit>& track, Double_t& initi
   {
     std::map<long long, HoughPoint> currHoughPoints;
 
-    for(int i = 0; i < track.size(); i+=1)
+    for(int i = 0; i < (track.size() * 0.8); i+=1)
     {
       int x = 0;
       int y = 0;
@@ -1582,9 +1645,32 @@ bool FgdMCGenFitRecon::HoughRadius(std::vector<ReconHit>& track, Double_t& initi
         HoughPoint& point = tempIt->second;
         // LOG(debug) << "point.count "<<  point.count.size();
         const int& sizeCount = point.count.size();
-        if( currentMax <= sizeCount)
+        if( currentMax < sizeCount)
         {
             currentMax = sizeCount;
+            maxpoint = point;
+        }
+        ++tempIt;
+      }
+
+      ++it;
+  }
+
+  it = houghPoints.begin();
+  while( it!= houghPoints.end())
+  {
+      
+      std::map<long long, HoughPoint> tempMap = it->second;
+      // LOG(debug) << "Radius "<<  it->first << "; Entries " << tempMap.size();
+       
+      std::map<long long, HoughPoint>::iterator tempIt = tempMap.begin();
+      while( tempIt!= tempMap.end())
+      {
+        HoughPoint& point = tempIt->second;
+        // LOG(debug) << "point.count "<<  point.count.size();
+        const int& sizeCount = point.count.size();
+        if( currentMax == sizeCount && maxpoint.r > point.r)
+        {
             maxpoint = point;
         }
         ++tempIt;
