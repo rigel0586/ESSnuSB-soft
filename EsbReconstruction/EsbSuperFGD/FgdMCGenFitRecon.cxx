@@ -853,7 +853,9 @@ void FgdMCGenFitRecon::SplitTrack(std::vector<ReconHit>& allHits, std::vector<st
 
 void FgdMCGenFitRecon::FitTracks(std::vector<std::vector<ReconHit>>& foundTracks)
 {
-    // init fitter
+    if(fMCeventNum >= fMCeventRecords.size()) return;
+    
+    // init fitter 
     std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitterRefTrack>();
     //std::shared_ptr<genfit::AbsKalmanFitter> fitter = make_shared<genfit::KalmanFitter>();
     fitter->setMinIterations(fminGenFitInterations);

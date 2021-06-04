@@ -32,7 +32,8 @@ public:
 									, Int_t numEvents
 									, genie::GFluxI* extFlux = nullptr
 									, Bool_t uniformFlux = false
-									, TGeoManager* gm = nullptr);
+									, TGeoManager* gm = nullptr
+									, Bool_t keepThrowingFluxNu = true);
 
 	//! Destructor
 	~FgdGenieGenerator();
@@ -67,6 +68,7 @@ private:
 	TVector3 fvertexPos;//!<!
 	genie::GFluxI* fExtFlux;//!<!
 	Bool_t fUseUniformflux;//!<!
+	Bool_t fKeepThrowingFluxNu;//!<!
 
 	std::vector<genie::EventRecord> fGenieEvents;//!<!
 	void GenerateEvents();

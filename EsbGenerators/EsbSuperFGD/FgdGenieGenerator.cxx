@@ -32,7 +32,8 @@ FgdGenieGenerator::FgdGenieGenerator(const char* geoConfigFile
 									, Int_t numEvents
 									, genie::GFluxI* extFlux
 									, Bool_t uniformFlux
-									, TGeoManager* gm)
+									, TGeoManager* gm
+									, Bool_t keepThrowingFluxNu)
 	 : GenieGenerator()
 	 	, fgeoConfigFile(geoConfigFile)
 		, fnuFluxFile(nuFluxFile)
@@ -45,6 +46,7 @@ FgdGenieGenerator::FgdGenieGenerator(const char* geoConfigFile
 		, fUseFixedVertex(false)
 		, fvertexPos(0,0,0)
 		, fUseUniformflux(uniformFlux)
+		, fKeepThrowingFluxNu(keepThrowingFluxNu)
 {
 }
 
@@ -89,6 +91,7 @@ Bool_t FgdGenieGenerator::Configure()
 	}
 
 	GenieGenerator::Configure();
+	fmcj_driver->KeepOnThrowingFluxNeutrinos(fKeepThrowingFluxNu);
 	GenerateEvents();
 	
 	if(useDefaultFlux && geomAnalyzer!=nullptr)
@@ -101,34 +104,39 @@ Bool_t FgdGenieGenerator::Configure()
 
 Bool_t FgdGenieGenerator::ReadEvent(FairPrimaryGenerator* primGen)
 {
-	if(fCurrentEvent>=fnumEvents) return false;
-
-	genie::EventRecord& event = fGenieEvents[fCurrentEvent++];
-	
-	event.Print(std::cout);
-	TLorentzVector* v = event.Vertex();
-		
-	// Fire other final state particles
-	int nParticles = event.GetEntries();
-	for (int i = 0; i < nParticles; i++) 
+	if(fCurrentEvent < fGenieEvents.size())
 	{
-		genie::GHepParticle *p = event.Particle(i);
-		// kIStStableFinalState - Genie documentation: generator-level final state
-		// particles to be tracked by the detector-level MC
-		if ((p->Status() == genie::EGHepStatus::kIStStableFinalState)) 
+		genie::EventRecord& event = fGenieEvents[fCurrentEvent++];
+	
+		event.Print(std::cout);
+		TLorentzVector* v = event.Vertex();
+			
+		// Fire other final state particles
+		int nParticles = event.GetEntries();
+		for (int i = 0; i < nParticles; i++) 
 		{
-			if(IsPdgAllowed(p->Pdg()))
+			genie::GHepParticle *p = event.Particle(i);
+			// kIStStableFinalState - Genie documentation: generator-level final state
+			// particles to be tracked by the detector-level MC
+			if ((p->Status() == genie::EGHepStatus::kIStStableFinalState)) 
 			{
-				primGen->AddTrack(p->Pdg(), p->Px(), p->Py(), p->Pz(), v->X(), v->Y(), v->Z());
+				if(IsPdgAllowed(p->Pdg()))
+				{
+					primGen->AddTrack(p->Pdg(), p->Px(), p->Py(), p->Pz(), v->X(), v->Y(), v->Z());
+				}
 			}
 		}
-	}
 
-	if(!GlobalState.fOutputFileName.empty())
-	{
-		WriteToOutputFile(&event, false /* flaGkeepThrowing - check made in GenerateEvents*/);
+		if(!GlobalState.fOutputFileName.empty())
+		{
+			WriteToOutputFile(&event, false /* flaGkeepThrowing - check made in GenerateEvents*/);
+		}
 	}
-		
+	else
+	{
+		primGen->AddTrack(2112, 0, 0, 0.5, 0, 0, 5000); // just add a dummy track
+	}
+	
     return true;
 }
 
@@ -163,16 +171,18 @@ void FgdGenieGenerator::GenerateEvents()
 					delete event;
 					break;
 				}
+				delete event;
 			}
-			else
+			else 
 			{
-				--eventId; // try again
+				if(fKeepThrowingFluxNu)
+				{
+					--eventId; // try again
+				}
+				
 				break;
 			}
-			
-			delete event;
 		}
-		
 	}
 }
 

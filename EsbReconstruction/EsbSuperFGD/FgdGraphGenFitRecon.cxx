@@ -384,7 +384,8 @@ void FgdGraphGenFitRecon::Exec(Option_t* opt)
 {  
   try
   {
-
+    if(feventRecords.size() <= feventNum) return;
+    
     FgdTMVAEventRecord& tvmaEventRecord = feventRecords[feventNum];
     tvmaEventRecord.ReadEventData();
 
