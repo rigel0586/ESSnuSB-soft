@@ -1,6 +1,6 @@
 void parseExitParticles(TString inFile = "/*** TODO PATH ***/statsRoot.root"            // Path to statsRoot.root generated from simulate_3_MC_lepton_stats.C
                         , TString outFile = "/*** TODO PATH ***/formattedData.txt"      // output file where to write the nuance formatted data
-                        , Bool_t printData = true)                                      // true - to print the info to the console
+                        , Bool_t printData = false)                                     // true - to print the info to the console
 {
     TFile* tf = new TFile(inFile);
     TTree *tr = (TTree*)tf->Get("FgdMCExitParticlesReconstructionData");
